@@ -18,19 +18,20 @@
 
 ## 📋 Table of Contents
 
-- [About The Project](#-about-the-project)
-- [Key Features](#-key-features)
-- [System Users](#-system-users)
-- [Issue Lifecycle](#-issue-lifecycle)
-- [Technology Stack](#-technology-stack)
-- [Architecture](#-architecture)
-- [Project Structure](#-project-structure)
-- [Getting Started](#-getting-started)
-- [Team](#-team)
+- [About The Project](#about-the-project)
+- [Key Features](#key-features)
+- [System Users](#system-users)
+- [Issue Lifecycle](#issue-lifecycle)
+- [Technology Stack](#technology-stack)
+- [Architecture](#architecture)
+- [Project Structure](#project-structure)
+- [Getting Started](#getting-started)
+- [Future Enhancements](#future-enhancements)
+- [Team](#team)
 
 ---
 
-## 📖 About The Project
+## About The Project
 
 **FixIt** is a web-based infrastructure maintenance and issue reporting platform designed to streamline the reporting, tracking, and resolution of maintenance-related problems. Any registered citizen — whether at home, in a company, shop, public facility, or any other location — can submit and monitor maintenance issues digitally.
 
@@ -47,7 +48,7 @@ The system provides a full **end-to-end lifecycle** for each reported issue — 
 
 ---
 
-## ✨ Key Features
+## Key Features
 
 | Feature | Description |
 |---------|-------------|
@@ -63,7 +64,7 @@ The system provides a full **end-to-end lifecycle** for each reported issue — 
 
 ---
 
-## 👥 System Users
+## System Users
 
 ### 🧑 Citizen
 - Register and log in
@@ -83,44 +84,47 @@ The system provides a full **end-to-end lifecycle** for each reported issue — 
 
 ---
 
-## 🔄 Issue Lifecycle
+## Issue Lifecycle
 
 ```
 [Citizen Submits Issue]
          │
          ▼
-      PENDING  ◄─────────────────────────────────┐
-         │                                        │
-    Admin Reviews                                 │
-         │                                        │
-    ┌────┴────┐                                   │
-    │         │                                   │
-    ▼         ▼                                   │
-REJECTED   APPROVED                               │
-               │                                  │
-          Admin Schedules                         │
-          Visit + Cost                            │
-               │                                  │
-               ▼                                  │
-          SCHEDULED                               │
-               │                                  │
-          Work Begins                             │
-               │                                  │
-               ▼                                  │
-          IN PROGRESS                             │
-               │                                  │
-          Work Completed                          │
-          Admin Submits Report                    │
-               │                                  │
-               ▼                                  │
-           RESOLVED                               │
-               │                                  │
-      Citizen Rates Service (1–5 ⭐)              │
+        NEW
+         │
+    Admin Reviews
+         │
+    ┌────┴────┐
+    │         │
+    ▼         ▼
+REJECTED   APPROVED
+               │
+          Admin Schedules
+          Visit + Cost
+               │
+               ▼
+          SCHEDULED
+               │
+          Work Begins
+               │
+               ▼
+          IN PROGRESS
+               │
+          Work Completed
+          Admin Submits Report
+               │
+               ▼
+           RESOLVED
+               │
+      Citizen Rates Service (1–5 ⭐)
+               │
+               ▼
+            CLOSED
 ```
 
 ---
 
-## 🛠️ Technology Stack
+## Technology Stack
 
 | Layer | Technology | Purpose |
 |-------|-----------|---------|
@@ -136,7 +140,7 @@ REJECTED   APPROVED                               │
 
 ---
 
-## 🏗️ Architecture
+## Architecture
 
 FixIt is built using **Layered (N-Tier) Architecture** combined with the **Repository Pattern** and **Unit of Work Pattern**, ensuring clean separation of concerns, maintainability, and scalability.
 
@@ -178,7 +182,7 @@ FixIt is built using **Layered (N-Tier) Architecture** combined with the **Repos
 
 ---
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 FixIt/                              ← Solution Root
@@ -191,24 +195,29 @@ FixIt/                              ← Solution Root
 │   └── Helpers/                    ← DateHelper and shared utility methods
 │
 ├── FixIt.DAL/                      ← Data Access Layer
-│   ├── Entities/                   ← ApplicationUser, Issue, MaintenanceReport, Rating
+│   ├── Entities/                   ← ApplicationUser, Issue, MaintenanceSchedule,
+│   │                                  MaintenanceReport, Rating
 │   ├── Data/                       ← AppDbContext (EF Core + Identity)
 │   ├── Repositories/               ← IRepository<T>, GenericRepository, IIssueRepository
 │   └── UnitOfWork/                 ← IUnitOfWork, UnitOfWork
 │
 ├── FixIt.BLL/                      ← Business Logic Layer
-│   ├── DTOs/                       ← IssueDtos, AccountDtos, ReportDtos, RatingDtos
-│   ├── Interfaces/                 ← IIssueService, IReportService, IRatingService
-│   └── Services/                   ← IssueService, ReportService, RatingService
+│   ├── DTOs/                       ← IssueDtos, AccountDtos, ScheduleDtos,
+│   │                                  ReportDtos, RatingDtos, AnalyticsDtos
+│   ├── Interfaces/                 ← IIssueService, IScheduleService,
+│   │                                  IReportService, IRatingService
+│   └── Services/                   ← IssueService, ScheduleService,
+│                                      ReportService, RatingService
 │
 └── FixIt.PL/                       ← Presentation Layer (ASP.NET Core MVC)
     ├── Controllers/                ← HomeController, AccountController, IssueController
-    │                                  AdminController, RatingController
+    │                                  AdminController, ScheduleController, RatingController
     ├── Views/
     │   ├── Home/                   ← Landing page
     │   ├── Account/                ← Login, Register
     │   ├── Issue/                  ← Index (my issues), Create, Details
-    │   ├── Admin/                  ← Dashboard, IssueDetails, Schedule, AddReport
+    │   ├── Admin/                  ← Dashboard, IssueDetails, AddReport, Analytics
+    │   ├── Schedule/               ← Create, Details (maintenance scheduling views)
     │   ├── Rating/                 ← Rate (after resolution)
     │   └── Shared/                 ← _Layout, _AdminLayout, _ValidationScripts
     ├── wwwroot/
@@ -224,7 +233,7 @@ FixIt/                              ← Solution Root
 
 ---
 
-## 🚀 Getting Started
+## Getting Started
 
 ### Prerequisites
 
@@ -264,16 +273,26 @@ FixIt/                              ← Solution Root
 
 ---
 
-## 👨‍💻 Team
+## Future Enhancements
+
+The following features are planned for future versions of FixIt:
+
+- 💳 **Online Payment Integration** — Visa and payment gateway support for service fee collection
+- 👷 **Worker Accounts** — Dedicated worker login with personal task management and assignment tracking
+- 🤖 **AI-Based Classification** — Automatic issue category detection and priority suggestion using machine learning
+
+---
+
+## Team
 
 | # | Name | Role |
 |---|------|------|
 | 1 | **Mohamed Abobakr Ahmed** | Team Leader & Full-Stack Developer |
 | 2 | Zeyad Abdelmonem Abdo | Backend Developer |
-| 3 | Mazen Adel Souliman | Frontend Developer |
+| 3 | Mazen Adel Souliman | Backend Developer |
 | 4 | Rana Shehtta Gaber | UI/UX Designer & Frontend Developer |
 | 5 | Jana Ashraf Mohamed | Database Engineer & Backend Developer |
-| 6 | Habiba Mohamed Abdelazeam | QA Tester & Documentation Lead |
+| 6 | Habiba Mohamed Abdelazeam | Frontend Developer & QA Tester |
 
 ---
 
