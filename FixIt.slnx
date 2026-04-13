@@ -1,0 +1,6 @@
+<Solution>
+  <Project Path="FixIt.BLL/FixIt.BLL.csproj" />
+  <Project Path="FixIt.Common/FixIt.Common.csproj" />
+  <Project Path="FixIt.DAL/FixIt.DAL.csproj" />
+  <Project Path="FixIt.PL/FixIt.PL.csproj" />
+</Solution>
