@@ -1,4 +1,4 @@
-﻿using FixIt.DAL.Entities;
+using FixIt.DAL.Entities;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -12,8 +12,8 @@ namespace FixIt.DAL.Data.Configurations
                 .HasMaxLength(150)
                 .IsRequired(false);
 
-            // One Admin → Many Issues
-            builder.HasMany(a => a.Issues)
+            // One Admin → Many Assigned Issues
+            builder.HasMany(a => a.AssignedIssues)
                 .WithOne(i => i.Admin)
                 .HasForeignKey(i => i.AdminId)
                 .IsRequired(false)
