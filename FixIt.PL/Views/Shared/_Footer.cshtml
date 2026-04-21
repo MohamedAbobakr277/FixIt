@@ -1,22 +1,49 @@
-﻿<footer class="footer-custom">
+<footer class="footer-fixit">
+    <div class="footer-grid">
 
-    <div class="footer-container">
-
-        <!-- LEFT: BRAND -->
-        <div class="footer-left">
-            FixIt
+        <!-- Brand -->
+        <div>
+            <div class="footer-brand">
+                <img src="~/images/logo-icon.png" asp-append-version="true" alt="FixIt" style="width:28px;height:28px;border-radius:6px;" />
+                FixIt
+            </div>
+            <p class="footer-tagline">
+                Smart Community Issue Reporting System.
+                Making infrastructure maintenance transparent and efficient.
+            </p>
         </div>
 
-        <!-- CENTER: TAGLINE -->
-        <div class="footer-center">
-            Smart Community Issue Reporting System
+        <!-- Platform -->
+        <div>
+            <div class="footer-heading">Platform</div>
+            <ul class="footer-links">
+                <li><a href="#features">Features</a></li>
+                <li><a href="#how-it-works">How It Works</a></li>
+                <li><a href="#categories">Categories</a></li>
+            </ul>
         </div>
 
-        <!-- RIGHT: COPYRIGHT -->
-        <div class="footer-right">
-            © 2026 FixIt. All rights reserved.
+        <!-- Account -->
+        <div>
+            <div class="footer-heading">Account</div>
+            <ul class="footer-links">
+                <li><a asp-controller="Account" asp-action="Login">Sign In</a></li>
+                <li><a asp-controller="Account" asp-action="Register">Register</a></li>
+            </ul>
         </div>
 
+        <!-- Project -->
+        <div>
+            <div class="footer-heading">Project</div>
+            <ul class="footer-links">
+                <li><a href="https://github.com/MohamedAbobakr277/FixIt" target="_blank">GitHub</a></li>
+                <li><a href="#">DEPI Initiative</a></li>
+            </ul>
+        </div>
     </div>
 
+    <div class="footer-bottom">
+        <span class="footer-copy">© 2026 FixIt. All rights reserved.</span>
+        <span class="footer-copy">Made with ❤️ under DEPI</span>
+    </div>
 </footer>
