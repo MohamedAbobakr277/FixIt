@@ -1,12 +1,216 @@
-﻿@{
+@{
     ViewData["Title"] = "Home";
 }
 
-<div class="hero-container">
+<!-- ══ HERO ══ -->
+<section class="hero">
+    <div class="hero-bg-pattern"></div>
+    <div class="hero-glow-1"></div>
+    <div class="hero-glow-2"></div>
+    <div class="hero-container">
+        <div class="hero-content">
+            <div class="hero-badge">Community-Powered Platform</div>
+            <h1 class="hero-title">
+                Report Infrastructure<br />
+                Issues <span class="gradient-text">Faster & Easier</span>
+            </h1>
+            <p class="hero-subtitle">
+                From broken pipes to electrical faults — submit, track, and resolve
+                maintenance issues from any location with full transparency.
+            </p>
+            <div class="hero-buttons">
+                <a class="btn-primary-fixit" asp-controller="Account" asp-action="Register">
+                    Report an Issue →
+                </a>
+                <a class="btn-outline-fixit" href="#how-it-works">
+                    See How It Works
+                </a>
+            </div>
+            <div class="hero-stats">
+                <div>
+                    <div class="hero-stat-value"><span class="counter" data-target="24">0</span>/7</div>
+                    <div class="hero-stat-label">Issue Reporting</div>
+                </div>
+                <div>
+                    <div class="hero-stat-value"><span class="counter" data-target="100">0</span>%</div>
+                    <div class="hero-stat-label">Transparent</div>
+                </div>
+                <div>
+                    <div class="hero-stat-value"><span class="counter" data-target="5.0">0.0</span></div>
+                    <div class="hero-stat-label">Rating System</div>
+                </div>
+            </div>
+        </div>
 
-    <h1 class="hero-title">
-        Report Infrastructure<br />
-        Issues <span class="highlight-text">Faster & Easier</span>
-    </h1>
+        <div class="hero-visual">
+            <div class="hero-card">
+                <div class="hero-card-header">
+                    <span class="hero-card-title">Recent Issues</span>
+                    <span class="hero-card-dot"></span>
+                </div>
+                <div class="issue-row">
+                    <div class="issue-icon electric">⚡</div>
+                    <div class="issue-info">
+                        <div class="issue-info-title">Power Outage — Block C</div>
+                        <div class="issue-info-loc">Nasr City, Cairo</div>
+                    </div>
+                    <span class="status-badge status-inprogress">In Progress</span>
+                </div>
+                <div class="issue-row">
+                    <div class="issue-icon water">💧</div>
+                    <div class="issue-info">
+                        <div class="issue-info-title">Water Leak — Main Pipe</div>
+                        <div class="issue-info-loc">Maadi, Cairo</div>
+                    </div>
+                    <span class="status-badge status-new">New</span>
+                </div>
+                <div class="issue-row">
+                    <div class="issue-icon build">🏗️</div>
+                    <div class="issue-info">
+                        <div class="issue-info-title">Cracked Wall — 3rd Floor</div>
+                        <div class="issue-info-loc">Heliopolis, Cairo</div>
+                    </div>
+                    <span class="status-badge status-resolved">Resolved</span>
+                </div>
+                <div class="issue-row">
+                    <div class="issue-icon plumb">🔧</div>
+                    <div class="issue-info">
+                        <div class="issue-info-title">Broken Faucet — Kitchen</div>
+                        <div class="issue-info-loc">Dokki, Giza</div>
+                    </div>
+                    <span class="status-badge status-scheduled">Scheduled</span>
+                </div>
+            </div>
+            <div class="hero-notif">
+                <span class="hero-notif-dot"></span>
+                <span class="hero-notif-text"><strong>Issue Resolved</strong> — Water Leak Fixed</span>
+            </div>
+        </div>
+    </div>
+</section>
 
-</div>
+<!-- ══ FEATURES ══ -->
+<section class="section section-alt" id="features">
+    <div class="section-container">
+        <div class="section-header">
+            <div class="section-label">Features</div>
+            <h2 class="section-title">Everything You Need to Fix It</h2>
+            <p class="section-desc">A complete platform for reporting, tracking, and resolving infrastructure issues with full lifecycle management.</p>
+        </div>
+        <div class="features-grid">
+            <div class="feature-card">
+                <div class="feature-icon">📝</div>
+                <div class="feature-title">Easy Issue Reporting</div>
+                <div class="feature-desc">Submit issues with title, description, category, location, and optional photo in seconds.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🔍</div>
+                <div class="feature-title">Real-Time Tracking</div>
+                <div class="feature-desc">Follow your issue from submission through approval, scheduling, and resolution.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">🛡️</div>
+                <div class="feature-title">Admin Dashboard</div>
+                <div class="feature-desc">Powerful dashboard with search, filter, and full issue lifecycle management.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📅</div>
+                <div class="feature-title">Maintenance Scheduling</div>
+                <div class="feature-desc">Admins schedule visits with date, time, estimated cost, and assigned workers.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">⭐</div>
+                <div class="feature-title">Service Rating</div>
+                <div class="feature-desc">Rate completed services with 1–5 stars and optional comments for quality assurance.</div>
+            </div>
+            <div class="feature-card">
+                <div class="feature-icon">📊</div>
+                <div class="feature-title">Reports & Analytics</div>
+                <div class="feature-desc">Before/after maintenance images and comprehensive resolution reports.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ HOW IT WORKS ══ -->
+<section class="section section-white" id="how-it-works">
+    <div class="section-container">
+        <div class="section-header">
+            <div class="section-label">Process</div>
+            <h2 class="section-title">How It Works</h2>
+            <p class="section-desc">Simple 4-step process from reporting to resolution.</p>
+        </div>
+        <div class="steps-grid">
+            <div class="step-card">
+                <div class="step-number">1</div>
+                <div class="step-title">Report Issue</div>
+                <div class="step-desc">Describe the problem, select a category, and upload a photo.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-number">2</div>
+                <div class="step-title">Admin Review</div>
+                <div class="step-desc">Admin reviews, approves, and schedules maintenance.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-number">3</div>
+                <div class="step-title">Get It Fixed</div>
+                <div class="step-desc">Maintenance team resolves the issue on schedule.</div>
+            </div>
+            <div class="step-card">
+                <div class="step-number">4</div>
+                <div class="step-title">Rate Service</div>
+                <div class="step-desc">Rate the quality and leave feedback for accountability.</div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ CATEGORIES ══ -->
+<section class="section section-alt" id="categories">
+    <div class="section-container">
+        <div class="section-header">
+            <div class="section-label">Categories</div>
+            <h2 class="section-title">What Can You Report?</h2>
+            <p class="section-desc">Report any infrastructure or maintenance issue from home, office, or public space.</p>
+        </div>
+        <div class="categories-grid">
+            <div class="category-card">
+                <div class="category-icon" style="background:rgba(250,204,21,0.12)">⚡</div>
+                <div><div class="category-name">Electrical</div><div class="category-desc">Wiring, outages, electrical faults</div></div>
+            </div>
+            <div class="category-card">
+                <div class="category-icon" style="background:rgba(59,130,246,0.12)">💧</div>
+                <div><div class="category-name">Water</div><div class="category-desc">Leaks, supply issues, drainage</div></div>
+            </div>
+            <div class="category-card">
+                <div class="category-icon" style="background:rgba(168,85,247,0.12)">🔧</div>
+                <div><div class="category-name">Plumbing</div><div class="category-desc">Pipes, faucets, sewage problems</div></div>
+            </div>
+            <div class="category-card">
+                <div class="category-icon" style="background:rgba(249,115,22,0.12)">🪵</div>
+                <div><div class="category-name">Carpentry</div><div class="category-desc">Doors, windows, furniture repair</div></div>
+            </div>
+            <div class="category-card">
+                <div class="category-icon" style="background:rgba(34,197,94,0.12)">🏗️</div>
+                <div><div class="category-name">General Maintenance</div><div class="category-desc">Building, facility, structural work</div></div>
+            </div>
+            <div class="category-card">
+                <div class="category-icon" style="background:rgba(148,163,184,0.12)">📋</div>
+                <div><div class="category-name">Other</div><div class="category-desc">Any other maintenance request</div></div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ══ CTA ══ -->
+<section class="cta-section">
+    <div class="section-container">
+        <div class="cta-content">
+            <h2 class="cta-title">Ready to Report an Issue?</h2>
+            <p class="cta-desc">Join the community and help improve infrastructure maintenance in your area.</p>
+            <a class="btn-primary-fixit" asp-controller="Account" asp-action="Register" style="font-size:16px;padding:16px 36px;">
+                Create Free Account →
+            </a>
+        </div>
+    </div>
+</section>
