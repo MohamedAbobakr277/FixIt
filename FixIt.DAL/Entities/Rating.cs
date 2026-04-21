@@ -9,7 +9,7 @@ public class Rating
 
     // Foreign Keys
     public int IssueId { get; set; }
-    public int CitizenId { get; set; }
+    public string CitizenId { get; set; } = string.Empty;
 
     // Navigation properties
     public Issue? Issue { get; set; }

@@ -1,16 +1,10 @@
-﻿using FixIt.Common.Enums;
-
 namespace FixIt.DAL.Entities;
-    public class Admin : User
+
+public class Admin : ApplicationUser
 {
     public string? Department { get; set; }
 
     // Navigation properties
-    public ICollection<Issue> Issues { get; set; } = new List<Issue>();
+    public ICollection<Issue> AssignedIssues { get; set; } = new List<Issue>();
     public ICollection<MaintenanceReport> MaintenanceReports { get; set; } = new List<MaintenanceReport>();
- 
-    public Admin()
-    {
-        Role = UserRole.Admin;
-    }
 }

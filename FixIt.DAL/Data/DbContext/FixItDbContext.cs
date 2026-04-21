@@ -1,11 +1,12 @@
 using FixIt.DAL.Entities;
 using FixIt.DAL.Data.Configurations;
+using Microsoft.AspNetCore.Identity.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore;
 
 namespace FixIt.DAL.Data;
-public class FixItDbContext : DbContext
-{
 
+public class FixItDbContext : IdentityDbContext<ApplicationUser>
+{
     public FixItDbContext(DbContextOptions<FixItDbContext> options)
         : base(options)
     {
@@ -15,7 +16,7 @@ public class FixItDbContext : DbContext
     {
         base.OnModelCreating(modelBuilder);
 
-        modelBuilder.ApplyConfiguration(new UserConfiguration());
+        modelBuilder.ApplyConfiguration(new ApplicationUserConfiguration());
         modelBuilder.ApplyConfiguration(new CitizenConfiguration());
         modelBuilder.ApplyConfiguration(new AdminConfiguration());
         modelBuilder.ApplyConfiguration(new IssueConfiguration());
@@ -24,7 +25,6 @@ public class FixItDbContext : DbContext
         modelBuilder.ApplyConfiguration(new RatingConfiguration());
     }
 
-    public DbSet<User> Users { get; set; }
     public DbSet<Citizen> Citizens { get; set; }
     public DbSet<Admin> Admins { get; set; }
     public DbSet<Issue> Issues { get; set; }
