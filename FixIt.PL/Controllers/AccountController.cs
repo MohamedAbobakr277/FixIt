@@ -1,0 +1,113 @@
+using FixIt.BLL.DTOs;
+using FixIt.BLL.Interfaces;
+using FluentValidation;
+using Microsoft.AspNetCore.Mvc;
+
+namespace FixIt.PL.Controllers;
+
+public class AccountController : Controller
+{
+    private readonly IAccountService _accountService;
+    private readonly IValidator<RegisterDto> _registerValidator;
+    private readonly IValidator<LoginDto> _loginValidator;
+
+    public AccountController(
+        IAccountService accountService,
+        IValidator<RegisterDto> registerValidator,
+        IValidator<LoginDto> loginValidator)
+    {
+        _accountService = accountService;
+        _registerValidator = registerValidator;
+        _loginValidator = loginValidator;
+    }
+
+    // ── GET /Account/Register ──────────────────────────────────────────────
+    [HttpGet]
+    public IActionResult Register()
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction("Index", "Home");
+
+        return View(new RegisterDto());
+    }
+
+    // ── POST /Account/Register ─────────────────────────────────────────────
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Register(RegisterDto dto)
+    {
+        var validation = await _registerValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+        {
+            foreach (var error in validation.Errors)
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            return View(dto);
+        }
+
+        var errors = await _accountService.RegisterAsync(dto);
+        if (errors == null) // null means success
+        {
+            TempData["SuccessMessage"] = "Account created successfully! Please sign in.";
+            return RedirectToAction(nameof(Login));
+        }
+
+        foreach (var error in errors)
+            ModelState.AddModelError(string.Empty, error);
+
+        return View(dto);
+    }
+
+    // ── GET /Account/Login ─────────────────────────────────────────────────
+    [HttpGet]
+    public IActionResult Login(string? returnUrl = null)
+    {
+        if (User.Identity?.IsAuthenticated == true)
+            return RedirectToAction("Index", "Home");
+
+        ViewData["ReturnUrl"] = returnUrl;
+        return View(new LoginDto());
+    }
+
+    // ── POST /Account/Login ────────────────────────────────────────────────
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Login(LoginDto dto, string? returnUrl = null)
+    {
+        var validation = await _loginValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+        {
+            foreach (var error in validation.Errors)
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            ViewData["ReturnUrl"] = returnUrl;
+            return View(dto);
+        }
+
+        var loginError = await _accountService.LoginAsync(dto);
+        if (loginError == null) // null means success
+        {
+            if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
+                return Redirect(returnUrl);
+            return RedirectToAction("Index", "Home");
+        }
+
+        ModelState.AddModelError(string.Empty, loginError);
+        ViewData["ReturnUrl"] = returnUrl;
+        return View(dto);
+    }
+
+    // ── POST /Account/Logout ───────────────────────────────────────────────
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> Logout()
+    {
+        await _accountService.LogoutAsync();
+        return RedirectToAction("Index", "Home");
+    }
+
+    // ── GET /Account/AccessDenied ──────────────────────────────────────────
+    [HttpGet]
+    public IActionResult AccessDenied()
+    {
+        return View();
+    }
+}
