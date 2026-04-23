@@ -1,0 +1,72 @@
+@model FixIt.Common.Pagination.PaginatedList<FixIt.BLL.DTOs.IssueListDto>
+
+@{
+    var filter = ViewData["Filter"] as FixIt.BLL.DTOs.IssueFilterDto;
+    var currentUrl = Url.Action(ViewContext.RouteData.Values["action"].ToString());
+    
+    string GetPageUrl(int pageIndex)
+    {
+        var url = $"{currentUrl}?PageIndex={pageIndex}&PageSize={filter?.PageSize}&SortBy={filter?.SortBy}&SortOrder={filter?.SortOrder}";
+        if (filter?.Statuses != null)
+        {
+            foreach (var status in filter.Statuses)
+            {
+                url += $"&Statuses={status}";
+            }
+        }
+        if (filter?.Categories != null)
+        {
+            foreach (var category in filter.Categories)
+            {
+                url += $"&Categories={category}";
+            }
+        }
+        return url;
+    }
+}
+
+<nav aria-label="Page navigation">
+    <ul class="pagination">
+        @if (Model.HasPreviousPage)
+        {
+            <li class="page-item">
+                <a class="page-link" href="@GetPageUrl(Model.PageIndex - 1)">Previous</a>
+            </li>
+        }
+        else
+        {
+            <li class="page-item disabled">
+                <span class="page-link">Previous</span>
+            </li>
+        }
+
+        @for (var i = 1; i <= Model.TotalPages; i++)
+        {
+            if (i == Model.PageIndex)
+            {
+                <li class="page-item active">
+                    <span class="page-link">@i</span>
+                </li>
+            }
+            else
+            {
+                <li class="page-item">
+                    <a class="page-link" href="@GetPageUrl(i)">@i</a>
+                </li>
+            }
+        }
+
+        @if (Model.HasNextPage)
+        {
+            <li class="page-item">
+                <a class="page-link" href="@GetPageUrl(Model.PageIndex + 1)">Next</a>
+            </li>
+        }
+        else
+        {
+            <li class="page-item disabled">
+                <span class="page-link">Next</span>
+            </li>
+        }
+    </ul>
+</nav>
