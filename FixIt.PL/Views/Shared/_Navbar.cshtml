@@ -1,3 +1,8 @@
+@using Microsoft.AspNetCore.Identity
+@using FixIt.DAL.Entities
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+
 <nav class="navbar-fixit" id="mainNavbar">
     <div class="scroll-progress" id="scrollProgress"></div>
     <div class="nav-container">
@@ -15,14 +20,36 @@
             <li><a href="#features">Features</a></li>
             <li><a href="#how-it-works">How It Works</a></li>
             <li><a href="#categories">Categories</a></li>
+            @if (SignInManager.IsSignedIn(User))
+            {
+                <li><a asp-controller="Issue" asp-action="Index">My Issues</a></li>
+            }
         </ul>
 
         <div class="nav-actions" id="navActions">
             <button class="theme-toggle" id="themeToggle" aria-label="Toggle dark mode" title="Toggle dark mode">
                 🌙
             </button>
-            <a class="nav-login" asp-controller="Account" asp-action="Login">Sign In</a>
-            <a class="btn-primary-fixit" asp-controller="Account" asp-action="Register">Get Started →</a>
+
+            @if (SignInManager.IsSignedIn(User))
+            {
+                var currentUser = await UserManager.GetUserAsync(User);
+                var displayName = currentUser?.FullName ?? User.Identity?.Name ?? "User";
+                <span class="nav-user-greeting">
+                    👋 <strong>@displayName</strong>
+                </span>
+                <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                    @Html.AntiForgeryToken()
+                    <button type="submit" class="nav-logout-btn" id="logoutBtn">
+                        Sign Out
+                    </button>
+                </form>
+            }
+            else
+            {
+                <a class="nav-login" asp-controller="Account" asp-action="Login">Sign In</a>
+                <a class="btn-primary-fixit" asp-controller="Account" asp-action="Register">Get Started →</a>
+            }
         </div>
 
     </div>
