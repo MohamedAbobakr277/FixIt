@@ -85,6 +85,7 @@ public class AccountController : Controller
         var loginError = await _accountService.LoginAsync(dto);
         if (loginError == null) // null means success
         {
+            TempData["SuccessMessage"] = "Welcome back!";
             if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
                 return Redirect(returnUrl);
             return RedirectToAction("Index", "Home");
@@ -101,6 +102,7 @@ public class AccountController : Controller
     public async Task<IActionResult> Logout()
     {
         await _accountService.LogoutAsync();
+        TempData["SuccessMessage"] = "You have been successfully logged out.";
         return RedirectToAction("Index", "Home");
     }
 
