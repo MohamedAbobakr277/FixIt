@@ -23,13 +23,6 @@
         <h1 class="auth-title">Welcome back</h1>
         <p class="auth-subtitle">Sign in to your FixIt account</p>
 
-        <!-- Success message passed from Register redirect -->
-        @if (TempData["SuccessMessage"] != null)
-        {
-            <div class="alert-success-auth">
-                <span>✅</span> @TempData["SuccessMessage"]
-            </div>
-        }
 
         <!-- Validation errors (model-level) -->
         @if (!ViewData.ModelState.IsValid)

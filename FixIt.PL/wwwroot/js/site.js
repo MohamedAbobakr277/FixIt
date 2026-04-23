@@ -169,3 +169,14 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+// ── Toast Notifications ──
+document.addEventListener('DOMContentLoaded', () => {
+    const toast = document.getElementById('toast-success');
+    if (toast) {
+        setTimeout(() => {
+            toast.style.animation = 'fadeOutToast 0.5s ease forwards';
+            setTimeout(() => toast.remove(), 500);
+        }, 5000);
+    }
+});
