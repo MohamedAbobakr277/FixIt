@@ -55,6 +55,9 @@ builder.Services.AddValidatorsFromAssemblyContaining<RegisterDtoValidator>();
 // ── Account Service (M1) ──
 builder.Services.AddScoped<IAccountService, AccountService>();
 
+// ── Issue Service (M3) ──
+builder.Services.AddScoped<IIssueService, IssueService>();
+
 var app = builder.Build();
 
 // ── Seed Roles ──
