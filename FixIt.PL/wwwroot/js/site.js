@@ -33,6 +33,15 @@ window.addEventListener('scroll', () => {
         const progress = (scrollTop / scrollHeight) * 100;
         scrollProgress.style.width = progress + '%';
     }
+
+    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
+    if (scrollToTopBtn) {
+        if (window.scrollY > 300) {
+            scrollToTopBtn.classList.add('show');
+        } else {
+            scrollToTopBtn.classList.remove('show');
+        }
+    }
 });
 
 // ── Mobile toggle ──
@@ -58,6 +67,17 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
         }
     });
 });
+
+// ── Scroll to Top Button ──
+const scrollBtn = document.getElementById('scrollToTopBtn');
+if (scrollBtn) {
+    scrollBtn.addEventListener('click', () => {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+}
 
 // ── Scroll reveal & Number Counters ──
 const animateCounter = (el) => {

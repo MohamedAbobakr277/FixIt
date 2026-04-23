@@ -36,7 +36,7 @@
 *,*::before,*::after{box-sizing:border-box}
 html{font-size:16px;scroll-behavior:smooth}
 body{font-family:var(--font-body);color:var(--text-body);background:var(--bg-body);margin:0;padding:0;overflow-x:hidden;-webkit-font-smoothing:antialiased;transition:background .35s ease,color .35s ease;opacity:0;animation:fadeInPage 0.8s cubic-bezier(0.2,0.8,0.2,1) forwards}
-@keyframes fadeInPage { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes fadeInPage { from { opacity: 0; } to { opacity: 1; } }
 a{text-decoration:none;transition:var(--transition);color:var(--primary)}
 a:hover{color:var(--primary-dark)}
 img{max-width:100%;height:auto}
@@ -240,3 +240,41 @@ img{max-width:100%;height:auto}
 .nav-user-greeting strong{color:var(--primary)}
 .nav-logout-btn{background:none;border:1.5px solid var(--border);border-radius:var(--radius-full);padding:7px 16px;font-family:var(--font-body);font-size:13.5px;font-weight:500;color:var(--text-muted);cursor:pointer;transition:var(--transition)}
 .nav-logout-btn:hover{border-color:#dc2626;color:#dc2626;background:rgba(239,68,68,.06)}
+
+/* ═══ SCROLL TO TOP ═══ */
+.scroll-to-top {
+    position: fixed;
+    bottom: 40px;
+    right: 40px;
+    width: 52px;
+    height: 52px;
+    border-radius: var(--radius-full);
+    background: var(--bg-surface);
+    color: var(--primary);
+    border: 1.5px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    box-shadow: var(--card-shadow);
+    z-index: 999;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(20px);
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+.scroll-to-top.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+.scroll-to-top:hover {
+    transform: translateY(-6px) scale(1.05);
+    background: linear-gradient(135deg, var(--primary), var(--primary-light));
+    color: #fff;
+    border-color: transparent;
+    box-shadow: 0 12px 24px rgba(0, 151, 167, 0.35);
+}
+.scroll-to-top:active {
+    transform: translateY(0) scale(0.95);
+}
