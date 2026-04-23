@@ -9,7 +9,7 @@ using FixIt.BLL.Interfaces;
 using FixIt.BLL.Validators;
 using FixIt.Common.Constants;
 using FluentValidation;
-using FixIt.PL.Services;
+using FixIt.BLL.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
