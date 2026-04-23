@@ -9,6 +9,7 @@ public class MappingProfile : Profile
     {
         // Issue mappings (members will extend these)
         CreateMap<Issue, IssueSummaryDto>();
+        CreateMap<Issue, FixIt.BLL.DTOs.IssueListDto>();
         CreateMap<Issue, IssueDetailsDto>()
             .ForMember(dest => dest.CitizenName, opt => opt.MapFrom(src => src.Citizen != null ? src.Citizen.FullName : ""));
 
