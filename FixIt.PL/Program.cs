@@ -5,7 +5,11 @@ using FixIt.DAL.Entities;
 using FixIt.DAL.Repositories;
 using FixIt.DAL.UnitOfWork;
 using FixIt.BLL.Mapping;
+using FixIt.BLL.Interfaces;
+using FixIt.BLL.Validators;
 using FixIt.Common.Constants;
+using FluentValidation;
+using FixIt.PL.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -45,8 +49,11 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // ── AutoMapper ──
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// ── FluentValidation (members will register validators from BLL assembly) ──
-// builder.Services.AddValidatorsFromAssemblyContaining<SomeValidator>();
+// ── FluentValidation ──
+builder.Services.AddValidatorsFromAssemblyContaining<RegisterDtoValidator>();
+
+// ── Account Service (M1) ──
+builder.Services.AddScoped<IAccountService, AccountService>();
 
 var app = builder.Build();
 
