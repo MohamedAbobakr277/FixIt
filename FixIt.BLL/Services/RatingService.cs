@@ -1,4 +1,5 @@
 using FixIt.BLL.DTOs;
+using FixIt.Common.DTOs;
 using FixIt.BLL.Interfaces;
 using FixIt.BLL.Mapping;
 using FixIt.Common.Enums;

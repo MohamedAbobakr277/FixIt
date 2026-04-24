@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using AutoMapper;
 using FixIt.BLL.DTOs;
 using FixIt.BLL.Interfaces;
+using FixIt.Common.DTOs;
 using FixIt.Common.Constants;
 using FixIt.Common.Pagination;
 using FixIt.DAL.Entities;
