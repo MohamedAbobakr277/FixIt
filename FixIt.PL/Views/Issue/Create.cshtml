@@ -1,0 +1,172 @@
+@model FixIt.BLL.DTOs.CreateIssueDto
+@{
+    ViewData["Title"] = "Report Issue";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+}
+
+<div class="auth-page">
+    <div class="auth-glow auth-glow-1"></div>
+    <div class="auth-glow auth-glow-2"></div>
+
+    <div class="auth-card auth-card-wide">
+
+        <!-- Logo -->
+        <a class="auth-logo" asp-controller="Home" asp-action="Index">
+            <img src="~/images/logo-icon.png" alt="FixIt Logo" style="width: 40px; height: 40px; border-radius: var(--radius-md); object-fit: contain;" />
+            <span class="auth-logo-text">FixIt</span>
+        </a>
+
+        <h1 class="auth-title">Report an Issue</h1>
+        <p class="auth-subtitle">Help us improve your community by reporting issues</p>
+
+        <!-- Validation summary (server-side global errors) -->
+        <div asp-validation-summary="All" class="validation-summary-errors" style="display:none"></div>
+        @{
+            var hasSummaryErrors = !ViewData.ModelState.IsValid &&
+                                   ViewData.ModelState.ContainsKey(string.Empty) &&
+                                   ViewData.ModelState[string.Empty]!.Errors.Count > 0;
+        }
+        @if (hasSummaryErrors)
+        {
+            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
+        }
+
+        <form asp-action="Create" method="post" enctype="multipart/form-data" id="createIssueForm" novalidate>
+            @Html.AntiForgeryToken()
+
+            <!-- Issue Details -->
+            <div class="section-label-sm">Issue Details</div>
+
+            <!-- Title -->
+            <div class="form-floating mb-3">
+                <input asp-for="Title"
+                       class="form-control"
+                       id="Title"
+                       placeholder="Brief description of the issue"
+                       autocomplete="off" />
+                <label for="Title">Issue Title *</label>
+                <span asp-validation-for="Title" class="field-error"></span>
+            </div>
+
+            <!-- Description -->
+            <div class="form-floating mb-3">
+                <textarea asp-for="Description"
+                          class="form-control"
+                          id="Description"
+                          placeholder="Detailed description of the issue"
+                          style="height: 120px; resize: vertical;"
+                          autocomplete="off"></textarea>
+                <label for="Description">Description *</label>
+                <span asp-validation-for="Description" class="field-error"></span>
+            </div>
+
+            <!-- Location and Category row -->
+            <div class="auth-row mb-3">
+                <div>
+                    <div class="form-floating">
+                        <input asp-for="Location"
+                               class="form-control"
+                               id="Location"
+                               placeholder="123 Main Street"
+                               autocomplete="street-address" />
+                        <label for="Location">Location *</label>
+                    </div>
+                    <span asp-validation-for="Location" class="field-error"></span>
+                </div>
+
+                <div>
+                    <div class="form-floating">
+                        <select asp-for="Category"
+                                class="form-control"
+                                id="Category"
+                                asp-items="Html.GetEnumSelectList<FixIt.Common.Enums.IssueCategory>()">
+                            <option value="">Select category...</option>
+                        </select>
+                        <label for="Category">Category *</label>
+                    </div>
+                    <span asp-validation-for="Category" class="field-error"></span>
+                </div>
+            </div>
+
+            <!-- Image Upload -->
+            <div class="section-label-sm">
+                Attach Image <span class="optional-badge">Optional</span>
+            </div>
+
+            <div class="mb-3">
+                <div class="file-upload-wrapper">
+                    <input asp-for="Image"
+                           type="file"
+                           class="file-upload-input"
+                           id="Image"
+                           accept=".jpg,.jpeg,.png,.webp" />
+                    <label for="Image" class="file-upload-label">
+                        <span class="file-upload-icon">📷</span>
+                        <span class="file-upload-text">Choose image...</span>
+                    </label>
+                    <small class="text-muted">Allowed formats: JPG, PNG, WebP. Max size: 5MB</small>
+                </div>
+                <span asp-validation-for="Image" class="field-error"></span>
+                
+                <!-- Image preview -->
+                <div id="imagePreview" class="image-preview" style="display: none;">
+                    <img id="previewImg" src="#" alt="Image preview" />
+                    <button type="button" class="image-preview-remove" id="removeImage">×</button>
+                </div>
+            </div>
+
+            <button type="submit" class="auth-submit" id="createIssueSubmitBtn">
+                Submit Issue →
+            </button>
+        </form>
+
+        <p class="auth-footer">
+            <a asp-action="Index">← Back to My Issues</a>
+        </p>
+    </div>
+</div>
+
+@section Scripts {
+    @await Html.PartialAsync("_ValidationScriptsPartial")
+    <script>
+        // Image preview functionality
+        const fileInput = document.getElementById('Image');
+        const fileLabel = document.querySelector('.file-upload-text');
+        const imagePreview = document.getElementById('imagePreview');
+        const previewImg = document.getElementById('previewImg');
+        const removeImageBtn = document.getElementById('removeImage');
+
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                // Update label text
+                fileLabel.textContent = file.name;
+                
+                // Show preview
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    previewImg.src = e.target.result;
+                    imagePreview.style.display = 'block';
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        removeImageBtn.addEventListener('click', function() {
+            fileInput.value = '';
+            fileLabel.textContent = 'Choose image...';
+            imagePreview.style.display = 'none';
+            previewImg.src = '#';
+        });
+
+        // Loading state on submit
+        document.getElementById('createIssueForm').addEventListener('submit', function () {
+            var btn = document.getElementById('createIssueSubmitBtn');
+            btn.disabled = true;
+            btn.textContent = 'Submitting issue…';
+        });
+    </script>
+}
