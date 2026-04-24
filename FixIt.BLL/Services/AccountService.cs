@@ -4,11 +4,10 @@ using FixIt.Common.Constants;
 using FixIt.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 
-namespace FixIt.PL.Services;
+namespace FixIt.BLL.Services;
 
 /// <summary>
-/// Account service implementation lives in PL because SignInManager is an ASP.NET Core
-/// infrastructure type and requires the Web SDK to resolve correctly.
+/// Account service implementation handling authentication and registration.
 /// </summary>
 public class AccountService : IAccountService
 {

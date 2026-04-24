@@ -1,0 +1,620 @@
+@model FixIt.Common.Pagination.PaginatedList<FixIt.BLL.DTOs.IssueListDto>
+@using FixIt.Common.Enums
+@{
+    ViewData["Title"] = "My Issues";
+    var filter = ViewData["Filter"] as FixIt.BLL.DTOs.IssueFilterDto ?? new FixIt.BLL.DTOs.IssueFilterDto();
+}
+
+@section Styles {
+    <style>
+        /* Animations */
+        @@keyframes slideUpFade {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .issues-dashboard {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+            padding: 3rem 5%;
+            margin-top: 60px;
+            max-width: 1200px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        /* Top Filter Bar */
+        .premium-filter-bar {
+            background: var(--bg-surface);
+            border: 1px solid rgba(0, 151, 167, 0.15);
+            border-radius: var(--radius-lg);
+            padding: 16px 24px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05), inset 0 0 0 1px rgba(255,255,255,0.05);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+            position: sticky;
+            top: 80px;
+            z-index: 100;
+        }
+
+        .filter-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        /* Premium Animated Dropdowns (Two-Way) */
+        .dropdown {
+            position: relative;
+            perspective: 1000px;
+        }
+        .dropdown-chevron {
+            margin-left: 4px;
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            transition-delay: 0.3s;
+            opacity: 0.6;
+        }
+        .dropdown:hover .dropdown-chevron {
+            transform: rotate(180deg);
+            opacity: 1;
+            transition-delay: 0s;
+        }
+
+        .btn-glass-dropdown {
+            background: rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13.5px;
+            font-weight: 600;
+            color: var(--text-heading);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            transition: all 0.2s;
+        }
+        .dropdown:hover .btn-glass-dropdown, .btn-glass-dropdown[aria-expanded="true"] {
+            background: var(--bg-body);
+            border-color: var(--primary);
+            color: var(--primary);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+        }
+
+        .glass-dropdown-menu {
+            display: block !important;
+            visibility: hidden;
+            opacity: 0;
+            transform-origin: top center;
+            transform: translateY(12px) rotateX(-8deg) scale(0.96);
+            transition: visibility 0.5s, opacity 0.4s ease, transform 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+            transition-delay: 0.3s;
+            pointer-events: none;
+            background: var(--bg-surface);
+            backdrop-filter: blur(20px);
+            border-radius: var(--radius-lg);
+            min-width: 220px;
+            margin-top: 4px;
+            position: absolute;
+            top: 100%;
+            left: 0;
+            z-index: 1000;
+        }
+        .dropdown:hover .glass-dropdown-menu {
+            visibility: visible;
+            opacity: 1;
+            transform: translateY(0) rotateX(0deg) scale(1);
+            pointer-events: auto;
+            transition-delay: 0s;
+        }
+        
+        /* Bridge the gap so mouse doesn't fall off during transit */
+        .glass-dropdown-menu::before {
+            content: '';
+            position: absolute;
+            top: -15px;
+            left: 0;
+            right: 0;
+            height: 15px;
+        }
+
+        .glass-dropdown-menu .dropdown-header {
+            color: var(--text-muted);
+            font-size: 11.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+            padding-bottom: 4px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dropdown-checkbox {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-body);
+            margin-bottom: 2px;
+        }
+        .dropdown-checkbox:hover {
+            background: rgba(0, 151, 167, 0.05);
+            color: var(--primary);
+        }
+        .dropdown-checkbox input {
+            position: absolute;
+            opacity: 0;
+            cursor: pointer;
+        }
+        .custom-box {
+            width: 18px;
+            height: 18px;
+            border: 1.5px solid var(--border);
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        .dropdown-checkbox input:checked ~ .custom-box {
+            background: var(--primary);
+            border-color: var(--primary);
+        }
+        .dropdown-checkbox input:checked ~ .custom-box::after {
+            content: "";
+            width: 4px;
+            height: 9px;
+            border: solid white;
+            border-width: 0 2px 2px 0;
+            transform: rotate(45deg);
+            margin-bottom: 2px;
+        }
+
+        .filter-separator {
+            width: 1px;
+            height: 24px;
+            background: var(--border);
+            margin: 0 8px;
+        }
+
+        .btn-clear-inline {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 13px;
+            font-weight: 600;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 20px;
+            transition: all 0.2s;
+        }
+        .btn-clear-inline:hover {
+            background: rgba(0,0,0,0.05);
+            color: var(--text-heading);
+        }
+
+        /* Premium Radio Rows for Sort */
+        .sort-radio-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 10px 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+        .sort-radio-row:hover {
+            background: rgba(0, 151, 167, 0.05);
+        }
+        .sort-radio-row input {
+            display: none;
+        }
+        .radio-title {
+            font-size: 13.5px;
+            font-weight: 500;
+            color: var(--text-heading);
+        }
+        .radio-circle {
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            border: 2px solid var(--border);
+            position: relative;
+            transition: all 0.2s;
+        }
+        .sort-radio-row input:checked ~ .radio-circle {
+            border-color: var(--primary);
+        }
+        .sort-radio-row input:checked ~ .radio-circle::after {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 8px;
+            height: 8px;
+            background: var(--primary);
+            border-radius: 50%;
+            box-shadow: 0 0 8px var(--primary-glow);
+        }
+
+        .btn-apply-filter {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            border: none;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 13.5px;
+            font-weight: 600;
+            box-shadow: 0 4px 12px rgba(0, 151, 167, 0.25);
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-apply-filter:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 15px rgba(0, 151, 167, 0.4);
+            color: white;
+        }
+
+        /* Issues List */
+        .issues-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            animation: slideUpFade 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .issues-header h1 {
+            font-size: 32px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--text-heading), var(--primary));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -0.02em;
+        }
+        .issue-card {
+            background: var(--bg-surface);
+            border: 1px solid rgba(0,0,0,0.05);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            opacity: 0;
+            animation: slideUpFade 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        .issue-card:hover {
+            transform: translateY(-4px) scale(1.01);
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08);
+            border-color: rgba(0, 151, 167, 0.3);
+        }
+        
+        /* Staggered animation delays for up to 10 cards */
+        .issue-card:nth-child(2) { animation-delay: 0.1s; }
+        .issue-card:nth-child(3) { animation-delay: 0.15s; }
+        .issue-card:nth-child(4) { animation-delay: 0.2s; }
+        .issue-card:nth-child(5) { animation-delay: 0.25s; }
+        .issue-card:nth-child(6) { animation-delay: 0.3s; }
+        .issue-card:nth-child(7) { animation-delay: 0.35s; }
+
+        .issue-info h4 {
+            font-size: 18px;
+            font-weight: 700;
+            color: var(--text-heading);
+            margin-bottom: 8px;
+            letter-spacing: -0.01em;
+        }
+        .issue-meta {
+            display: flex;
+            gap: 16px;
+            font-size: 13.5px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        .issue-meta span {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .issue-meta svg {
+            color: var(--primary);
+            opacity: 0.8;
+        }
+        
+        .badge {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        .badge-status-new { background: rgba(2, 132, 199, 0.1); color: #0284c7; border: 1px solid rgba(2, 132, 199, 0.2); }
+        .badge-status-new::before { background: #0284c7; box-shadow: 0 0 8px #0284c7; }
+        
+        .badge-status-inprogress { background: rgba(202, 138, 4, 0.1); color: #b45309; border: 1px solid rgba(202, 138, 4, 0.2); }
+        .badge-status-inprogress::before { background: #ca8a04; box-shadow: 0 0 8px #ca8a04; }
+        
+        .badge-status-resolved { background: rgba(22, 101, 52, 0.1); color: #15803d; border: 1px solid rgba(22, 101, 52, 0.2); }
+        .badge-status-resolved::before { background: #166534; box-shadow: 0 0 8px #166534; }
+        
+        .badge-status-closed { background: rgba(71, 85, 105, 0.1); color: #475569; border: 1px solid rgba(71, 85, 105, 0.2); }
+        .badge-status-closed::before { background: #475569; }
+
+        .btn-details {
+            padding: 8px 20px;
+            background: transparent;
+            color: var(--primary);
+            border: 1.5px solid var(--primary);
+            border-radius: 20px;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 13.5px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .btn-details:hover {
+            background: var(--primary);
+            color: white;
+            transform: translateX(2px);
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .pagination-container {
+            margin-top: 40px;
+            display: flex;
+            justify-content: center;
+            animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        @@media (max-width: 768px) {
+            .filter-controls {
+                flex-direction: column;
+                align-items: stretch;
+            }
+            .filter-separator {
+                display: none;
+            }
+        }
+    </style>
+}
+
+<div class="issues-dashboard">
+    <div class="issues-header">
+        <h1>My Reported Issues</h1>
+        <a asp-action="Create" class="btn-primary-fixit" style="padding: 10px 24px; border-radius: 20px; font-weight: 600; text-decoration: none; display: flex; align-items: center; gap: 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>
+            Report Issue
+        </a>
+    </div>
+
+    <!-- Filter Bar Top -->
+    <div class="premium-filter-bar">
+        <form method="get" asp-action="Index" id="filterForm">
+            <div class="filter-controls">
+                
+                <!-- Status Filter Dropdown -->
+                <div class="dropdown">
+                    <button class="btn-glass-dropdown" type="button">
+                        Status @(filter.Statuses?.Count > 0 ? $"({filter.Statuses.Count})" : "")
+                        <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="dropdown-menu p-3 shadow-lg border-0 glass-dropdown-menu mt-2">
+                        <h6 class="dropdown-header px-0 fw-bold mb-2">Select Statuses</h6>
+                        @foreach (var val in Enum.GetValues(typeof(IssueStatus)).Cast<IssueStatus>())
+                        {
+                            var isChecked = filter.Statuses?.Contains(val) == true;
+                            <label class="dropdown-checkbox">
+                                <input type="checkbox" name="Statuses" value="@val" @(isChecked ? "checked" : "") />
+                                <span class="custom-box"></span>
+                                @val
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Category Filter Dropdown -->
+                <div class="dropdown">
+                    <button class="btn-glass-dropdown" type="button">
+                        Category @(filter.Categories?.Count > 0 ? $"({filter.Categories.Count})" : "")
+                        <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="dropdown-menu p-3 shadow-lg border-0 glass-dropdown-menu mt-2">
+                        <h6 class="dropdown-header px-0 fw-bold mb-2">Select Categories</h6>
+                        @foreach (var val in Enum.GetValues(typeof(IssueCategory)).Cast<IssueCategory>())
+                        {
+                            var isChecked = filter.Categories?.Contains(val) == true;
+                            <label class="dropdown-checkbox">
+                                <input type="checkbox" name="Categories" value="@val" @(isChecked ? "checked" : "") />
+                                <span class="custom-box"></span>
+                                @val
+                            </label>
+                        }
+                    </div>
+                </div>
+
+                <!-- Separator -->
+                <div class="filter-separator"></div>
+
+                <!-- Sort Dropdown -->
+                <div class="dropdown">
+                    <button class="btn-glass-dropdown" type="button">
+                        Sort: @(filter.SortBy == "status" ? "Status" : "Date") (@(filter.SortOrder == "asc" ? "Asc" : "Desc"))
+                        <svg class="dropdown-chevron" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="6 9 12 15 18 9"></polyline></svg>
+                    </button>
+                    <div class="dropdown-menu p-3 shadow-lg border-0 glass-dropdown-menu mt-2" style="min-width: 200px;">
+                        
+                        <h6 class="dropdown-header px-0 fw-bold mb-2">Sort By</h6>
+                        <label class="sort-radio-row">
+                            <input type="radio" name="SortBy" value="date" @(filter.SortBy == "date" ? "checked" : "") />
+                            <span class="radio-title">Date</span>
+                            <span class="radio-circle"></span>
+                        </label>
+                        <label class="sort-radio-row">
+                            <input type="radio" name="SortBy" value="status" @(filter.SortBy == "status" ? "checked" : "") />
+                            <span class="radio-title">Status</span>
+                            <span class="radio-circle"></span>
+                        </label>
+
+                        <div class="dropdown-divider my-2"></div>
+                        
+                        <h6 class="dropdown-header px-0 fw-bold mb-2">Order</h6>
+                        <label class="sort-radio-row">
+                            <input type="radio" name="SortOrder" value="desc" @(filter.SortOrder == "desc" ? "checked" : "") />
+                            <span class="radio-title" id="lblDesc">Descending</span>
+                            <span class="radio-circle"></span>
+                        </label>
+                        <label class="sort-radio-row">
+                            <input type="radio" name="SortOrder" value="asc" @(filter.SortOrder == "asc" ? "checked" : "") />
+                            <span class="radio-title" id="lblAsc">Ascending</span>
+                            <span class="radio-circle"></span>
+                        </label>
+
+                    </div>
+                </div>
+
+                <div class="ms-auto d-flex align-items-center gap-2">
+                    @if (filter.Statuses?.Any() == true || filter.Categories?.Any() == true || filter.SortBy != "date" || filter.SortOrder != "desc")
+                    {
+                        <a asp-action="Index" class="btn-clear-inline">Clear</a>
+                    }
+                    <button type="submit" class="btn-apply-filter" id="applyFiltersBtn" style="display: none; animation: slideUpFade 0.3s forwards;">
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                        Apply Filters
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+
+    <!-- Issues List -->
+    <div class="issues-main">
+
+        @if (!Model.Items.Any())
+        {
+            <div class="issue-card" style="justify-content: center; padding: 40px; color: var(--text-muted);">
+                <div style="text-align: center;">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin-bottom: 16px; opacity: 0.5;">
+                        <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                    </svg>
+                    <h4>No issues found</h4>
+                    <p>You haven't reported any issues matching these criteria.</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var issue in Model.Items)
+            {
+                <div class="issue-card">
+                    <div class="issue-info">
+                        <h4>@issue.Title</h4>
+                        <div class="issue-meta">
+                            <span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                                </svg>
+                                @issue.SubmittedAt.ToString("MMM dd, yyyy")
+                            </span>
+                            <span>
+                                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path>
+                                </svg>
+                                @issue.Category
+                            </span>
+                        </div>
+                    </div>
+                    <div style="display: flex; align-items: center; gap: 20px;">
+                        <span class="badge badge-status-@issue.Status.ToString().ToLower()">@issue.Status</span>
+                        @* Link to Details view (M4) *@
+                        <a asp-action="Details" asp-route-id="@issue.IssueId" class="btn-details">
+                            View Details
+                            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="5" y1="12" x2="19" y2="12"></line><polyline points="12 5 19 12 12 19"></polyline></svg>
+                        </a>
+                    </div>
+                </div>
+            }
+
+            <div class="pagination-container">
+                @await Html.PartialAsync("_Pagination", Model)
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const filterForm = document.getElementById('filterForm');
+            if (filterForm) {
+                const applyBtn = document.getElementById('applyFiltersBtn');
+                const inputs = filterForm.querySelectorAll('input');
+
+                // Show apply button on any change
+                inputs.forEach(input => {
+                    input.addEventListener('change', () => {
+                        applyBtn.style.display = 'flex';
+                    });
+                });
+
+                // Dynamic Order Labels based on SortBy selection
+                const sortByRadios = filterForm.querySelectorAll('input[name="SortBy"]');
+                const lblDesc = document.getElementById('lblDesc');
+                const lblAsc = document.getElementById('lblAsc');
+
+                function updateOrderLabels() {
+                    const sortBy = filterForm.querySelector('input[name="SortBy"]:checked')?.value || 'date';
+                    
+                    // Add smooth fade transition for text change
+                    lblDesc.style.opacity = 0;
+                    lblAsc.style.opacity = 0;
+                    
+                    setTimeout(() => {
+                        if (sortBy === 'date') {
+                            lblDesc.textContent = 'Newest First';
+                            lblAsc.textContent = 'Oldest First';
+                        } else {
+                            lblDesc.textContent = 'Closed to New';
+                            lblAsc.textContent = 'New to Closed';
+                        }
+                        lblDesc.style.opacity = 1;
+                        lblAsc.style.opacity = 1;
+                    }, 150);
+                }
+
+                sortByRadios.forEach(radio => radio.addEventListener('change', updateOrderLabels));
+                
+                // Initialize labels on page load
+                // Ensure CSS transitions exist on labels
+                lblDesc.style.transition = "opacity 0.15s ease-in-out";
+                lblAsc.style.transition = "opacity 0.15s ease-in-out";
+                updateOrderLabels();
+            }
+        });
+    </script>
+}
