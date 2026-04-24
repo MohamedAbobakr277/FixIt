@@ -2,7 +2,7 @@
 
 @{
     var filter = ViewData["Filter"] as FixIt.BLL.DTOs.IssueFilterDto;
-    var currentUrl = Url.Action(ViewContext.RouteData.Values["action"].ToString());
+    var currentUrl = Url.Action(ViewContext.RouteData.Values["action"]?.ToString());
     
     string GetPageUrl(int pageIndex)
     {

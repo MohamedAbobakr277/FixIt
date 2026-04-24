@@ -1,5 +1,6 @@
 using System.Threading.Tasks;
 using FixIt.BLL.DTOs;
+using FixIt.Common.DTOs;
 using FixIt.Common.Pagination;
 
 namespace FixIt.BLL.Interfaces;
