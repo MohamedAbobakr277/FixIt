@@ -6,6 +6,8 @@ using FixIt.DAL.Repositories;
 using FixIt.DAL.UnitOfWork;
 using FixIt.BLL.Mapping;
 using FixIt.BLL.Services;
+using FixIt.BLL.Interfaces;
+using FixIt.BLL.Validators;
 using FixIt.Common.Constants;
 using FluentValidation;
 
@@ -45,7 +47,7 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // ── AutoMapper ──
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
 // ── Services ──
 builder.Services.AddScoped<IAccountService, AccountService>();
