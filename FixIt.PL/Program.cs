@@ -5,6 +5,7 @@ using FixIt.DAL.Entities;
 using FixIt.DAL.Repositories;
 using FixIt.DAL.UnitOfWork;
 using FixIt.BLL.Mapping;
+using FixIt.BLL.Services;
 using FixIt.Common.Constants;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -44,6 +45,9 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // ── AutoMapper ──
 builder.Services.AddAutoMapper(typeof(MappingProfile));
+
+// ── Services ──
+builder.Services.AddScoped<IIssueDetailsService, IssueDetailsService>();
 
 // ── FluentValidation (members will register validators from BLL assembly) ──
 // builder.Services.AddValidatorsFromAssemblyContaining<SomeValidator>();
