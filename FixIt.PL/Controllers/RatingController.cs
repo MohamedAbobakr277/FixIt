@@ -20,9 +20,22 @@ public class RatingController : Controller
     }
 
     [HttpGet]
-    public IActionResult Create(int issueId)
+    public async Task<IActionResult> Create(int issueId)
     {
-        var model = new CreateRatingDto { IssueId = issueId, Stars = 5 }; // Default to 5 stars
+        var citizenId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(citizenId))
+        {
+            return Unauthorized();
+        }
+
+        var (canRate, errorMessage) = await _ratingService.CanRateIssueAsync(issueId, citizenId);
+        if (!canRate)
+        {
+            TempData["ErrorMessage"] = errorMessage;
+            return RedirectToAction("Index", "Home"); // Fallback to Home since Issue/Index might not exist
+        }
+
+        var model = new CreateRatingDto { IssueId = issueId, Stars = 5 };
         return View(model);
     }
 
