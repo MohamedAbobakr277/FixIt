@@ -19,9 +19,18 @@
                 maintenance issues from any location with full transparency.
             </p>
             <div class="hero-buttons">
-                <a class="btn-primary-fixit" asp-controller="Account" asp-action="Register">
-                    Report an Issue →
-                </a>
+                @if (User.Identity?.IsAuthenticated == true)
+                {
+                    <a class="btn-primary-fixit" asp-controller="Issue" asp-action="Index">
+                        Report an Issue →
+                    </a>
+                }
+                else
+                {
+                    <a class="btn-primary-fixit" asp-controller="Account" asp-action="Register">
+                        Report an Issue →
+                    </a>
+                }
                 <a class="btn-outline-fixit" href="#how-it-works">
                     See How It Works
                 </a>
@@ -206,11 +215,29 @@
 <section class="cta-section">
     <div class="section-container">
         <div class="cta-content">
-            <h2 class="cta-title">Ready to Report an Issue?</h2>
-            <p class="cta-desc">Join the community and help improve infrastructure maintenance in your area.</p>
-            <a class="btn-primary-fixit" asp-controller="Account" asp-action="Register" style="font-size:16px;padding:16px 36px;">
-                Create Free Account →
-            </a>
+            @if (User.Identity?.IsAuthenticated == true)
+            {
+                <h2 class="cta-title">Ready to Report an Issue?</h2>
+                <p class="cta-desc">Submit your maintenance request now and our team will get it fixed.</p>
+                <a class="btn-primary-fixit" asp-controller="Issue" asp-action="Index" style="font-size:16px;padding:16px 36px;">
+                    Report an Issue →
+                </a>
+            }
+            else
+            {
+                <h2 class="cta-title">Ready to Report an Issue?</h2>
+                <p class="cta-desc">Join the community and help improve infrastructure maintenance in your area.</p>
+                <a class="btn-primary-fixit" asp-controller="Account" asp-action="Register" style="font-size:16px;padding:16px 36px;">
+                    Create Free Account →
+                </a>
+            }
         </div>
     </div>
 </section>
+
+<!-- ══ SCROLL TO TOP ══ -->
+<button id="scrollToTopBtn" class="scroll-to-top" aria-label="Scroll to top" title="Scroll to top">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 19V5M5 12l7-7 7 7"/>
+    </svg>
+</button>

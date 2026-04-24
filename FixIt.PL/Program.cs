@@ -5,11 +5,11 @@ using FixIt.DAL.Entities;
 using FixIt.DAL.Repositories;
 using FixIt.DAL.UnitOfWork;
 using FixIt.BLL.Mapping;
+using FixIt.BLL.Services;
 using FixIt.BLL.Interfaces;
 using FixIt.BLL.Validators;
 using FixIt.Common.Constants;
 using FluentValidation;
-using FixIt.PL.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -47,13 +47,17 @@ builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepositor
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 
 // ── AutoMapper ──
-builder.Services.AddAutoMapper(typeof(MappingProfile));
+builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
+
+// ── Services ──
+builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IIssueService, IssueService>();
+builder.Services.AddScoped<IIssueDetailsService, IssueDetailsService>();
+builder.Services.AddScoped<IRatingService, RatingService>();
 
 // ── FluentValidation ──
-builder.Services.AddValidatorsFromAssemblyContaining<RegisterDtoValidator>();
-
-// ── Account Service (M1) ──
-builder.Services.AddScoped<IAccountService, AccountService>();
+// One registration covers all validators in the same assembly
+builder.Services.AddValidatorsFromAssemblyContaining<CreateRatingDtoValidator>();
 
 var app = builder.Build();
 
