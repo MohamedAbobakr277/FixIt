@@ -12,6 +12,6 @@ public class Rating
     public string CitizenId { get; set; } = string.Empty;
 
     // Navigation properties
-    public Issue? Issue { get; set; }
-    public Citizen? Citizen { get; set; }
+    public Issue Issue { get; set; } = null!;
+    public Citizen Citizen { get; set; } = null!;
 }
