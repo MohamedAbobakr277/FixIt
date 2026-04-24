@@ -1,0 +1,15 @@
+@model int
+
+<div class="d-flex align-items-center" title="@Model out of 5 stars">
+    @for (int i = 1; i <= 5; i++)
+    {
+        if (i <= Model)
+        {
+            <i class="bi bi-star-fill text-warning me-1"></i>
+        }
+        else
+        {
+            <i class="bi bi-star text-muted me-1"></i>
+        }
+    }
+</div>
