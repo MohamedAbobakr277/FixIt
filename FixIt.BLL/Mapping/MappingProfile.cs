@@ -1,5 +1,9 @@
 using AutoMapper;
+<<<<<<< HEAD
 using FixIt.BLL.DTOs;
+=======
+using FixIt.Common.DTOs;
+>>>>>>> feature/issue-details
 using FixIt.DAL.Entities;
 
 namespace FixIt.BLL.Mapping;
@@ -8,7 +12,7 @@ public class MappingProfile : Profile
 {
     public MappingProfile()
     {
-        // Issue mappings (members will extend these)
+        // Issue mappings
         CreateMap<Issue, IssueSummaryDto>();
         CreateMap<Issue, IssueListDto>();
         CreateMap<Issue, IssueDetailsDto>()
@@ -41,6 +45,7 @@ public class MappingProfile : Profile
         CreateMap<MaintenanceReport, ReportDto>();
     }
 }
+<<<<<<< HEAD
 
 // ── Shared DTOs (members will add more in their own files) ──
 
@@ -53,3 +58,5 @@ public class IssueSummaryDto
     public string Status { get; set; } = string.Empty;
     public DateTime SubmittedAt { get; set; }
 }
+=======
+>>>>>>> feature/issue-details

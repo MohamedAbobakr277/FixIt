@@ -1,13 +1,13 @@
-using System.Threading.Tasks;
-using FixIt.BLL.DTOs;
+using Microsoft.AspNetCore.Mvc;
+using FixIt.BLL.Services;
 using FixIt.BLL.Interfaces;
-using FixIt.BLL.Validators;
+using FixIt.BLL.DTOs;
+using FixIt.Common.DTOs;
 using FixIt.Common.Constants;
 using FixIt.DAL.Entities;
-using FluentValidation;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Authorization;
+using FluentValidation;
 
 namespace FixIt.PL.Controllers;
 
@@ -15,12 +15,14 @@ namespace FixIt.PL.Controllers;
 public class IssueController : Controller
 {
     private readonly IIssueService _issueService;
+    private readonly IIssueDetailsService _issueDetailsService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IValidator<CreateIssueDto> _createIssueValidator;
 
-    public IssueController(IIssueService issueService, UserManager<ApplicationUser> userManager, IValidator<CreateIssueDto> createIssueValidator)
+    public IssueController(IIssueService issueService, IIssueDetailsService issueDetailsService, UserManager<ApplicationUser> userManager, IValidator<CreateIssueDto> createIssueValidator)
     {
         _issueService = issueService;
+        _issueDetailsService = issueDetailsService;
         _userManager = userManager;
         _createIssueValidator = createIssueValidator;
     }
@@ -71,14 +73,14 @@ public class IssueController : Controller
         }
     }
 
-    [HttpGet]
     public async Task<IActionResult> Details(int id)
     {
-        var user = await _userManager.GetUserAsync(User);
-        if (user == null) return Challenge();
-
-        var issue = await _issueService.GetIssueByIdAsync(id, user.Id);
-        if (issue == null) return NotFound();
+        var issue = await _issueDetailsService.GetIssueDetailsAsync(id);
+        
+        if (issue == null)
+        {
+            return NotFound();
+        }
 
         return View(issue);
     }

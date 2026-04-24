@@ -5,9 +5,7 @@ using FixIt.DAL.Entities;
 using FixIt.DAL.Repositories;
 using FixIt.DAL.UnitOfWork;
 using FixIt.BLL.Mapping;
-using FixIt.BLL.Interfaces;
 using FixIt.BLL.Services;
-using FixIt.BLL.Validators;
 using FixIt.Common.Constants;
 using FluentValidation;
 
@@ -49,9 +47,10 @@ builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 // ── AutoMapper ──
 builder.Services.AddAutoMapper(typeof(MappingProfile));
 
-// ── BLL Services ──
+// ── Services ──
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
+builder.Services.AddScoped<IIssueDetailsService, IssueDetailsService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
 
 // ── FluentValidation ──
