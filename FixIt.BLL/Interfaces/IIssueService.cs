@@ -9,5 +9,5 @@ public interface IIssueService
 {
     Task<PaginatedList<IssueListDto>> GetCitizenIssuesAsync(string citizenId, IssueFilterDto filter);
     Task<IssueDetailsDto?> GetIssueByIdAsync(int issueId, string citizenId);
-    Task<int> CreateAsync(CreateIssueDto dto, string citizenId);
+    Task<int> CreateAsync(FixIt.BLL.DTOs.CreateIssueDto dto, string citizenId);
 }

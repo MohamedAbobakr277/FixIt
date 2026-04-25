@@ -1,4 +1,4 @@
-using FixIt.BLL.DTOs;
+using FixIt.Common.DTOs;
 using FixIt.BLL.Interfaces;
 using FixIt.Common.Constants;
 using FixIt.DAL.Entities;

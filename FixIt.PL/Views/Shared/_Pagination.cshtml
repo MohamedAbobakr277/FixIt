@@ -1,7 +1,7 @@
-@model FixIt.Common.Pagination.PaginatedList<FixIt.BLL.DTOs.IssueListDto>
+@model FixIt.Common.Pagination.PaginatedList<FixIt.Common.DTOs.IssueListDto>
 
 @{
-    var filter = ViewData["Filter"] as FixIt.BLL.DTOs.IssueFilterDto;
+    var filter = ViewData["Filter"] as FixIt.Common.DTOs.IssueFilterDto;
     var currentUrl = Url.Action(ViewContext.RouteData.Values["action"]?.ToString());
     
     string GetPageUrl(int pageIndex)

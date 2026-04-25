@@ -1,5 +1,5 @@
 using FluentValidation;
-using FixIt.BLL.DTOs;
+using FixIt.Common.DTOs;
 
 namespace FixIt.BLL.Validators;
 

@@ -4,8 +4,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using AutoMapper;
 using FixIt.BLL.DTOs;
-using FixIt.BLL.Interfaces;
 using FixIt.Common.DTOs;
+using FixIt.BLL.Interfaces;
 using FixIt.Common.Constants;
 using FixIt.Common.Pagination;
 using FixIt.DAL.Entities;
@@ -70,7 +70,7 @@ public class IssueService : IIssueService
         return issue == null ? null : _mapper.Map<IssueDetailsDto>(issue);
     }
 
-    public async Task<int> CreateAsync(CreateIssueDto dto, string citizenId)
+    public async Task<int> CreateAsync(FixIt.BLL.DTOs.CreateIssueDto dto, string citizenId)
     {
         var issue = _mapper.Map<Issue>(dto);
         issue.CitizenId = citizenId;

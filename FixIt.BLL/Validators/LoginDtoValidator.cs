@@ -1,4 +1,4 @@
-using FixIt.BLL.DTOs;
+using FixIt.Common.DTOs;
 using FluentValidation;
 
 namespace FixIt.BLL.Validators;

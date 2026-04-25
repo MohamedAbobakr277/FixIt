@@ -1,6 +1,6 @@
 using System.ComponentModel.DataAnnotations;
 
-namespace FixIt.BLL.DTOs;
+namespace FixIt.Common.DTOs;
 
 public class CreateRatingDto
 {
