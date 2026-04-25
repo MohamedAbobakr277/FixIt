@@ -17,9 +17,9 @@ public class IssueController : Controller
     private readonly IIssueService _issueService;
     private readonly IIssueDetailsService _issueDetailsService;
     private readonly UserManager<ApplicationUser> _userManager;
-    private readonly IValidator<CreateIssueDto> _createIssueValidator;
+    private readonly IValidator<FixIt.BLL.DTOs.CreateIssueDto> _createIssueValidator;
 
-    public IssueController(IIssueService issueService, IIssueDetailsService issueDetailsService, UserManager<ApplicationUser> userManager, IValidator<CreateIssueDto> createIssueValidator)
+    public IssueController(IIssueService issueService, IIssueDetailsService issueDetailsService, UserManager<ApplicationUser> userManager, IValidator<FixIt.BLL.DTOs.CreateIssueDto> createIssueValidator)
     {
         _issueService = issueService;
         _issueDetailsService = issueDetailsService;
@@ -46,7 +46,7 @@ public class IssueController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Create(CreateIssueDto dto)
+    public async Task<IActionResult> Create(FixIt.BLL.DTOs.CreateIssueDto dto)
     {
         var validationResult = await _createIssueValidator.ValidateAsync(dto);
         if (!validationResult.IsValid)

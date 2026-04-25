@@ -1,8 +1,8 @@
-@model FixIt.Common.Pagination.PaginatedList<FixIt.BLL.DTOs.IssueListDto>
+@model FixIt.Common.Pagination.PaginatedList<FixIt.Common.DTOs.IssueListDto>
 @using FixIt.Common.Enums
 @{
     ViewData["Title"] = "My Issues";
-    var filter = ViewData["Filter"] as FixIt.BLL.DTOs.IssueFilterDto ?? new FixIt.BLL.DTOs.IssueFilterDto();
+    var filter = ViewData["Filter"] as FixIt.Common.DTOs.IssueFilterDto ?? new FixIt.Common.DTOs.IssueFilterDto();
 }
 
 @section Styles {

@@ -1,4 +1,4 @@
-using FixIt.BLL.DTOs;
+using FixIt.Common.DTOs;
 using FixIt.BLL.Interfaces;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;

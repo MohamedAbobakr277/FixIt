@@ -18,7 +18,7 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Report, opt => opt.MapFrom(src => src.MaintenanceReport));
 
         // CreateIssueDto to Issue mapping
-        CreateMap<CreateIssueDto, Issue>()
+        CreateMap<FixIt.BLL.DTOs.CreateIssueDto, Issue>()
             .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())
             .ForMember(dest => dest.IssueId, opt => opt.Ignore())
             .ForMember(dest => dest.Status, opt => opt.Ignore())
