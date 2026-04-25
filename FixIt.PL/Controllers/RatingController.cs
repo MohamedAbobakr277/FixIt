@@ -1,5 +1,5 @@
 using System.Security.Claims;
-using FixIt.BLL.DTOs;
+using FixIt.Common.DTOs;
 using FixIt.BLL.Interfaces;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;

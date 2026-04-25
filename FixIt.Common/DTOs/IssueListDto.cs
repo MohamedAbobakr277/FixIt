@@ -1,7 +1,7 @@
 using System;
 using FixIt.Common.Enums;
 
-namespace FixIt.BLL.DTOs;
+namespace FixIt.Common.DTOs;
 
 public class IssueListDto
 {
