@@ -2,6 +2,9 @@ using FixIt.Common.DTOs;
 using FixIt.BLL.Interfaces;
 using FluentValidation;
 using Microsoft.AspNetCore.Mvc;
+using System.Security.Claims;
+using Microsoft.AspNetCore.Identity;
+using FixIt.DAL.Entities;
 
 namespace FixIt.PL.Controllers;
 
@@ -10,15 +13,21 @@ public class AccountController : Controller
     private readonly IAccountService _accountService;
     private readonly IValidator<RegisterDto> _registerValidator;
     private readonly IValidator<LoginDto> _loginValidator;
+    private readonly SignInManager<ApplicationUser> _signInManager;
+    private readonly UserManager<ApplicationUser> _userManager;
 
     public AccountController(
         IAccountService accountService,
         IValidator<RegisterDto> registerValidator,
-        IValidator<LoginDto> loginValidator)
+        IValidator<LoginDto> loginValidator,
+        SignInManager<ApplicationUser> signInManager,
+        UserManager<ApplicationUser> userManager)
     {
         _accountService = accountService;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
+        _signInManager = signInManager;
+        _userManager = userManager;
     }
 
     // ── GET /Account/Register ──────────────────────────────────────────────
@@ -111,5 +120,75 @@ public class AccountController : Controller
     public IActionResult AccessDenied()
     {
         return View();
+    }
+
+    // ── POST /Account/ExternalLogin ────────────────────────────────────────
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public IActionResult ExternalLogin(string provider, string? returnUrl = null)
+    {
+        var redirectUrl = Url.Action(nameof(ExternalLoginCallback), "Account", new { returnUrl });
+        var properties = _signInManager.ConfigureExternalAuthenticationProperties(provider, redirectUrl);
+        return Challenge(properties, provider);
+    }
+
+    // ── GET /Account/ExternalLoginCallback ─────────────────────────────────
+    [HttpGet]
+    public async Task<IActionResult> ExternalLoginCallback(string? returnUrl = null, string? remoteError = null)
+    {
+        returnUrl ??= Url.Content("~/");
+
+        if (remoteError != null)
+        {
+            TempData["ErrorMessage"] = $"Error from external provider: {remoteError}";
+            return RedirectToAction(nameof(Login), new { returnUrl });
+        }
+
+        var info = await _signInManager.GetExternalLoginInfoAsync();
+        if (info == null)
+        {
+            TempData["ErrorMessage"] = "Error loading external login information.";
+            return RedirectToAction(nameof(Login), new { returnUrl });
+        }
+
+        var signInResult = await _signInManager.ExternalLoginSignInAsync(info.LoginProvider, info.ProviderKey, isPersistent: false, bypassTwoFactor: true);
+        if (signInResult.Succeeded)
+        {
+            TempData["SuccessMessage"] = "Welcome back!";
+            return LocalRedirect(returnUrl);
+        }
+
+        if (info.Principal.HasClaim(c => c.Type == ClaimTypes.Email))
+        {
+            var email = info.Principal.FindFirstValue(ClaimTypes.Email);
+            var user = await _userManager.FindByEmailAsync(email!);
+            
+            if (user == null)
+            {
+                user = new ApplicationUser { UserName = email, Email = email };
+                var createResult = await _userManager.CreateAsync(user);
+                if (!createResult.Succeeded)
+                {
+                    foreach (var error in createResult.Errors)
+                        ModelState.AddModelError(string.Empty, error.Description);
+                    return View(nameof(Login));
+                }
+            }
+
+            var linkResult = await _userManager.AddLoginAsync(user, info);
+            if (!linkResult.Succeeded)
+            {
+                foreach (var error in linkResult.Errors)
+                    ModelState.AddModelError(string.Empty, error.Description);
+                return View(nameof(Login));
+            }
+
+            await _signInManager.SignInAsync(user, isPersistent: false);
+            TempData["SuccessMessage"] = "Account linked and successfully logged in.";
+            return LocalRedirect(returnUrl);
+        }
+
+        TempData["ErrorMessage"] = "Email claim not received from: " + info.LoginProvider;
+        return RedirectToAction(nameof(Login), new { returnUrl });
     }
 }
