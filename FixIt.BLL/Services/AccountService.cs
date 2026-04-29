@@ -23,7 +23,7 @@ public class AccountService : IAccountService
     }
 
     /// <inheritdoc/>
-    public async Task<IEnumerable<string>?> RegisterAsync(RegisterDto dto)
+    public async Task<(IEnumerable<string>? Errors, string? UserId, string? Token)> RegisterAsync(RegisterDto dto)
     {
         var citizen = new Citizen
         {
@@ -40,15 +40,25 @@ public class AccountService : IAccountService
         if (result.Succeeded)
         {
             await _userManager.AddToRoleAsync(citizen, AppConstants.CitizenRole);
-            return null; // null = success
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(citizen);
+            return (null, citizen.Id, token); // null = success
         }
 
-        return result.Errors.Select(e => e.Description);
+        return (result.Errors.Select(e => e.Description), null, null);
     }
 
     /// <inheritdoc/>
     public async Task<string?> LoginAsync(LoginDto dto)
     {
+        var user = await _userManager.FindByEmailAsync(dto.Email.Trim().ToLower());
+        if (user != null)
+        {
+            if (!await _userManager.IsEmailConfirmedAsync(user))
+            {
+                return "Please check your email and confirm your account before signing in.";
+            }
+        }
+
         var result = await _signInManager.PasswordSignInAsync(
             userName: dto.Email.Trim().ToLower(),
             password: dto.Password,
@@ -57,7 +67,19 @@ public class AccountService : IAccountService
 
         if (result.Succeeded)  return null; // null = success
         if (result.IsLockedOut) return "Your account has been locked. Please try again later.";
+        
         return "Invalid email or password. Please try again.";
+    }
+
+    /// <inheritdoc/>
+    public async Task<bool> ConfirmEmailAsync(string userId, string token)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null)
+            return false;
+
+        var result = await _userManager.ConfirmEmailAsync(user, token);
+        return result.Succeeded;
     }
 
     /// <inheritdoc/>

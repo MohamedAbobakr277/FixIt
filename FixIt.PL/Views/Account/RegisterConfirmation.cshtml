@@ -1,0 +1,32 @@
+@{
+    ViewData["Title"] = "Register Confirmation";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+}
+
+<div class="auth-page">
+    <div class="auth-glow auth-glow-1"></div>
+    <div class="auth-glow auth-glow-2"></div>
+
+    <div class="auth-card">
+
+        <!-- Logo -->
+        <a class="auth-logo" asp-controller="Home" asp-action="Index">
+            <img src="~/images/logo-icon.png" alt="FixIt Logo" style="width: 40px; height: 40px; border-radius: var(--radius-md); object-fit: contain;" />
+            <span class="auth-logo-text">FixIt</span>
+        </a>
+
+        <h1 class="auth-title">Check your email</h1>
+        <p class="auth-subtitle">We've sent a confirmation link to your email address.</p>
+
+        <div class="alert-success-auth text-center" style="margin-top: 2rem; margin-bottom: 2rem;">
+            <span>📧</span> Please check your inbox and click the link to activate your account.
+        </div>
+
+        <p class="auth-footer">
+            <a asp-controller="Account" asp-action="Login">Return to Sign in</a>
+        </p>
+    </div>
+</div>
