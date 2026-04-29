@@ -29,9 +29,13 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
     options.Password.RequireUppercase = true;
     options.Password.RequireLowercase = true;
     options.User.RequireUniqueEmail = true;
+    options.SignIn.RequireConfirmedAccount = true;
 })
 .AddEntityFrameworkStores<FixItDbContext>()
 .AddDefaultTokenProviders();
+
+// ── Configuration ──
+builder.Services.Configure<FixIt.Common.Settings.SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
 
 // ── Cookie Settings ──
 builder.Services.ConfigureApplicationCookie(options =>
@@ -51,6 +55,7 @@ builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
 // ── Services ──
 builder.Services.AddScoped<IAccountService, AccountService>();
+builder.Services.AddScoped<IEmailSenderService, SmtpEmailSenderService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<IIssueDetailsService, IssueDetailsService>();
 builder.Services.AddScoped<IRatingService, RatingService>();

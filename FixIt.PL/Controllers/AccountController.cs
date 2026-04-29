@@ -10,15 +10,18 @@ public class AccountController : Controller
     private readonly IAccountService _accountService;
     private readonly IValidator<RegisterDto> _registerValidator;
     private readonly IValidator<LoginDto> _loginValidator;
+    private readonly IEmailSenderService _emailSender;
 
     public AccountController(
         IAccountService accountService,
         IValidator<RegisterDto> registerValidator,
-        IValidator<LoginDto> loginValidator)
+        IValidator<LoginDto> loginValidator,
+        IEmailSenderService emailSender)
     {
         _accountService = accountService;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
+        _emailSender = emailSender;
     }
 
     // ── GET /Account/Register ──────────────────────────────────────────────
@@ -44,17 +47,57 @@ public class AccountController : Controller
             return View(dto);
         }
 
-        var errors = await _accountService.RegisterAsync(dto);
-        if (errors == null) // null means success
+        var (errors, userId, token) = await _accountService.RegisterAsync(dto);
+        if (errors == null && userId != null && token != null) // success
         {
-            TempData["SuccessMessage"] = "Account created successfully! Please sign in.";
-            return RedirectToAction(nameof(Login));
+            var callbackUrl = Url.Action(
+                "ConfirmEmail",
+                "Account",
+                new { userId = userId, code = token },
+                protocol: Request.Scheme);
+
+            if (callbackUrl != null)
+            {
+                var htmlMessage = $@"
+                    <h2>Welcome to FixIt!</h2>
+                    <p>Please confirm your email address to activate your account by clicking the link below:</p>
+                    <p><a href='{System.Text.Encodings.Web.HtmlEncoder.Default.Encode(callbackUrl)}'>Confirm My Account</a></p>
+                    <br/>
+                    <p>Or copy and paste this link into your browser:</p>
+                    <p>{callbackUrl}</p>";
+
+                await _emailSender.SendEmailAsync(dto.Email, "Confirm your email address - FixIt", htmlMessage);
+            }
+
+            return RedirectToAction(nameof(RegisterConfirmation));
         }
 
-        foreach (var error in errors)
+        foreach (var error in errors!)
             ModelState.AddModelError(string.Empty, error);
 
         return View(dto);
+    }
+
+    // ── GET /Account/RegisterConfirmation ──────────────────────────────────
+    [HttpGet]
+    public IActionResult RegisterConfirmation()
+    {
+        return View();
+    }
+
+    // ── GET /Account/ConfirmEmail ──────────────────────────────────────────
+    [HttpGet]
+    public async Task<IActionResult> ConfirmEmail(string userId, string code)
+    {
+        if (userId == null || code == null)
+        {
+            return RedirectToAction("Index", "Home");
+        }
+
+        var isConfirmed = await _accountService.ConfirmEmailAsync(userId, code);
+        ViewData["IsConfirmed"] = isConfirmed;
+
+        return View();
     }
 
     // ── GET /Account/Login ─────────────────────────────────────────────────
