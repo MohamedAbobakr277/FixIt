@@ -9,16 +9,27 @@ using FixIt.BLL.Services;
 using FixIt.BLL.Interfaces;
 using FixIt.BLL.Validators;
 using FixIt.Common.Constants;
+using FixIt.Common.Helpers;
 using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// ── Initialize Encryption Helper ──
+var encryptionKey = builder.Configuration["EncryptionSettings:Key"];
+var encryptionIv = builder.Configuration["EncryptionSettings:IV"];
+if (!string.IsNullOrEmpty(encryptionKey) && !string.IsNullOrEmpty(encryptionIv))
+{
+    EncryptionHelper.Initialize(encryptionKey, encryptionIv);
+}
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 // ── Database ──
 builder.Services.AddDbContext<FixItDbContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+    options.UseSqlServer(
+        builder.Configuration.GetConnectionString("DefaultConnection"),
+        b => b.MigrationsAssembly("FixIt.DAL")));
 
 // ── Identity ──
 builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
@@ -46,6 +57,14 @@ builder.Services.ConfigureApplicationCookie(options =>
     options.ExpireTimeSpan = TimeSpan.FromDays(7);
 });
 
+// ── Session ──
+builder.Services.AddSession(options =>
+{
+    options.IdleTimeout = TimeSpan.FromMinutes(30);
+    options.Cookie.HttpOnly = true;
+    options.Cookie.IsEssential = true;
+});
+
 // ── Repository & Unit of Work ──
 builder.Services.AddScoped(typeof(IGenericRepository<>), typeof(GenericRepository<>));
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
@@ -56,6 +75,7 @@ builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 // ── Services ──
 builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<IEmailSenderService, SmtpEmailSenderService>();
+builder.Services.AddScoped<ITwoFactorService, TwoFactorService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<IIssueDetailsService, IssueDetailsService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
@@ -97,6 +117,7 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 app.UseRouting();
 
+app.UseSession();
 app.UseAuthentication();
 app.UseAuthorization();
 
