@@ -6,4 +6,9 @@ public class ApplicationUser : IdentityUser
 {
     public string FullName { get; set; } = string.Empty;
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
+
+    // 2FA Fields
+    public string? TwoFactorSecret { get; set; }
+    public bool IsTwoFactorEnabled { get; set; }
+    public string? RecoveryCodes { get; set; } // Semi-colon separated or JSON
 }
