@@ -1,0 +1,39 @@
+@model TwoFactorRecoveryDto
+
+@{
+    ViewData["Title"] = "Your Recovery Codes";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-warning text-dark text-center py-4">
+                    <h3 class="font-weight-light my-2"><i class="bi bi-exclamation-triangle"></i> Important: Save Your Recovery Codes</h3>
+                </div>
+                <div class="card-body p-5">
+                    <p class="mb-4">
+                        If you lose your device, you can use these codes to access your account. 
+                        <strong>Each code can only be used once.</strong> Store them in a safe place.
+                    </p>
+
+                    <div class="bg-light p-4 rounded border mb-4">
+                        <div class="row">
+                            @foreach (var code in Model.RecoveryCodes)
+                            {
+                                <div class="col-6 mb-2">
+                                    <code class="fs-5 fw-bold text-dark">@code</code>
+                                </div>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button onclick="window.print()" class="btn btn-dark"><i class="bi bi-printer"></i> Print Codes</button>
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Done</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
