@@ -28,7 +28,7 @@ public class IssueController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Index([FromQuery] IssueFilterDto filter)
+    public async Task<IActionResult> Index([FromQuery] FixIt.Common.DTOs.IssueFilterDto filter)
     {
         var user = await _userManager.GetUserAsync(User);
         if (user == null) return Challenge();

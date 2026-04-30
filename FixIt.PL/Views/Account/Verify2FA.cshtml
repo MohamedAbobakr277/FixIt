@@ -1,0 +1,41 @@
+@model TwoFactorLoginDto
+
+@{
+    ViewData["Title"] = "Two-Factor Verification";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-lg">
+                <div class="card-header bg-dark text-white text-center py-4">
+                    <h3 class="font-weight-light my-2">Security Verification</h3>
+                </div>
+                <div class="card-body p-5">
+                    <div class="text-center mb-4">
+                        <i class="bi bi-shield-lock text-primary" style="font-size: 3rem;"></i>
+                        <p class="text-muted mt-2">Enter the code from your authenticator app to sign in.</p>
+                    </div>
+
+                    <form asp-action="Verify2FA" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+                        
+                        <div class="form-floating mb-3">
+                            <input asp-for="Code" class="form-control text-center fs-3 fw-bold" placeholder="000000" maxlength="6" required autocomplete="one-time-code" autofocus />
+                            <label asp-for="Code">6-Digit Code</label>
+                            <span asp-validation-for="Code" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid gap-2 mb-3">
+                            <button type="submit" class="btn btn-primary btn-lg">Verify & Sign In</button>
+                        </div>
+                        
+                        <div class="text-center">
+                            <a asp-action="RecoveryCodeLogin" class="text-decoration-none small text-muted">Lost your device? Use a recovery code</a>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
