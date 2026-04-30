@@ -68,6 +68,16 @@
             </button>
         </form>
 
+        <div class="my-4 text-center">
+            <span class="text-muted">or</span>
+        </div>
+
+        <form asp-controller="Account" asp-action="ExternalLogin" asp-route-returnUrl="@returnUrl" method="post">
+            <button type="submit" name="provider" value="Google" class="auth-submit" style="background-color: #db4437; color: white;">
+                Login with Google
+            </button>
+        </form>
+
         <p class="auth-footer">
             Don't have an account?
             <a asp-controller="Account" asp-action="Register">Create one for free</a>
