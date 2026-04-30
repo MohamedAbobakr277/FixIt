@@ -64,6 +64,14 @@ builder.Services.AddScoped<IRatingService, RatingService>();
 // One registration covers all validators in the same assembly
 builder.Services.AddValidatorsFromAssemblyContaining<CreateRatingDtoValidator>();
 
+// ── Authentication (Google) ──
+builder.Services.AddAuthentication()
+    .AddGoogle(options =>
+    {
+        options.ClientId = builder.Configuration["Authentication:Google:ClientId"]!;
+        options.ClientSecret = builder.Configuration["Authentication:Google:ClientSecret"]!;
+    });
+
 var app = builder.Build();
 
 // ── Seed Roles ──
