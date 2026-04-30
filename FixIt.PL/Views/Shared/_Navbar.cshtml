@@ -44,6 +44,9 @@
                 <span class="nav-user-greeting">
                     👋 <strong>@displayName</strong>
                 </span>
+                <a asp-controller="Account" asp-action="Setup2FA" class="nav-security-link" title="Security Settings">
+                    🛡️ Security
+                </a>
                 <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
                     @Html.AntiForgeryToken()
                     <button type="submit" class="nav-logout-btn" id="logoutBtn">
