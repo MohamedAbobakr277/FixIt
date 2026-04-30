@@ -118,11 +118,20 @@ public class AccountService : IAccountService
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null) throw new Exception("User not found");
 
-        var secretKey = _twoFactorService.GenerateSecretKey();
-        
-        // Temporarily store secret in user object but don't enable yet
-        user.TwoFactorSecret = EncryptionHelper.Encrypt(secretKey);
-        await _userManager.UpdateAsync(user);
+        string secretKey;
+
+        // Only generate a new secret if one doesn't already exist
+        // This prevents the QR code from changing on every page refresh
+        if (string.IsNullOrEmpty(user.TwoFactorSecret))
+        {
+            secretKey = _twoFactorService.GenerateSecretKey();
+            user.TwoFactorSecret = EncryptionHelper.Encrypt(secretKey);
+            await _userManager.UpdateAsync(user);
+        }
+        else
+        {
+            secretKey = EncryptionHelper.Decrypt(user.TwoFactorSecret);
+        }
 
         var qrUri = _twoFactorService.GenerateQrCodeUri(user.Email!, secretKey);
         var qrBase64 = _twoFactorService.GenerateQrCodeImageBase64(qrUri);
@@ -140,7 +149,7 @@ public class AccountService : IAccountService
         if (user == null || string.IsNullOrEmpty(user.TwoFactorSecret)) return false;
 
         var secretKey = EncryptionHelper.Decrypt(user.TwoFactorSecret);
-        if (_twoFactorService.VerifyCode(secretKey, code))
+        if (_twoFactorService.VerifyCode(secretKey, code.Trim()))
         {
             user.IsTwoFactorEnabled = true;
             
@@ -188,7 +197,7 @@ public class AccountService : IAccountService
         if (user == null || !user.IsTwoFactorEnabled || string.IsNullOrEmpty(user.TwoFactorSecret)) return false;
 
         var secretKey = EncryptionHelper.Decrypt(user.TwoFactorSecret);
-        var isValid = _twoFactorService.VerifyCode(secretKey, code);
+        var isValid = _twoFactorService.VerifyCode(secretKey, code.Trim());
         
         if (isValid)
         {

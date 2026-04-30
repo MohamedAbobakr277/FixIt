@@ -61,10 +61,12 @@ public class AccountController : Controller
         var (errors, userId, token) = await _accountService.RegisterAsync(dto);
         if (errors == null && userId != null && token != null) // success
         {
+            // Encode the token so special chars (+, /, =) survive URL transmission
+            var encodedToken = System.Net.WebUtility.UrlEncode(token);
             var callbackUrl = Url.Action(
                 "ConfirmEmail",
                 "Account",
-                new { userId = userId, code = token },
+                new { userId = userId, code = encodedToken },
                 protocol: Request.Scheme);
 
             if (callbackUrl != null)
@@ -105,7 +107,9 @@ public class AccountController : Controller
             return RedirectToAction("Index", "Home");
         }
 
-        var isConfirmed = await _accountService.ConfirmEmailAsync(userId, code);
+        // Decode the token back before passing to Identity
+        var decodedCode = System.Net.WebUtility.UrlDecode(code);
+        var isConfirmed = await _accountService.ConfirmEmailAsync(userId, decodedCode);
         ViewData["IsConfirmed"] = isConfirmed;
 
         return View();
