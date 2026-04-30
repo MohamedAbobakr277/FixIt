@@ -1,0 +1,29 @@
+@{
+    ViewData["Title"] = "Two-Factor Authentication Enabled";
+}
+
+<div class="container mt-5">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card shadow-lg border-0 rounded-lg text-center">
+                <div class="card-body p-5">
+                    <i class="bi bi-shield-fill-check text-success" style="font-size: 5rem;"></i>
+                    <h2 class="mt-3">2FA is Enabled</h2>
+                    <p class="text-muted">Your account is protected with Two-Factor Authentication.</p>
+                    
+                    <hr class="my-4" />
+
+                    <div class="d-grid gap-3">
+                        <a asp-action="RecoveryCodes" class="btn btn-outline-primary">View Recovery Codes</a>
+                        
+                        <form asp-action="Disable2FA" method="post" onsubmit="return confirm('Are you sure you want to disable 2FA? This will make your account less secure.');">
+                            <button type="submit" class="btn btn-outline-danger w-100">Disable 2FA</button>
+                        </form>
+
+                        <a asp-controller="Home" asp-action="Index" class="btn btn-secondary">Back to Home</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

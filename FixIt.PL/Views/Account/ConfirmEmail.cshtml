@@ -1,0 +1,50 @@
+@{
+    ViewData["Title"] = "Email Confirmation";
+    bool isConfirmed = ViewData["IsConfirmed"] as bool? ?? false;
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+}
+
+<div class="auth-page">
+    <div class="auth-glow auth-glow-1"></div>
+    <div class="auth-glow auth-glow-2"></div>
+
+    <div class="auth-card">
+
+        <!-- Logo -->
+        <a class="auth-logo" asp-controller="Home" asp-action="Index">
+            <img src="~/images/logo-icon.png" alt="FixIt Logo" style="width: 40px; height: 40px; border-radius: var(--radius-md); object-fit: contain;" />
+            <span class="auth-logo-text">FixIt</span>
+        </a>
+
+        @if (isConfirmed)
+        {
+            <h1 class="auth-title">Email Confirmed!</h1>
+            <p class="auth-subtitle">Thank you for verifying your email address.</p>
+
+            <div class="alert-success-auth text-center" style="margin-top: 2rem; margin-bottom: 2rem;">
+                <span>✅</span> Your account is now active.
+            </div>
+
+            <a asp-controller="Account" asp-action="Login" class="auth-submit text-center text-decoration-none" style="display: block;">
+                Proceed to Sign In →
+            </a>
+        }
+        else
+        {
+            <h1 class="auth-title">Confirmation Failed</h1>
+            <p class="auth-subtitle">We could not verify your email address.</p>
+
+            <div class="alert-error-auth text-center" style="margin-top: 2rem; margin-bottom: 2rem;">
+                <span>❌</span> The confirmation link may be invalid or expired.
+            </div>
+
+            <p class="auth-footer">
+                <a asp-controller="Account" asp-action="Register">Create a new account</a> or 
+                <a asp-controller="Account" asp-action="Login">Try signing in</a>
+            </p>
+        }
+    </div>
+</div>
