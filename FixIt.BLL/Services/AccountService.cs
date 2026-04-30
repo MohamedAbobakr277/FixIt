@@ -161,6 +161,14 @@ public class AccountService : IAccountService
             }
 
             var result = await _userManager.UpdateAsync(user);
+            if (result.Succeeded)
+            {
+                // 1. Rotate security stamp → invalidates all OTHER sessions (other devices)
+                await _userManager.UpdateSecurityStampAsync(user);
+                // 2. Refresh THIS session's cookie with the new stamp + fresh claims
+                //    so the current user stays logged in with updated data
+                await _signInManager.RefreshSignInAsync(user);
+            }
             return result.Succeeded;
         }
 
@@ -177,6 +185,13 @@ public class AccountService : IAccountService
         user.RecoveryCodes = null;
 
         var result = await _userManager.UpdateAsync(user);
+        if (result.Succeeded)
+        {
+            // 1. Rotate security stamp → invalidates all OTHER sessions (other devices)
+            await _userManager.UpdateSecurityStampAsync(user);
+            // 2. Refresh THIS session's cookie with the new stamp + fresh claims
+            await _signInManager.RefreshSignInAsync(user);
+        }
         return result.Succeeded;
     }
 
