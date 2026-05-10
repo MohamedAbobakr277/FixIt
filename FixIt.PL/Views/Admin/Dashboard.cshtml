@@ -1,6 +1,8 @@
 @model FixIt.BLL.DTOs.DashboardStatsDto
 @using FixIt.Common.Enums
-
+@using Microsoft.AspNetCore.Identity
+@using FixIt.DAL.Entities
+@inject UserManager<ApplicationUser> UserManager
 @{
     ViewData["Title"] = "Dashboard";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -26,122 +28,94 @@
     int fullStars  = (int)Math.Floor(avg);
     bool halfStar  = (avg - fullStars) >= 0.5;
     int emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+
+    var currentUser = await UserManager.GetUserAsync(User);
+    var displayName = currentUser?.FullName ?? User.Identity?.Name?.Split('@')[0] ?? "Admin";
 }
 
-<div class="adm-page-header">
-    <h1 class="adm-page-title">Dashboard Overview</h1>
-    <p class="adm-page-subtitle">Real-time summary of all community issue activity.</p>
+<div class="adm-welcome-header">
+    <h1 class="adm-greeting">
+        Good morning, <span class="adm-username">@displayName!</span>
+    </h1>
 </div>
 
-<!-- ── STAT CARDS ── -->
-<div class="adm-stats-grid">
+<div class="adm-dashboard-layout" style="display: flex; flex-direction: column; gap: 24px;">
+    
+    <!-- ── STAT CARDS ── -->
+    <div class="adm-stats-grid">
+        <div class="adm-stat-card">
+            <div class="adm-stat-label">Total Issues</div>
+            <div class="adm-stat-value">@Model.TotalIssues</div>
+            <div class="adm-stat-trend">
+                <span class="adm-trend-pill up">↑ 43.8%</span>
+                <span class="adm-trend-text">VS last month</span>
+            </div>
+        </div>
+        <div class="adm-stat-card">
+            <div class="adm-stat-label">New Issues</div>
+            <div class="adm-stat-value">@Model.NewIssues</div>
+            <div class="adm-stat-trend">
+                <span class="adm-trend-pill down">↓ 12.9%</span>
+                <span class="adm-trend-text">VS last month</span>
+            </div>
+        </div>
+        <div class="adm-stat-card">
+            <div class="adm-stat-label">In Progress</div>
+            <div class="adm-stat-value">@Model.InProgressIssues</div>
+            <div class="adm-stat-trend">
+                <span class="adm-trend-pill up">↑ 8.3%</span>
+                <span class="adm-trend-text">VS last month</span>
+            </div>
+        </div>
+        <div class="adm-stat-card">
+            <div class="adm-stat-label">Resolved</div>
+            <div class="adm-stat-value">@Model.ResolvedIssues</div>
+            <div class="adm-stat-trend">
+                <span class="adm-trend-pill up">↑ 22.1%</span>
+                <span class="adm-trend-text">VS last month</span>
+            </div>
+        </div>
+        <div class="adm-stat-card">
+            <div class="adm-stat-label">Closed</div>
+            <div class="adm-stat-value">@Model.ClosedIssues</div>
+            <div class="adm-stat-trend">
+                <span class="adm-trend-pill down">↓ 5.4%</span>
+                <span class="adm-trend-text">VS last month</span>
+            </div>
+        </div>
+    </div><!-- ── DASHBOARD GRID ── -->
 
-    <div class="adm-stat-card total">
-        <div class="adm-stat-header">
-            <span class="adm-stat-label">Total Issues</span>
-            <div class="adm-stat-icon">📋</div>
-        </div>
-        <div class="adm-stat-value" id="stat-total">@Model.TotalIssues</div>
-        <div class="adm-stat-trend">All submitted issues</div>
-        <div class="adm-trend-line">
-            <svg viewBox="0 0 120 36" preserveAspectRatio="none" fill="none">
-                <polyline points="0,30 20,22 40,26 60,14 80,18 100,8 120,12"
-                          stroke="rgba(0,151,167,0.5)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <polyline points="0,30 20,22 40,26 60,14 80,18 100,8 120,12 120,36 0,36"
-                          fill="rgba(0,151,167,0.07)"/>
-            </svg>
-        </div>
-    </div>
-
-    <div class="adm-stat-card new">
-        <div class="adm-stat-header">
-            <span class="adm-stat-label">New</span>
-            <div class="adm-stat-icon">🆕</div>
-        </div>
-        <div class="adm-stat-value" id="stat-new">@Model.NewIssues</div>
-        <div class="adm-stat-trend">Awaiting review</div>
-        <div class="adm-trend-line">
-            <svg viewBox="0 0 120 36" preserveAspectRatio="none" fill="none">
-                <polyline points="0,28 20,24 40,20 60,16 80,20 100,12 120,16"
-                          stroke="rgba(59,130,246,0.5)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <polyline points="0,28 20,24 40,20 60,16 80,20 100,12 120,16 120,36 0,36"
-                          fill="rgba(59,130,246,0.07)"/>
-            </svg>
-        </div>
-    </div>
-
-    <div class="adm-stat-card inprogress">
-        <div class="adm-stat-header">
-            <span class="adm-stat-label">In Progress</span>
-            <div class="adm-stat-icon">⚙️</div>
-        </div>
-        <div class="adm-stat-value" id="stat-inprogress">@Model.InProgressIssues</div>
-        <div class="adm-stat-trend">Currently being worked on</div>
-        <div class="adm-trend-line">
-            <svg viewBox="0 0 120 36" preserveAspectRatio="none" fill="none">
-                <polyline points="0,32 20,26 40,20 60,24 80,14 100,10 120,14"
-                          stroke="rgba(249,115,22,0.5)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <polyline points="0,32 20,26 40,20 60,24 80,14 100,10 120,14 120,36 0,36"
-                          fill="rgba(249,115,22,0.07)"/>
-            </svg>
-        </div>
-    </div>
-
-    <div class="adm-stat-card resolved">
-        <div class="adm-stat-header">
-            <span class="adm-stat-label">Resolved</span>
-            <div class="adm-stat-icon">✅</div>
-        </div>
-        <div class="adm-stat-value" id="stat-resolved">@Model.ResolvedIssues</div>
-        <div class="adm-stat-trend">Successfully closed</div>
-        <div class="adm-trend-line">
-            <svg viewBox="0 0 120 36" preserveAspectRatio="none" fill="none">
-                <polyline points="0,32 20,28 40,22 60,18 80,12 100,8 120,6"
-                          stroke="rgba(16,185,129,0.5)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
-                <polyline points="0,32 20,28 40,22 60,18 80,12 100,8 120,6 120,36 0,36"
-                          fill="rgba(16,185,129,0.07)"/>
-            </svg>
-        </div>
-    </div>
-
-</div>
-
-<!-- ── DASHBOARD GRID ── -->
-<div class="adm-dashboard-grid">
-
-    <!-- Recent Issues Table -->
-    <div class="adm-card">
+    <!-- Performance History Table (Full Width) -->
+    <div class="adm-card" style="animation-delay: 0.6s;">
         <div class="adm-card-header">
             <div class="adm-card-title">
-                <span class="adm-card-icon">🕐</span>
-                Recent Issues
+                <span class="adm-card-icon">🕐</span> Performance History
             </div>
-            <span class="adm-card-badge">Last 5</span>
         </div>
-
         @if (Model.RecentIssues.Any())
         {
             <table class="adm-table">
                 <thead>
                     <tr>
-                        <th>Title</th>
+                        <th>No</th>
+                        <th>Operating System (Title)</th>
                         <th>Citizen</th>
                         <th>Status</th>
                     </tr>
                 </thead>
                 <tbody>
-                    @foreach (var issue in Model.RecentIssues)
+                    @foreach (var (issue, index) in Model.RecentIssues.Select((v, i) => (v, i)))
                     {
                         <tr>
+                            <td style="color: var(--adm-muted);">#@(index + 1)</td>
+                            <td><span class="adm-issue-title" title="@issue.Title">@issue.Title</span></td>
                             <td>
-                                <span class="adm-issue-title" title="@issue.Title">@issue.Title</span>
+                                <span class="adm-citizen-name">
+                                    <span class="adm-citizen-avatar">@(string.IsNullOrWhiteSpace(issue.CitizenName) ? "?" : issue.CitizenName[0].ToString().ToUpper())</span>
+                                    @issue.CitizenName
+                                </span>
                             </td>
-                            <td>
-                                <span class="adm-citizen-name">@issue.CitizenName</span>
-                            </td>
-                            <td>
-                                <span class="@BadgeClass(issue.Status)">@StatusLabel(issue.Status)</span>
-                            </td>
+                            <td><span class="@BadgeClass(issue.Status)">@StatusLabel(issue.Status)</span></td>
                         </tr>
                     }
                 </tbody>
@@ -149,43 +123,16 @@
         }
         else
         {
-            <div style="padding:40px;text-align:center;color:var(--adm-muted);font-size:14px;">
-                No issues submitted yet.
-            </div>
+            <div style="padding:40px;text-align:center;color:var(--adm-muted);font-size:14px;">No data available.</div>
         }
     </div>
 
-    <!-- Side Panels -->
-    <div class="adm-side-panels">
-
-        <!-- Average Rating -->
-        <div class="adm-card">
+    <!-- Mid Row: 3 Cards (Status Breakdown, Rating, Quick Actions) -->
+    <div class="adm-row-3" style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">        <!-- Medium Card: Status Breakdown -->
+        <div class="adm-card" style="animation-delay: 0.7s;">
             <div class="adm-card-header">
                 <div class="adm-card-title">
-                    <span class="adm-card-icon">⭐</span>
-                    Average Rating
-                </div>
-                <span class="adm-card-badge">@Model.TotalRatings ratings</span>
-            </div>
-            <div class="adm-rating-display">
-                <div class="adm-rating-score">@(Model.AverageRating > 0 ? Model.AverageRating.ToString("F1") : "—")</div>
-                <div class="adm-rating-stars">
-                    @for (int i = 0; i < fullStars; i++) { <span class="adm-star adm-star-full">★</span> }
-                    @if (halfStar) { <span class="adm-star adm-star-half">★</span> }
-                    @for (int i = 0; i < emptyStars; i++) { <span class="adm-star adm-star-empty">★</span> }
-                </div>
-                <div class="adm-rating-total">
-                    @(Model.TotalRatings == 0 ? "No ratings yet" : $"Based on {Model.TotalRatings} review{(Model.TotalRatings != 1 ? "s" : "")}")
-                </div>
-            </div>
-        </div>
-
-        <!-- Status Breakdown -->
-        <div class="adm-card">
-            <div class="adm-card-header">
-                <div class="adm-card-title">
-                    <span class="adm-card-icon">📌</span>
-                    Status Breakdown
+                    <span class="adm-card-icon">📌</span> Status Breakdown
                 </div>
             </div>
             <div class="adm-status-list">
@@ -214,16 +161,46 @@
                     <span class="adm-status-name">Resolved</span>
                     <span class="adm-status-count">@Model.ResolvedIssues</span>
                 </div>
-                <div class="adm-status-row">
-                    <span class="adm-status-dot adm-dot-closed"></span>
-                    <span class="adm-status-name">Closed</span>
-                    <span class="adm-status-count">@Model.ClosedIssues</span>
+            </div>
+        </div>
+
+        <!-- Small Card: Rating -->
+        <div class="adm-card" style="animation-delay: 0.8s;">
+            <div class="adm-card-header">
+                <div class="adm-card-title">
+                    <span class="adm-card-icon">⭐</span> Traffic Statistic (Rating)
                 </div>
-                <div class="adm-status-row">
-                    <span class="adm-status-dot adm-dot-rejected"></span>
-                    <span class="adm-status-name">Rejected</span>
-                    <span class="adm-status-count">@Model.RejectedIssues</span>
+            </div>
+            <div class="adm-rating-display" style="margin-top: 10px;">
+                <div class="adm-rating-score">@(Model.AverageRating > 0 ? Model.AverageRating.ToString("F1") : "—")</div>
+                <div class="adm-rating-stars">
+                    @for (int i = 0; i < fullStars; i++) { <span class="adm-star adm-star-full">★</span> }
+                    @if (halfStar) { <span class="adm-star adm-star-half">★</span> }
+                    @for (int i = 0; i < emptyStars; i++) { <span class="adm-star adm-star-empty">★</span> }
                 </div>
+                <div class="adm-rating-total" style="margin-top: 20px;">
+                    @(Model.TotalRatings == 0 ? "No ratings yet" : $"Based on {Model.TotalRatings} review{(Model.TotalRatings != 1 ? "s" : "")}")
+                </div>
+            </div>
+        </div>
+        <!-- Small Card: Quick Actions -->
+        <div class="adm-card" style="animation-delay: 1.0s;">
+            <div class="adm-card-header">
+                <div class="adm-card-title">Top Actions</div>
+            </div>
+            <div class="adm-quick-actions">
+                <a href="#" class="adm-quick-action-btn">
+                    <span class="adm-qa-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+                    <span class="adm-qa-text">Review Issues (@Model.NewIssues)</span>
+                </a>
+                <a href="#" class="adm-quick-action-btn">
+                    <span class="adm-qa-icon orange"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
+                    <span class="adm-qa-text">View Schedule</span>
+                </a>
+                <a href="#" class="adm-quick-action-btn">
+                    <span class="adm-qa-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></span>
+                    <span class="adm-qa-text">Submit Reports</span>
+                </a>
             </div>
         </div>
 
