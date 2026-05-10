@@ -1,0 +1,231 @@
+@model FixIt.BLL.DTOs.DashboardStatsDto
+@using FixIt.Common.Enums
+
+@{
+    ViewData["Title"] = "Dashboard";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    string BadgeClass(IssueStatus s) => s switch {
+        IssueStatus.New        => "adm-badge adm-badge-new",
+        IssueStatus.Approved   => "adm-badge adm-badge-approved",
+        IssueStatus.Scheduled  => "adm-badge adm-badge-scheduled",
+        IssueStatus.InProgress => "adm-badge adm-badge-inprogress",
+        IssueStatus.Resolved   => "adm-badge adm-badge-resolved",
+        IssueStatus.Closed     => "adm-badge adm-badge-closed",
+        IssueStatus.Rejected   => "adm-badge adm-badge-rejected",
+        _                      => "adm-badge"
+    };
+
+    string StatusLabel(IssueStatus s) => s switch {
+        IssueStatus.InProgress => "In Progress",
+        _ => s.ToString()
+    };
+
+    // Build star display (out of 5)
+    double avg = Model.AverageRating;
+    int fullStars  = (int)Math.Floor(avg);
+    bool halfStar  = (avg - fullStars) >= 0.5;
+    int emptyStars = 5 - fullStars - (halfStar ? 1 : 0);
+}
+
+<div class="adm-page-header">
+    <h1 class="adm-page-title">Dashboard Overview</h1>
+    <p class="adm-page-subtitle">Real-time summary of all community issue activity.</p>
+</div>
+
+<!-- ── STAT CARDS ── -->
+<div class="adm-stats-grid">
+
+    <div class="adm-stat-card total">
+        <div class="adm-stat-header">
+            <span class="adm-stat-label">Total Issues</span>
+            <div class="adm-stat-icon">📋</div>
+        </div>
+        <div class="adm-stat-value" id="stat-total">@Model.TotalIssues</div>
+        <div class="adm-stat-trend">All submitted issues</div>
+        <div class="adm-trend-line">
+            <svg viewBox="0 0 120 36" preserveAspectRatio="none" fill="none">
+                <polyline points="0,30 20,22 40,26 60,14 80,18 100,8 120,12"
+                          stroke="rgba(0,151,167,0.5)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="0,30 20,22 40,26 60,14 80,18 100,8 120,12 120,36 0,36"
+                          fill="rgba(0,151,167,0.07)"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="adm-stat-card new">
+        <div class="adm-stat-header">
+            <span class="adm-stat-label">New</span>
+            <div class="adm-stat-icon">🆕</div>
+        </div>
+        <div class="adm-stat-value" id="stat-new">@Model.NewIssues</div>
+        <div class="adm-stat-trend">Awaiting review</div>
+        <div class="adm-trend-line">
+            <svg viewBox="0 0 120 36" preserveAspectRatio="none" fill="none">
+                <polyline points="0,28 20,24 40,20 60,16 80,20 100,12 120,16"
+                          stroke="rgba(59,130,246,0.5)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="0,28 20,24 40,20 60,16 80,20 100,12 120,16 120,36 0,36"
+                          fill="rgba(59,130,246,0.07)"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="adm-stat-card inprogress">
+        <div class="adm-stat-header">
+            <span class="adm-stat-label">In Progress</span>
+            <div class="adm-stat-icon">⚙️</div>
+        </div>
+        <div class="adm-stat-value" id="stat-inprogress">@Model.InProgressIssues</div>
+        <div class="adm-stat-trend">Currently being worked on</div>
+        <div class="adm-trend-line">
+            <svg viewBox="0 0 120 36" preserveAspectRatio="none" fill="none">
+                <polyline points="0,32 20,26 40,20 60,24 80,14 100,10 120,14"
+                          stroke="rgba(249,115,22,0.5)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="0,32 20,26 40,20 60,24 80,14 100,10 120,14 120,36 0,36"
+                          fill="rgba(249,115,22,0.07)"/>
+            </svg>
+        </div>
+    </div>
+
+    <div class="adm-stat-card resolved">
+        <div class="adm-stat-header">
+            <span class="adm-stat-label">Resolved</span>
+            <div class="adm-stat-icon">✅</div>
+        </div>
+        <div class="adm-stat-value" id="stat-resolved">@Model.ResolvedIssues</div>
+        <div class="adm-stat-trend">Successfully closed</div>
+        <div class="adm-trend-line">
+            <svg viewBox="0 0 120 36" preserveAspectRatio="none" fill="none">
+                <polyline points="0,32 20,28 40,22 60,18 80,12 100,8 120,6"
+                          stroke="rgba(16,185,129,0.5)" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+                <polyline points="0,32 20,28 40,22 60,18 80,12 100,8 120,6 120,36 0,36"
+                          fill="rgba(16,185,129,0.07)"/>
+            </svg>
+        </div>
+    </div>
+
+</div>
+
+<!-- ── DASHBOARD GRID ── -->
+<div class="adm-dashboard-grid">
+
+    <!-- Recent Issues Table -->
+    <div class="adm-card">
+        <div class="adm-card-header">
+            <div class="adm-card-title">
+                <span class="adm-card-icon">🕐</span>
+                Recent Issues
+            </div>
+            <span class="adm-card-badge">Last 5</span>
+        </div>
+
+        @if (Model.RecentIssues.Any())
+        {
+            <table class="adm-table">
+                <thead>
+                    <tr>
+                        <th>Title</th>
+                        <th>Citizen</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var issue in Model.RecentIssues)
+                    {
+                        <tr>
+                            <td>
+                                <span class="adm-issue-title" title="@issue.Title">@issue.Title</span>
+                            </td>
+                            <td>
+                                <span class="adm-citizen-name">@issue.CitizenName</span>
+                            </td>
+                            <td>
+                                <span class="@BadgeClass(issue.Status)">@StatusLabel(issue.Status)</span>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+        else
+        {
+            <div style="padding:40px;text-align:center;color:var(--adm-muted);font-size:14px;">
+                No issues submitted yet.
+            </div>
+        }
+    </div>
+
+    <!-- Side Panels -->
+    <div class="adm-side-panels">
+
+        <!-- Average Rating -->
+        <div class="adm-card">
+            <div class="adm-card-header">
+                <div class="adm-card-title">
+                    <span class="adm-card-icon">⭐</span>
+                    Average Rating
+                </div>
+                <span class="adm-card-badge">@Model.TotalRatings ratings</span>
+            </div>
+            <div class="adm-rating-display">
+                <div class="adm-rating-score">@(Model.AverageRating > 0 ? Model.AverageRating.ToString("F1") : "—")</div>
+                <div class="adm-rating-stars">
+                    @for (int i = 0; i < fullStars; i++) { <span class="adm-star adm-star-full">★</span> }
+                    @if (halfStar) { <span class="adm-star adm-star-half">★</span> }
+                    @for (int i = 0; i < emptyStars; i++) { <span class="adm-star adm-star-empty">★</span> }
+                </div>
+                <div class="adm-rating-total">
+                    @(Model.TotalRatings == 0 ? "No ratings yet" : $"Based on {Model.TotalRatings} review{(Model.TotalRatings != 1 ? "s" : "")}")
+                </div>
+            </div>
+        </div>
+
+        <!-- Status Breakdown -->
+        <div class="adm-card">
+            <div class="adm-card-header">
+                <div class="adm-card-title">
+                    <span class="adm-card-icon">📌</span>
+                    Status Breakdown
+                </div>
+            </div>
+            <div class="adm-status-list">
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-new"></span>
+                    <span class="adm-status-name">New</span>
+                    <span class="adm-status-count">@Model.NewIssues</span>
+                </div>
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-approved"></span>
+                    <span class="adm-status-name">Approved</span>
+                    <span class="adm-status-count">@Model.ApprovedIssues</span>
+                </div>
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-scheduled"></span>
+                    <span class="adm-status-name">Scheduled</span>
+                    <span class="adm-status-count">@Model.ScheduledIssues</span>
+                </div>
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-inprogress"></span>
+                    <span class="adm-status-name">In Progress</span>
+                    <span class="adm-status-count">@Model.InProgressIssues</span>
+                </div>
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-resolved"></span>
+                    <span class="adm-status-name">Resolved</span>
+                    <span class="adm-status-count">@Model.ResolvedIssues</span>
+                </div>
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-closed"></span>
+                    <span class="adm-status-name">Closed</span>
+                    <span class="adm-status-count">@Model.ClosedIssues</span>
+                </div>
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-rejected"></span>
+                    <span class="adm-status-name">Rejected</span>
+                    <span class="adm-status-count">@Model.RejectedIssues</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>

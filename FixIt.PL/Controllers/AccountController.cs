@@ -120,7 +120,11 @@ public class AccountController : Controller
     public IActionResult Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
+        {
+            if (User.IsInRole("Admin"))
+                return RedirectToAction("Dashboard", "Admin");
             return RedirectToAction("Index", "Home");
+        }
 
         ViewData["ReturnUrl"] = returnUrl;
         return View(new LoginDto());
@@ -312,6 +316,11 @@ public class AccountController : Controller
     {
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
+
+        // Admin accounts go directly to the Admin Dashboard
+        if (User.IsInRole("Admin"))
+            return RedirectToAction("Dashboard", "Admin");
+
         return RedirectToAction("Index", "Home");
     }
 
