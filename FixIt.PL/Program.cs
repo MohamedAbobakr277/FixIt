@@ -96,6 +96,7 @@ builder.Services.AddScoped<ITwoFactorService, TwoFactorService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<IIssueDetailsService, IssueDetailsService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 
 // ── FluentValidation ──
 // One registration covers all validators in the same assembly
