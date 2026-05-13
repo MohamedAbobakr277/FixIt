@@ -189,15 +189,15 @@
                 <div class="adm-card-title">Top Actions</div>
             </div>
             <div class="adm-quick-actions">
-                <a href="#" class="adm-quick-action-btn">
+                <a asp-controller="Issue" asp-action="AdminIndex" class="adm-quick-action-btn">
                     <span class="adm-qa-icon blue"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
                     <span class="adm-qa-text">Review Issues (@Model.NewIssues)</span>
                 </a>
-                <a href="#" class="adm-quick-action-btn">
+                <a asp-controller="Admin" asp-action="Schedule" class="adm-quick-action-btn">
                     <span class="adm-qa-icon orange"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg></span>
                     <span class="adm-qa-text">View Schedule</span>
                 </a>
-                <a href="#" class="adm-quick-action-btn">
+                <a asp-controller="Admin" asp-action="Reports" class="adm-quick-action-btn">
                     <span class="adm-qa-icon green"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg></span>
                     <span class="adm-qa-text">Submit Reports</span>
                 </a>
