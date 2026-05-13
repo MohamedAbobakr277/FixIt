@@ -10,21 +10,30 @@ namespace FixIt.PL.Controllers;
 [Authorize(Roles = "Admin")]
 public class AdminController : Controller
 {
+    private readonly IAdminDashboardService _dashboardService;
     private readonly IScheduleService _scheduleService;
     private readonly IReportService _reportService;
     private readonly IValidator<CreateScheduleDto> _scheduleValidator;
     private readonly IValidator<CreateReportDto> _reportValidator;
 
     public AdminController(
+        IAdminDashboardService dashboardService,
         IScheduleService scheduleService,
         IReportService reportService,
         IValidator<CreateScheduleDto> scheduleValidator,
         IValidator<CreateReportDto> reportValidator)
     {
+        _dashboardService = dashboardService;
         _scheduleService = scheduleService;
         _reportService = reportService;
         _scheduleValidator = scheduleValidator;
         _reportValidator = reportValidator;
+    }
+
+    public async Task<IActionResult> Dashboard()
+    {
+        var stats = await _dashboardService.GetDashboardStatsAsync();
+        return View(stats);
     }
 
     // ── GET /Admin/Schedule ─────────────────────────────────────────────
