@@ -36,6 +36,14 @@ public class MappingProfile : Profile
 
         // Rating mappings
         CreateMap<Rating, RatingDto>();
+        CreateMap<Rating, AdminRatingListDto>()
+            .ForMember(dest => dest.IssueTitle, opt => opt.MapFrom(src => src.Issue != null ? src.Issue.Title : ""))
+            .ForMember(dest => dest.CitizenName, opt => opt.MapFrom(src => src.Citizen != null ? src.Citizen.FullName : ""));
+        CreateMap<Rating, AdminRatingDetailsDto>()
+            .ForMember(dest => dest.IssueTitle, opt => opt.MapFrom(src => src.Issue != null ? src.Issue.Title : ""))
+            .ForMember(dest => dest.IssueStatus, opt => opt.MapFrom(src => src.Issue != null ? src.Issue.Status.ToString() : ""))
+            .ForMember(dest => dest.CitizenName, opt => opt.MapFrom(src => src.Citizen != null ? src.Citizen.FullName : ""))
+            .ForMember(dest => dest.CitizenEmail, opt => opt.MapFrom(src => src.Citizen != null ? src.Citizen.Email : ""));
 
         // Schedule mappings
         CreateMap<MaintenanceSchedule, ScheduleDto>();

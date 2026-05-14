@@ -1,0 +1,58 @@
+@model FixIt.Common.DTOs.AdminRatingDetailsDto
+
+@{
+    ViewData["Title"] = "Rating Details";
+}
+
+<div class="container mt-5">
+    <div class="mb-4">
+        <a asp-action="Index" class="btn btn-outline-secondary">&larr; Back to List</a>
+    </div>
+
+    <div class="card shadow-sm max-w-2xl mx-auto">
+        <div class="card-header bg-primary text-white d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">Rating #@Model.RatingId</h4>
+            <div class="text-warning bg-white px-2 py-1 rounded">
+                <partial name="_StarDisplay" model="Model.Stars" />
+            </div>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title mb-4">Review Comments</h5>
+            <p class="card-text border p-3 rounded bg-light">
+                @if (string.IsNullOrWhiteSpace(Model.Comment))
+                {
+                    <span class="text-muted"><em>No comment provided.</em></span>
+                }
+                else
+                {
+                    @Model.Comment
+                }
+            </p>
+
+            <hr />
+
+            <div class="row mt-4">
+                <div class="col-md-6 mb-3">
+                    <h6 class="text-muted mb-2">Issue Details</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Title:</strong> @Model.IssueTitle</li>
+                        <li><strong>Status:</strong> <span class="badge bg-secondary">@Model.IssueStatus</span></li>
+                        <li>
+                            <a asp-controller="Issue" asp-action="Details" asp-route-id="@Model.IssueId" class="text-decoration-none">
+                                View Issue
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <h6 class="text-muted mb-2">Citizen Details</h6>
+                    <ul class="list-unstyled">
+                        <li><strong>Name:</strong> @Model.CitizenName</li>
+                        <li><strong>Email:</strong> @Model.CitizenEmail</li>
+                        <li><strong>Submitted:</strong> @Model.SubmittedAt.ToString("MMM dd, yyyy HH:mm")</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
