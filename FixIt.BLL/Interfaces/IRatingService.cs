@@ -8,4 +8,8 @@ public interface IRatingService
     Task CreateRatingAsync(CreateRatingDto dto, string citizenId);
     Task<RatingDto?> GetRatingByIssueIdAsync(int issueId);
     Task<(bool CanRate, string? ErrorMessage)> CanRateIssueAsync(int issueId, string citizenId);
+    
+    // Admin methods
+    Task<IEnumerable<AdminRatingListDto>> GetAllRatingsAsync();
+    Task<AdminRatingDetailsDto?> GetRatingByIdAsync(int ratingId);
 }

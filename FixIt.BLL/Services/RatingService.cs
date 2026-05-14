@@ -96,4 +96,27 @@ public class RatingService : IRatingService
 
         return (true, null);
     }
+
+    public async Task<IEnumerable<AdminRatingListDto>> GetAllRatingsAsync()
+    {
+        var ratings = await _unitOfWork.Ratings.GetAll()
+            .Include(r => r.Issue)
+            .Include(r => r.Citizen)
+            .OrderByDescending(r => r.SubmittedAt)
+            .ToListAsync();
+
+        return _mapper.Map<IEnumerable<AdminRatingListDto>>(ratings);
+    }
+
+    public async Task<AdminRatingDetailsDto?> GetRatingByIdAsync(int ratingId)
+    {
+        var rating = await _unitOfWork.Ratings.GetAll()
+            .Include(r => r.Issue)
+            .Include(r => r.Citizen)
+            .FirstOrDefaultAsync(r => r.RatingId == ratingId);
+
+        if (rating == null) return null;
+
+        return _mapper.Map<AdminRatingDetailsDto>(rating);
+    }
 }
