@@ -385,14 +385,24 @@ public class AccountController : Controller
                 }
             }
 
-            var linkResult = await _userManager.AddLoginAsync(user, info);
-            if (!linkResult.Succeeded)
-            {
-                foreach (var error in linkResult.Errors)
-                    ModelState.AddModelError(string.Empty, error.Description);
-                return View(nameof(Login));
-            }
+            var existingLogins = await _userManager.GetLoginsAsync(user);
 
+bool alreadyLinked = existingLogins.Any(l =>
+    l.LoginProvider == info.LoginProvider &&
+    l.ProviderKey == info.ProviderKey);
+
+if (!alreadyLinked)
+{
+    var linkResult = await _userManager.AddLoginAsync(user, info);
+
+    if (!linkResult.Succeeded)
+    {
+        foreach (var error in linkResult.Errors)
+            ModelState.AddModelError(string.Empty, error.Description);
+
+        return View(nameof(Login));
+    }
+}
             await _signInManager.SignInAsync(user, isPersistent: false);
             TempData["SuccessMessage"] = "Account linked and successfully logged in.";
             return LocalRedirect(returnUrl);
