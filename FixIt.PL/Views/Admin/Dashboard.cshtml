@@ -106,7 +106,7 @@
                 <tbody>
                     @foreach (var (issue, index) in Model.RecentIssues.Select((v, i) => (v, i)))
                     {
-                        <tr>
+                        <tr onclick="location.href='@Url.Action("AdminDetails", "Issue", new { id = issue.IssueId })'" style="cursor: pointer;">
                             <td style="color: var(--adm-muted);">#@(index + 1)</td>
                             <td><span class="adm-issue-title" title="@issue.Title">@issue.Title</span></td>
                             <td>

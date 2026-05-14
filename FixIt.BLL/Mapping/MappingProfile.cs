@@ -17,6 +17,18 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Schedule, opt => opt.MapFrom(src => src.MaintenanceSchedule))
             .ForMember(dest => dest.Report, opt => opt.MapFrom(src => src.MaintenanceReport));
 
+        CreateMap<Issue, AdminIssueListItemDto>()
+            .ForMember(dest => dest.CitizenName, opt => opt.MapFrom(src => src.Citizen != null ? src.Citizen.FullName : "Unknown"));
+
+        CreateMap<Issue, AdminIssueDetailsDto>()
+            .ForMember(dest => dest.CitizenName, opt => opt.MapFrom(src => src.Citizen != null ? src.Citizen.FullName : "Unknown"))
+            .ForMember(dest => dest.Schedule, opt => opt.MapFrom(src => src.MaintenanceSchedule))
+            .ForMember(dest => dest.Report, opt => opt.MapFrom(src => src.MaintenanceReport))
+            .ForMember(dest => dest.Timeline, opt => opt.MapFrom(src => src.StatusHistory));
+
+        CreateMap<IssueStatusHistory, TimelineEntryDto>()
+            .ForMember(dest => dest.ChangedByName, opt => opt.MapFrom(src => src.ChangedBy != null ? src.ChangedBy.FullName : "System"));
+
         // CreateIssueDto to Issue mapping
         CreateMap<FixIt.BLL.DTOs.CreateIssueDto, Issue>()
             .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())

@@ -275,7 +275,7 @@
                 <tbody>
                 @foreach (var item in Model.Items)
                 {
-                    <tr>
+                    <tr onclick="location.href='@Url.Action("AdminDetails", "Issue", new { id = item.IssueId })'" style="cursor: pointer;">
                         <td><span class="iss-id">ISS-@item.IssueId.ToString("D3")</span></td>
                         <td>
                             <div class="iss-title-main">@item.Title</div>
