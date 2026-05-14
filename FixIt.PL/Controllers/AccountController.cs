@@ -379,6 +379,10 @@ public class AccountController : Controller
         if (User.IsInRole("Admin"))
             return RedirectToAction("Dashboard", "Admin");
 
+        // Citizen accounts go to Citizen Dashboard
+        if (User.IsInRole("Citizen"))
+            return RedirectToAction("Dashboard", "Citizen");
+
         return RedirectToAction("Index", "Home");
     }
 

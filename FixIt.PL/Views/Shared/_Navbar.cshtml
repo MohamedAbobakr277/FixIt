@@ -22,13 +22,27 @@
             string GetLink(string hash) => isHome ? hash : Url.Action("Index", "Home") + hash;
         }
         <ul class="nav-links" id="navLinks">
-            <li><a href="@GetLink("#features")">Features</a></li>
-            <li><a href="@GetLink("#how-it-works")">How It Works</a></li>
-            <li><a href="@GetLink("#categories")">Categories</a></li>
             @if (SignInManager.IsSignedIn(User))
             {
-                <li><a asp-controller="Issue" asp-action="Index">My Issues</a></li>
-                <li><a asp-controller="Issue" asp-action="Create">Report Issue</a></li>
+                @if (User.IsInRole("Admin"))
+                {
+                    <li><a asp-controller="Admin" asp-action="Dashboard"><i class="bi bi-speedometer2"></i> Admin Dashboard</a></li>
+                }
+                else
+                {
+                    var ctrl = ViewContext.RouteData.Values["controller"]?.ToString();
+                    var act = ViewContext.RouteData.Values["action"]?.ToString();
+                    
+                    <li><a asp-controller="Citizen" asp-action="Dashboard" class="@(ctrl == "Citizen" && act == "Dashboard" ? "active" : "")"><i class="bi bi-grid-1x2"></i> Dashboard</a></li>
+                    <li><a asp-controller="Issue" asp-action="Create" class="@(ctrl == "Issue" && act == "Create" ? "active" : "")"><i class="bi bi-plus-lg"></i> Report Issue</a></li>
+                    <li><a asp-controller="Citizen" asp-action="Profile" class="@(ctrl == "Citizen" && act == "Profile" ? "active" : "")"><i class="bi bi-person-circle"></i> Profile</a></li>
+                }
+            }
+            else
+            {
+                <li><a href="@GetLink("#features")">Features</a></li>
+                <li><a href="@GetLink("#how-it-works")">How It Works</a></li>
+                <li><a href="@GetLink("#categories")">Categories</a></li>
             }
         </ul>
 
@@ -41,16 +55,18 @@
             {
                 var currentUser = await UserManager.GetUserAsync(User);
                 var displayName = currentUser?.FullName ?? User.Identity?.Name ?? "User";
-                <span class="nav-user-greeting">
-                    👋 <strong>@displayName</strong>
-                </span>
-                <a asp-controller="Account" asp-action="Setup2FA" class="nav-security-link" title="Security Settings">
-                    🛡️ Security
-                </a>
-                <form asp-controller="Account" asp-action="Logout" method="post" style="display:inline;">
+                
+                <div class="nav-user-info">
+                    <div class="nav-user-avatar">
+                        <i class="bi bi-person"></i>
+                    </div>
+                    <span class="nav-user-name">@displayName.ToLower()</span>
+                </div>
+
+                <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
                     @Html.AntiForgeryToken()
-                    <button type="submit" class="nav-logout-btn" id="logoutBtn">
-                        Sign Out
+                    <button type="submit" class="nav-logout-minimal" title="Logout">
+                        <i class="bi bi-box-arrow-right"></i> Logout
                     </button>
                 </form>
             }
