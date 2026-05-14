@@ -29,10 +29,6 @@
             {
                 <li><a asp-controller="Issue" asp-action="Index">My Issues</a></li>
                 <li><a asp-controller="Issue" asp-action="Create">Report Issue</a></li>
-                @if (User.IsInRole("Admin"))
-                {
-                    <li><a asp-controller="AdminRatings" asp-action="Index" class="text-warning">Admin Ratings</a></li>
-                }
             }
         </ul>
 

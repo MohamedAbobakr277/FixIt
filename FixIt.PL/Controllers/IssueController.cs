@@ -11,7 +11,7 @@ using FluentValidation;
 
 namespace FixIt.PL.Controllers;
 
-[Authorize(Roles = AppConstants.CitizenRole)]
+[Authorize(Roles = AppConstants.CitizenRole + "," + AppConstants.AdminRole)]
 public class IssueController : Controller
 {
     private readonly IIssueService _issueService;

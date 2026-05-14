@@ -469,3 +469,7 @@ img{max-width:100%;height:auto}
 .timeline-item{padding-left:24px}
 .timeline-dot{left:2px}
 }
+
+/* ═══ UTILITIES (Added for Admin Ratings) ═══ */
+.max-w-2xl { max-width: 42rem; }
+.mx-auto { margin-left: auto; margin-right: auto; }
