@@ -24,6 +24,7 @@ if (!string.IsNullOrEmpty(encryptionKey) && !string.IsNullOrEmpty(encryptionIv))
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
 
 // ── Database ──
 builder.Services.AddDbContext<FixItDbContext>(options =>
@@ -100,6 +101,7 @@ builder.Services.AddScoped<IRatingAdminService, RatingAdminService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<ICitizenDashboardService, CitizenDashboardService>();
 builder.Services.AddScoped<IEmailSenderService, SmtpEmailSenderService>();
 
 // ── FluentValidation ──
