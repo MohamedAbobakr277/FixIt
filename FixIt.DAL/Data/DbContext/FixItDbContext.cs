@@ -31,4 +31,5 @@ public class FixItDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<MaintenanceSchedule> MaintenanceSchedules { get; set; }
     public DbSet<MaintenanceReport> MaintenanceReports { get; set; }
     public DbSet<Rating> Ratings { get; set; }
+    public DbSet<LoginHistory> LoginHistories { get; set; }
 }
