@@ -1,6 +1,7 @@
 using FixIt.Common.DTOs;
 using FixIt.BLL.DTOs;
 using FixIt.DAL.Entities;
+using Microsoft.AspNetCore.Identity;
 
 namespace FixIt.BLL.Interfaces;
 
@@ -38,4 +39,6 @@ public interface IAccountService
     Task<IEnumerable<string>?> GetRecoveryCodesAsync(string userId);
     Task<bool> RedeemRecoveryCodeAsync(string userId, string code, bool rememberMe = false);
     Task<bool> IsTwoFactorEnabledAsync(string userId);
+    Task<IdentityResult> ChangePasswordAsync(string userId, string oldPassword, string newPassword);
+    Task<IEnumerable<LoginActivityDto>> GetLoginActivityAsync(string userId);
 }
