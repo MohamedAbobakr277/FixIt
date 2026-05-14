@@ -17,6 +17,16 @@ public interface IAccountService
     Task<bool> ConfirmEmailAsync(string userId, string token);
 
     Task LogoutAsync();
+    /// <summary>
+    /// Initiates the forgot‑password flow. Returns (success, token, userId). If the email is not found or not confirmed, returns (true, null, null) to avoid enumeration.
+    /// </summary>
+    Task<(bool success, string? token, string? userId)> ForgotPasswordAsync(string email);
+
+    /// <summary>
+    /// Resets the password using the supplied token.
+    /// </summary>
+    Task<bool> ResetPasswordAsync(string userId, string token, string newPassword);
+
 
     // 2FA Methods
     Task<TwoFactorSetupDto> GenerateTwoFactorSetupAsync(string userId);
