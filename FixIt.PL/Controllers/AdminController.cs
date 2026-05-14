@@ -13,6 +13,7 @@ public class AdminController : Controller
     private readonly IAdminDashboardService _dashboardService;
     private readonly IScheduleService _scheduleService;
     private readonly IReportService _reportService;
+    private readonly IRatingAdminService _ratingAdminService;
     private readonly IValidator<CreateScheduleDto> _scheduleValidator;
     private readonly IValidator<CreateReportDto> _reportValidator;
 
@@ -20,12 +21,14 @@ public class AdminController : Controller
         IAdminDashboardService dashboardService,
         IScheduleService scheduleService,
         IReportService reportService,
+        IRatingAdminService ratingAdminService,
         IValidator<CreateScheduleDto> scheduleValidator,
         IValidator<CreateReportDto> reportValidator)
     {
         _dashboardService = dashboardService;
         _scheduleService = scheduleService;
         _reportService = reportService;
+        _ratingAdminService = ratingAdminService;
         _scheduleValidator = scheduleValidator;
         _reportValidator = reportValidator;
     }
@@ -34,6 +37,13 @@ public class AdminController : Controller
     {
         var stats = await _dashboardService.GetDashboardStatsAsync();
         return View(stats);
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Ratings()
+    {
+        var data = await _ratingAdminService.GetRatingsPageDataAsync();
+        return View(data);
     }
 
     // ── GET /Admin/Schedule ─────────────────────────────────────────────

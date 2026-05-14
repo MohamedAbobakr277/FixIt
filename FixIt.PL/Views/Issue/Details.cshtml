@@ -199,33 +199,119 @@
     </section>
 }
 
-<!-- ══ RATING SECTION ══ -->
-@if (Model.Rating != null)
+<!-- ══ RATE THIS RESOLUTION (IN-PAGE FORM) ══ -->
+@if (Model.Status == "Resolved" && Model.Rating == null)
 {
-    <section class="section section-alt">
+    <section class="section section-alt pt-0">
         <div class="section-container">
-            <div class="details-card">
-                <h2 class="details-card-title">⭐ Service Rating</h2>
-                <div class="rating-details">
-                    <div class="rating-stars">
-                        @for (int i = 1; i <= 5; i++)
-                        {
-                            <span class="star @(i <= Model.Rating.Stars ? "star-filled" : "star-empty")">★</span>
-                        }
-                    </div>
-                    <div class="rating-value">@Model.Rating.Stars out of 5</div>
-                    @if (!string.IsNullOrEmpty(Model.Rating.Comment))
-                    {
-                        <div class="rating-comment">
-                            <strong>Comment:</strong>
-                            <p>@Model.Rating.Comment</p>
-                        </div>
-                    }
-                    <div class="rating-date">
-                        <small>Rated on @Model.Rating.SubmittedAt.ToString("MMM dd, yyyy HH:mm")</small>
+            <div class="card-fixit p-4 p-md-5">
+                <div class="row">
+                    <div class="col-lg-7">
+                        <div class="section-label mb-3">Feedback</div>
+                        <h2 class="section-title mb-2">Rate This Resolution</h2>
+                        <p class="text-muted mb-4">Help us improve by rating the quality of this resolution</p>
+
+                        <form asp-controller="Rating" asp-action="Create" method="post">
+                            <input type="hidden" name="IssueId" value="@Model.IssueId" />
+                            
+                            <div class="mb-4">
+                                <label class="form-label-fixit fs-6 mb-3">Your rating:</label>
+                                <div class="stars-input-container d-flex flex-row-reverse justify-content-start gap-2">
+                                    @for (int i = 5; i >= 1; i--)
+                                    {
+                                        <input type="radio" id="detailStar@(i)" name="Stars" value="@i" required class="d-none peer" />
+                                        <label for="detailStar@(i)" class="star-btn cursor-pointer">
+                                            <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
+                                        </label>
+                                    }
+                                </div>
+                            </div>
+
+                            <div class="mb-4">
+                                <textarea name="Comment" class="form-control-fixit" rows="3" placeholder="Add a comment (optional)"></textarea>
+                            </div>
+
+                            <button type="submit" class="btn-primary-fixit">
+                                Submit Rating
+                            </button>
+                        </form>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 }
+
+
+<!-- ══ RATING SECTION ══ -->
+@if (Model.Rating != null)
+{
+    <section class="section section-alt">
+        <div class="section-container">
+            <div class="card-fixit border-0 overflow-hidden" style="background: linear-gradient(135deg, var(--bg-card) 0%, var(--bg-surface-2) 100%);">
+                <div class="row align-items-center">
+                    <div class="col-md-4 text-center border-end-md py-4">
+                        <div class="section-label mb-2">Resolution Rating</div>
+                        <div class="display-3 fw-900 text-primary mb-0">@Model.Rating.Stars</div>
+                        <div class="text-warning fs-4 mb-2">
+                            @for (int i = 1; i <= 5; i++)
+                            {
+                                <span>@(i <= Model.Rating.Stars ? "★" : "☆")</span>
+                            }
+                        </div>
+                        <div class="text-muted small">Submitted on @Model.Rating.SubmittedAt.ToString("MMM dd, yyyy")</div>
+                    </div>
+                    <div class="col-md-8 p-5">
+                        <div class="d-flex align-items-center gap-3 mb-4">
+                            <div class="nav-brand-icon" style="width: 48px; height: 48px; font-size: 20px;">
+                                @(Model.CitizenName.Length > 0 ? Model.CitizenName[0].ToString().ToUpper() : "C")
+                            </div>
+                            <div>
+                                <h4 class="mb-0 fw-bold">@Model.CitizenName</h4>
+                                <p class="text-muted small mb-0">Verified Citizen Feedback</p>
+                            </div>
+                        </div>
+                        
+                        @if (!string.IsNullOrEmpty(Model.Rating.Comment))
+                        {
+                            <div class="position-relative">
+                                <svg width="40" height="40" viewBox="0 0 24 24" fill="currentColor" class="text-primary opacity-10 position-absolute" style="top: -20px; left: -10px;">
+                                    <path d="M14.017 21L14.017 18C14.017 16.8954 14.9124 16 16.017 16H19.017C20.1216 16 21.017 16.8954 21.017 18V21C21.017 22.1046 20.1216 23 19.017 23H16.017C14.9124 23 14.017 22.1046 14.017 21ZM14.017 21C14.017 19.8954 13.1216 19 12.017 19H9.017C7.91242 19 7.017 19.8954 7.017 21V23C7.017 23.5523 6.56929 24 6.017 24H3.017C1.91243 24 1.017 23.1046 1.017 22V19C1.017 17.8954 1.91243 17 3.017 17H6.017C7.12157 17 8.017 17.8954 8.017 19V21M14.017 21L14.017 21Z" />
+                                </svg>
+                                <p class="fs-5 fst-italic text-body ps-4 position-relative z-1" style="line-height: 1.6;">
+                                    "@Model.Rating.Comment"
+                                </p>
+                            </div>
+                        }
+                        else
+                        {
+                            <p class="text-muted fst-italic">No comment provided.</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+<style>
+    .star-btn {
+        color: var(--border);
+        transition: all 0.2s ease;
+    }
+    
+    .star-btn:hover {
+        transform: scale(1.1);
+        color: #fbbf24;
+    }
+
+    input[type="radio"]:checked ~ .star-btn,
+    .star-btn:hover ~ .star-btn {
+        color: #fbbf24;
+    }
+
+    .fw-900 { font-weight: 900; }
+    @@media (min-width: 768px) {
+        .border-end-md { border-right: 1px solid var(--border); }
+    }
+</style>
