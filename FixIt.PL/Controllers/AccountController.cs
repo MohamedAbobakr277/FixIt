@@ -483,4 +483,74 @@ public class AccountController : Controller
         return RedirectToAction(nameof(Login), new { returnUrl });
     }
 
+    [Authorize]
+    public async Task<IActionResult> Security()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        var isEnabled = await _accountService.IsTwoFactorEnabledAsync(userId);
+        if (isEnabled)
+        {
+            return RedirectToAction(nameof(TwoFactorEnabled));
+        }
+
+        return RedirectToAction(nameof(Setup2FA));
+    }
+
+    [Authorize]
+    public async Task<IActionResult> TwoFactorEnabled()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        var isEnabled = await _accountService.IsTwoFactorEnabledAsync(userId);
+        if (!isEnabled)
+        {
+            return RedirectToAction(nameof(Setup2FA));
+        }
+
+        return View();
+    }
+
+    // ── CHANGE PASSWORD ─────────────────────────────────────────────────────
+    [Authorize]
+    [HttpGet]
+    public IActionResult ChangePassword()
+    {
+        return View();
+    }
+
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
+    {
+        if (!ModelState.IsValid) return View(dto);
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _accountService.ChangePasswordAsync(userId, dto.OldPassword, dto.NewPassword);
+
+        if (result.Succeeded)
+        {
+            TempData["SuccessMessage"] = "Your password has been changed successfully.";
+            return RedirectToAction("Settings", "Citizen");
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+
+        return View(dto);
+    }
+
+    // ── LOGIN ACTIVITY ──────────────────────────────────────────────────────
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> LoginActivity()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var activities = await _accountService.GetLoginActivityAsync(userId);
+        return View(activities);
+    }
 }

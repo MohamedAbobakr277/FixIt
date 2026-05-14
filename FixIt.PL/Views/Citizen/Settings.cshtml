@@ -1,0 +1,346 @@
+@model FixIt.Common.DTOs.CitizenProfileDto
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<div class="page-wrapper">
+    <div class="section-container">
+        
+        <div class="settings-header mb-5">
+            <h1 class="section-title">Account Settings</h1>
+            <p class="section-desc text-start ms-0">Manage your profile, security preferences, and account notifications.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-3">
+                <div class="card-fixit p-3 mb-4 sticky-top" style="top: 100px;">
+                    <div class="nav flex-column nav-pills settings-nav" id="settings-tabs" role="tablist">
+                        <button class="nav-link active" id="profile-tab" data-bs-toggle="pill" data-bs-target="#profile" type="button" role="tab">
+                            <i class="bi bi-person-circle"></i> Profile Info
+                        </button>
+                        <button class="nav-link" id="security-tab" data-bs-toggle="pill" data-bs-target="#security" type="button" role="tab">
+                            <i class="bi bi-shield-lock"></i> Security & 2FA
+                        </button>
+                        <button class="nav-link" id="notifications-tab" data-bs-toggle="pill" data-bs-target="#notifications" type="button" role="tab">
+                            <i class="bi bi-bell"></i> Notifications
+                        </button>
+                        <button class="nav-link" id="history-tab" data-bs-toggle="pill" data-bs-target="#history" type="button" role="tab">
+                            <i class="bi bi-clock-history"></i> Activity History
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="tab-content" id="settings-tabContent">
+                    
+                    <!-- Profile Tab -->
+                    <div class="tab-pane fade show active" id="profile" role="tabpanel">
+                        <div class="card-fixit mb-4">
+                            <h3 class="card-title-fixit mb-4">Profile Information</h3>
+
+                            @if (TempData["SuccessMessage"] != null)
+                            {
+                                <div class="alert alert-success border-0 small mb-4 py-2 px-3 d-flex align-items-center" style="background: rgba(34, 197, 94, 0.1); color: #16a34a;">
+                                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                                </div>
+                            }
+
+                            <div class="d-flex align-items-center gap-4 mb-5">
+                                <div class="profile-avatar-container large">
+                                    @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                                    {
+                                        <img src="@Model.ProfilePicture" alt="@Model.FullName" class="profile-avatar" />
+                                    }
+                                    else
+                                    {
+                                        <div class="profile-avatar-placeholder">
+                                            <i class="bi bi-person"></i>
+                                        </div>
+                                    }
+                                    <button class="avatar-edit-btn"><i class="bi bi-camera"></i></button>
+                                </div>
+                                <div>
+                                    <h4 class="mb-1">@Model.FullName</h4>
+                                    <p class="text-muted small mb-0">Member since @Model.MemberSince.ToString("MMM yyyy")</p>
+                                </div>
+                            </div>
+
+                            <form asp-action="Settings" method="post" class="settings-form">
+                                <div asp-validation-summary="All" class="text-danger small mb-4"></div>
+                                
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label-fixit">Full Name</label>
+                                        <input name="FullName" type="text" class="form-control-fixit" value="@Model.FullName" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label-fixit">Email Address</label>
+                                        <input name="Email" type="email" class="form-control-fixit" value="@Model.Email" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label-fixit">Phone Number</label>
+                                        <input name="PhoneNumber" type="tel" class="form-control-fixit" value="@Model.PhoneNumber" placeholder="+1 (555) 000-0000" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label-fixit">Physical Address</label>
+                                        <input name="Address" type="text" class="form-control-fixit" value="@Model.Address" placeholder="Street, City, Zip" />
+                                    </div>
+                                    <div class="col-12 text-end mt-4">
+                                        <button type="submit" class="btn-primary-fixit">Save Changes</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <div class="stats-row">
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-icon"><i class="bi bi-file-earmark-plus"></i></div>
+                                <div class="stat-mini-data">
+                                    <div class="stat-mini-value">@Model.IssuesReported</div>
+                                    <div class="stat-mini-label">Issues Reported</div>
+                                </div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-icon success"><i class="bi bi-check-circle"></i></div>
+                                <div class="stat-mini-data">
+                                    <div class="stat-mini-value">@Model.ResolvedIssues</div>
+                                    <div class="stat-mini-label">Resolved</div>
+                                </div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-icon warning"><i class="bi bi-star"></i></div>
+                                <div class="stat-mini-data">
+                                    <div class="stat-mini-value">@Model.RatingsGiven</div>
+                                    <div class="stat-mini-label">Ratings Given</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div class="tab-pane fade" id="security" role="tabpanel">
+                        <div class="card-fixit mb-4">
+                            <h3 class="card-title-fixit mb-4">Security Settings</h3>
+                            
+                            <div class="settings-option mb-4 p-4 border rounded-3 @(Model.IsTwoFactorEnabled ? "bg-success-light" : "bg-surface-2") d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h5 class="mb-0">Two-Factor Authentication</h5>
+                                        @if (Model.IsTwoFactorEnabled)
+                                        {
+                                            <span class="badge bg-success-fixit">Enabled</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Disabled</span>
+                                        }
+                                    </div>
+                                    <p class="small text-muted mb-0">Add an extra layer of security to your account.</p>
+                                </div>
+                                <a asp-controller="Account" asp-action="Security" class="btn-outline-fixit btn-sm">
+                                    @(Model.IsTwoFactorEnabled ? "Manage" : "Configure")
+                                </a>
+                            </div>
+
+                            <div class="settings-option mb-4 p-4 border rounded-3 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h5 class="mb-1">Change Password</h5>
+                                    <p class="small text-muted mb-0">It's a good idea to use a strong password that you don't use elsewhere.</p>
+                                </div>
+                                <a asp-controller="Account" asp-action="ChangePassword" class="btn-outline-fixit btn-sm">Update</a>
+                            </div>
+
+                            <div class="settings-option p-4 border rounded-3 d-flex align-items-center justify-content-between">
+                                <div>
+                                    <h5 class="mb-1">Login Activity</h5>
+                                    <p class="small text-muted mb-0">Review your recent login sessions and active devices.</p>
+                                </div>
+                                <a asp-controller="Account" asp-action="LoginActivity" class="btn-outline-fixit btn-sm">View Log</a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications Tab -->
+                    <div class="tab-pane fade" id="notifications" role="tabpanel">
+                        <div class="card-fixit">
+                            <h3 class="card-title-fixit mb-4">Notification Preferences</h3>
+                            
+                            <div class="notification-group mb-4">
+                                <h6 class="text-uppercase small fw-800 text-primary mb-3">Email Notifications</h6>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" checked id="notif-1">
+                                    <label class="form-check-label" for="notif-1">Issue status updates</label>
+                                </div>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" checked id="notif-2">
+                                    <label class="form-check-label" for="notif-2">Maintenance alerts in my area</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" id="notif-3">
+                                    <label class="form-check-label" for="notif-3">Weekly community reports</label>
+                                </div>
+                            </div>
+
+                            <div class="notification-group">
+                                <h6 class="text-uppercase small fw-800 text-primary mb-3">App Notifications</h6>
+                                <div class="form-check form-switch mb-3">
+                                    <input class="form-check-input" type="checkbox" checked id="notif-4">
+                                    <label class="form-check-label" for="notif-4">Real-time status push</label>
+                                </div>
+                                <div class="form-check form-switch">
+                                    <input class="form-check-input" type="checkbox" checked id="notif-5">
+                                    <label class="form-check-label" for="notif-5">Direct messages from admins</label>
+                                </div>
+                            </div>
+
+                            <div class="text-end mt-5 border-top pt-4">
+                                <button class="btn-primary-fixit">Save Preferences</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Activity Tab -->
+                    <div class="tab-pane fade" id="history" role="tabpanel">
+                        <div class="card-fixit mb-4">
+                            <h3 class="card-title-fixit mb-4">Activity History</h3>
+                            <div class="history-list">
+                                @if (Model.IssueHistory.Any())
+                                {
+                                    @foreach (var issue in Model.IssueHistory)
+                                    {
+                                        <div class="history-item">
+                                            <div class="history-dot"></div>
+                                            <div class="history-content">
+                                                <div class="d-flex justify-content-between">
+                                                    <a asp-controller="Issue" asp-action="Details" asp-route-id="@issue.IssueId" class="history-title">@issue.Title</a>
+                                                    <span class="status-badge status-@issue.Status.ToString().ToLower()">@issue.Status</span>
+                                                </div>
+                                                <p class="history-meta">@issue.Category • Reported on @issue.SubmittedAt.ToString("MMM d")</p>
+                                            </div>
+                                        </div>
+                                    }
+                                }
+                                else
+                                {
+                                    <p class="text-muted text-center py-4">No activity found</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .settings-nav .nav-link { 
+            text-align: left; 
+            padding: 12px 16px; 
+            color: var(--text-muted); 
+            font-weight: 500; 
+            border-radius: var(--radius-sm);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: var(--transition);
+            background: none;
+            border: none;
+            width: 100%;
+        }
+        .settings-nav .nav-link i { font-size: 18px; }
+        .settings-nav .nav-link:hover { background: var(--bg-surface-2); color: var(--primary); }
+        .settings-nav .nav-link.active { background: var(--primary-glow); color: var(--primary); font-weight: 700; }
+        
+        .profile-avatar-container.large { width: 120px; height: 120px; position: relative; }
+        .avatar-edit-btn { 
+            position: absolute; 
+            bottom: 0; 
+            right: 0; 
+            width: 36px; 
+            height: 36px; 
+            border-radius: 50%; 
+            background: var(--primary); 
+            color: #fff; 
+            border: 3px solid var(--bg-card); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center;
+            cursor: pointer;
+            transition: var(--transition);
+        }
+        .avatar-edit-btn:hover { transform: scale(1.1); background: var(--primary-dark); }
+
+        .settings-form .form-label-fixit { margin-bottom: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
+
+        .form-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; }
+        .form-switch .form-check-input:checked { background-color: var(--primary); border-color: var(--primary); }
+        
+        .fw-800 { font-weight: 800; }
+
+        .history-list { display: flex; flex-direction: column; gap: 24px; position: relative; padding-left: 20px; }
+        .history-list::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--border); }
+        .history-item { position: relative; padding-left: 20px; }
+        .history-dot { position: absolute; left: -26px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg-body); border: 2.5px solid var(--primary); z-index: 1; }
+        
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 32px; }
+        .stat-mini-card { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border); 
+            border-radius: var(--radius-lg); 
+            padding: 24px; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            text-align: center;
+            gap: 16px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-mini-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: var(--primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .stat-mini-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08); 
+            border-color: var(--primary-light);
+        }
+        .stat-mini-card:hover::before { opacity: 1; }
+        
+        .stat-mini-icon { 
+            width: 56px; 
+            height: 56px; 
+            border-radius: 16px; 
+            background: var(--primary-glow); 
+            color: var(--primary); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 24px;
+            transition: transform 0.5s ease;
+        }
+        .stat-mini-card:hover .stat-mini-icon { transform: scale(1.1) rotate(5deg); }
+        
+        .stat-mini-icon.success { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .stat-mini-icon.warning { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+        
+        .stat-mini-value { font-size: 28px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.02em; line-height: 1; }
+        .stat-mini-label { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        @@media (max-width: 992px) {
+            .sticky-top { position: static !important; }
+            .stats-row { grid-template-columns: 1fr; }
+        }
+    </style>
+}
