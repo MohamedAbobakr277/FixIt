@@ -94,6 +94,7 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITwoFactorService, TwoFactorService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<IIssueDetailsService, IssueDetailsService>();
+builder.Services.AddScoped<IAdminIssueService, AdminIssueService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
 builder.Services.AddScoped<IRatingAdminService, RatingAdminService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
