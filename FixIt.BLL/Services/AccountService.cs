@@ -270,4 +270,39 @@ public class AccountService : IAccountService
         var user = await _userManager.FindByIdAsync(userId);
         return user?.IsTwoFactorEnabled ?? false;
     }
+
+    // Added ForgotPasswordAsync implementation
+    public async Task<(bool success, string? token, string? userId)> ForgotPasswordAsync(string email)
+    {
+        // Use the email provided directly (Identity handles normalization)
+        var user = await _userManager.FindByEmailAsync(email.Trim());
+        // If user not found or email not confirmed, silently succeed without token to avoid enumeration
+        if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+        {
+            return (true, null, null);
+        }
+        // Generate reset token
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        return (true, token, user.Id);
+    }
+
+    // Added ResetPasswordAsync implementation
+    public async Task<bool> ResetPasswordAsync(string userId, string token, string newPassword)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return false;
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        if (result.Succeeded)
+        {
+            // Automatically confirm email if password reset was successful via email link
+            if (!user.EmailConfirmed)
+            {
+                user.EmailConfirmed = true;
+                await _userManager.UpdateAsync(user);
+            }
+            return true;
+        }
+        return false;
+    }
+
 }

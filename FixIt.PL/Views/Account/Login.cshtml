@@ -67,6 +67,19 @@
                 Sign In →
             </button>
         </form>
+        <div class="text-center mt-2">
+            <a asp-action="ForgotPassword" class="text-muted small">Forgot your password?</a>
+        </div>
+
+        <div class="my-4 text-center">
+            <span class="text-muted">or</span>
+        </div>
+
+        <form asp-controller="Account" asp-action="ExternalLogin" asp-route-returnUrl="@returnUrl" method="post">
+            <button type="submit" name="provider" value="Google" class="auth-submit" style="background-color: #db4437; color: white;">
+                Login with Google
+            </button>
+        </form>
 
         <div class="my-4 text-center">
             <span class="text-muted">or</span>
