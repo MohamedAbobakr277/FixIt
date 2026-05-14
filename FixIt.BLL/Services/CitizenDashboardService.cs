@@ -65,6 +65,9 @@ public class CitizenDashboardService : ICitizenDashboardService
         {
             FullName = citizen.FullName,
             Email = citizen.Email ?? "",
+            IsTwoFactorEnabled = citizen.TwoFactorEnabled,
+            PhoneNumber = citizen.PhoneNumber,
+            Address = citizen.Address,
             MemberSince = citizen.CreatedAt,
             ProfilePicture = citizen.ProfilePicture,
             IssuesReported = citizen.Issues.Count,
@@ -83,5 +86,27 @@ public class CitizenDashboardService : ICitizenDashboardService
         }).ToList();
 
         return profile;
+    }
+
+    public async Task<bool> UpdateProfileAsync(string citizenId, UpdateProfileDto dto)
+    {
+        var user = await _userManager.FindByIdAsync(citizenId) as Citizen;
+        if (user == null) return false;
+
+        user.FullName = dto.FullName.Trim();
+        user.Email = dto.Email.Trim().ToLower();
+        user.UserName = dto.Email.Trim().ToLower(); // Important for login
+        user.PhoneNumber = dto.PhoneNumber?.Trim();
+        user.Address = dto.Address?.Trim();
+
+        var result = await _userManager.UpdateAsync(user);
+        
+        if (result.Succeeded)
+        {
+            // If email changed, we might need more logic but for now just update
+            return true;
+        }
+
+        return false;
     }
 }
