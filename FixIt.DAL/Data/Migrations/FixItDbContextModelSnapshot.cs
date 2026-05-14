@@ -183,6 +183,72 @@ namespace FixIt.DAL.Data.Migrations
                     b.ToTable("Issues", (string)null);
                 });
 
+            modelBuilder.Entity("FixIt.DAL.Entities.IssueStatusHistory", b =>
+                {
+                    b.Property<int>("IssueStatusHistoryId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IssueStatusHistoryId"));
+
+                    b.Property<DateTime>("ChangedAt")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("ChangedById")
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<int>("IssueId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Note")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int>("Status")
+                        .HasColumnType("int");
+
+                    b.HasKey("IssueStatusHistoryId");
+
+                    b.HasIndex("ChangedById");
+
+                    b.HasIndex("IssueId");
+
+                    b.ToTable("IssueStatusHistory");
+                });
+
+            modelBuilder.Entity("FixIt.DAL.Entities.LoginHistory", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("Device")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("IpAddress")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("Location")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime>("Timestamp")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("nvarchar(450)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.ToTable("LoginHistories");
+                });
+
             modelBuilder.Entity("FixIt.DAL.Entities.MaintenanceReport", b =>
                 {
                     b.Property<int>("ReportId")
@@ -479,6 +545,34 @@ namespace FixIt.DAL.Data.Migrations
                     b.Navigation("Citizen");
                 });
 
+            modelBuilder.Entity("FixIt.DAL.Entities.IssueStatusHistory", b =>
+                {
+                    b.HasOne("FixIt.DAL.Entities.ApplicationUser", "ChangedBy")
+                        .WithMany()
+                        .HasForeignKey("ChangedById");
+
+                    b.HasOne("FixIt.DAL.Entities.Issue", "Issue")
+                        .WithMany("StatusHistory")
+                        .HasForeignKey("IssueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ChangedBy");
+
+                    b.Navigation("Issue");
+                });
+
+            modelBuilder.Entity("FixIt.DAL.Entities.LoginHistory", b =>
+                {
+                    b.HasOne("FixIt.DAL.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("FixIt.DAL.Entities.MaintenanceReport", b =>
                 {
                     b.HasOne("FixIt.DAL.Entities.Admin", "Admin")
@@ -586,6 +680,8 @@ namespace FixIt.DAL.Data.Migrations
                     b.Navigation("MaintenanceSchedule");
 
                     b.Navigation("Rating");
+
+                    b.Navigation("StatusHistory");
                 });
 
             modelBuilder.Entity("FixIt.DAL.Entities.Admin", b =>
