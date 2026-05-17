@@ -1,0 +1,166 @@
+@using FixIt.BLL.DTOs
+@model ReportsPageDto
+
+@{
+    ViewData["Title"] = "Maintenance Reports";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="container mt-4">
+    <div class="row">
+        <!-- Left Panel - In Progress Issues -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5><i class="bi bi-tools"></i> In Progress Issues</h5>
+                </div>
+                <div class="card-body p-0">
+                    @if (Model.InProgressIssues.Any())
+                    {
+                        <div class="list-group list-group-flush">
+                            @foreach (var issue in Model.InProgressIssues)
+                            {
+                                <a href="#" class="list-group-item list-group-item-action issue-item" 
+                                   data-issue-id="@issue.IssueId"
+                                   data-issue-title="@issue.Title"
+                                   data-issue-location="@issue.Location"
+                                   data-worker-name="@issue.WorkerName">
+                                    <div class="d-flex w-100 justify-content-between">
+                                        <h6 class="mb-1">@issue.Title</h6>
+                                        <span class="badge bg-warning text-dark">@issue.Category</span>
+                                    </div>
+                                    <p class="mb-1">
+                                        <small class="text-muted">
+                                            <i class="bi bi-geo-alt"></i> @issue.Location
+                                        </small>
+                                    </p>
+                                    @if (!string.IsNullOrEmpty(issue.WorkerName))
+                                    {
+                                        <p class="mb-0">
+                                            <small class="text-muted">
+                                                <i class="bi bi-person"></i> @issue.WorkerName
+                                            </small>
+                                        </p>
+                                    }
+                                </a>
+                            }
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="text-center py-4">
+                            <i class="bi bi-tools text-muted" style="font-size: 2rem;"></i>
+                            <p class="text-muted mb-0">No issues in progress</p>
+                        </div>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Panel - Completion Report Form -->
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-success text-white">
+                    <h5><i class="bi bi-clipboard-check"></i> Completion Report</h5>
+                </div>
+                <div class="card-body">
+                    <form id="reportForm" asp-action="SubmitReport" method="post" enctype="multipart/form-data">
+                        <input type="hidden" id="IssueId" name="IssueId" />
+                        
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                        <div id="issueInfo" class="alert alert-info d-none">
+                            <h6 id="selectedIssueTitle"></h6>
+                            <p class="mb-0">
+                                <small>
+                                    <i class="bi bi-geo-alt"></i> <span id="selectedIssueLocation"></span><br />
+                                    <i class="bi bi-person"></i> <span id="selectedWorkerName"></span>
+                                </small>
+                            </p>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="Summary" class="form-label">Report Summary *</label>
+                            <textarea id="Summary" name="Summary" class="form-control" rows="4" 
+                                      placeholder="Provide a summary of the work completed..." required></textarea>
+                            <span class="text-danger small" id="Summary-error"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="WorkerNotes" class="form-label">Worker Notes</label>
+                            <textarea id="WorkerNotes" name="WorkerNotes" class="form-control" rows="3" 
+                                      placeholder="Additional notes from the worker..."></textarea>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="BeforeImage" class="form-label">Before Image</label>
+                                    <input type="file" id="BeforeImage" name="BeforeImage" class="form-control" 
+                                           accept="image/*" />
+                                    <span class="text-danger small" id="BeforeImage-error"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="AfterImage" class="form-label">After Image</label>
+                                    <input type="file" id="AfterImage" name="AfterImage" class="form-control" 
+                                           accept="image/*" />
+                                    <span class="text-danger small" id="AfterImage-error"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-grid gap-2">
+                            <button type="submit" class="btn btn-success" id="submitBtn" disabled>
+                                <i class="bi bi-check-circle"></i> Mark as Resolved
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        $(document).ready(function() {
+            // Handle issue selection
+            $('.issue-item').click(function(e) {
+                e.preventDefault();
+                
+                // Remove active class from all items
+                $('.issue-item').removeClass('active');
+                
+                // Add active class to clicked item
+                $(this).addClass('active');
+                
+                // Update form with selected issue data
+                var issueId = $(this).data('issue-id');
+                var title = $(this).data('issue-title');
+                var location = $(this).data('issue-location');
+                var workerName = $(this).data('worker-name');
+                
+                $('#IssueId').val(issueId);
+                $('#selectedIssueTitle').text(title);
+                $('#selectedIssueLocation').text(location);
+                $('#selectedWorkerName').text(workerName || 'Not assigned');
+                
+                // Show issue info and enable submit button
+                $('#issueInfo').removeClass('d-none');
+                $('#submitBtn').prop('disabled', false);
+            });
+            
+            // Handle form submission
+            $('#reportForm').on('submit', function(e) {
+                var issueId = $('#IssueId').val();
+                if (!issueId) {
+                    e.preventDefault();
+                    alert('Please select an issue to report on.');
+                    return false;
+                }
+            });
+        });
+    </script>
+}

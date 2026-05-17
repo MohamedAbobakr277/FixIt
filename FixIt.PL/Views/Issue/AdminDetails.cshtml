@@ -1,0 +1,484 @@
+@model FixIt.BLL.DTOs.AdminIssueDetailsDto
+@using FixIt.Common.Enums
+@{
+    ViewData["Title"] = $"ISS-{Model.IssueId:D3} – {Model.Title}";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    string CategoryIcon(IssueCategory c) => c switch
+    {
+        IssueCategory.Electrical         => "⚡",
+        IssueCategory.Water              => "💧",
+        IssueCategory.Plumbing           => "🔧",
+        IssueCategory.Carpentry          => "🪚",
+        IssueCategory.GeneralMaintenance => "🛠",
+        _                                => "📌"
+    };
+
+    string CategoryLabel(IssueCategory c) => c switch
+    {
+        IssueCategory.GeneralMaintenance => "General Maintenance",
+        _ => c.ToString()
+    };
+
+    string StatusLabel(IssueStatus s) => s switch
+    {
+        IssueStatus.InProgress => "In Progress",
+        _ => s.ToString()
+    };
+
+    string StatusBadgeClass(IssueStatus s) => s switch
+    {
+        IssueStatus.New        => "adm-badge adm-badge-new",
+        IssueStatus.Approved   => "adm-badge adm-badge-approved",
+        IssueStatus.Scheduled  => "adm-badge adm-badge-scheduled",
+        IssueStatus.InProgress => "adm-badge adm-badge-inprogress",
+        IssueStatus.Resolved   => "adm-badge adm-badge-resolved",
+        IssueStatus.Closed     => "adm-badge adm-badge-closed",
+        IssueStatus.Rejected   => "adm-badge adm-badge-rejected",
+        _                      => "adm-badge"
+    };
+
+    (IssueStatus next, string label)? primaryAction = Model.Status switch
+    {
+        IssueStatus.New        => (IssueStatus.Approved,   "Approve Issue"),
+        IssueStatus.Approved   => (IssueStatus.Scheduled,  "Mark as Scheduled"),
+        IssueStatus.Scheduled  => (IssueStatus.InProgress, "Start Work"),
+        IssueStatus.InProgress => (IssueStatus.Resolved,   "Mark Resolved"),
+        IssueStatus.Resolved   => (IssueStatus.Closed,     "Close Issue"),
+        _                      => ((IssueStatus, string)?)null
+    };
+
+    bool canReject = Model.Status == IssueStatus.New || Model.Status == IssueStatus.Approved;
+}
+
+@section Styles {
+<style>
+    .det-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 20px;
+        align-items: start;
+    }
+    @@media (max-width: 960px) { .det-grid { grid-template-columns: 1fr; } }
+
+    .det-stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+    .det-card {
+        background: var(--adm-surface);
+        border: 1px solid var(--adm-border);
+        border-radius: var(--adm-radius);
+        box-shadow: var(--adm-card-shadow);
+        padding: 22px 24px;
+    }
+    .det-card h2 {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--adm-text);
+        margin: 0 0 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .det-card h2 .h-ico {
+        color: var(--adm-muted);
+        display: inline-flex;
+    }
+
+    .det-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--adm-muted);
+        text-decoration: none;
+        font-size: 13.5px;
+        margin-bottom: 14px;
+    }
+    .det-back:hover { color: var(--adm-primary); }
+
+    /* Issue header card */
+    .det-head-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+    .det-head-row .iss-id {
+        margin-left: auto;
+        color: var(--adm-muted);
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .det-cat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--adm-text);
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .det-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--adm-text);
+        margin: 0 0 12px;
+        letter-spacing: -0.01em;
+        line-height: 1.25;
+    }
+    .det-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        color: var(--adm-muted);
+        font-size: 13px;
+        margin-bottom: 14px;
+    }
+    .det-meta span { display: inline-flex; align-items: center; gap: 6px; }
+    .det-meta svg { color: var(--adm-light); }
+    .det-desc {
+        color: var(--adm-text);
+        font-size: 13.5px;
+        line-height: 1.65;
+        margin: 0;
+    }
+    .det-img {
+        margin-top: 14px;
+        max-width: 100%;
+        border-radius: var(--adm-radius-sm);
+        border: 1px solid var(--adm-border);
+        display: block;
+    }
+
+    /* Admin notes */
+    .det-textarea {
+        width: 100%;
+        min-height: 110px;
+        resize: vertical;
+        padding: 12px 14px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: var(--adm-bg);
+        color: var(--adm-text);
+        font-size: 13.5px;
+        font-family: var(--adm-font);
+        line-height: 1.5;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .det-textarea:focus {
+        border-color: var(--adm-primary);
+        box-shadow: 0 0 0 3px var(--adm-primary-glow);
+    }
+    .det-btn {
+        margin-top: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 16px;
+        background: #0f172a;
+        color: #fff;
+        border: 1px solid #0f172a;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 500;
+        font-family: var(--adm-font);
+        cursor: pointer;
+        transition: background .15s, transform .1s;
+        text-decoration: none;
+    }
+    .det-btn:hover { background: #1e293b; color: #fff; }
+    .det-btn:active { transform: translateY(1px); }
+    [data-adm-theme="dark"] .det-btn { background: #1e293b; border-color: #334155; }
+    [data-adm-theme="dark"] .det-btn:hover { background: #334155; }
+
+    .det-btn-success {
+        background: #10b981;
+        border-color: #10b981;
+        color: #fff;
+        width: 100%;
+        justify-content: center;
+        padding: 11px 16px;
+        font-weight: 600;
+    }
+    .det-btn-success:hover { background: #059669; border-color: #059669; }
+
+    .det-btn-danger {
+        background: transparent;
+        border-color: var(--adm-border);
+        color: #dc2626;
+        width: 100%;
+        justify-content: center;
+        padding: 9px 16px;
+        margin-top: 8px;
+    }
+    .det-btn-danger:hover { background: rgba(220,38,38,0.08); color: #b91c1c; border-color: #dc2626; }
+
+    /* Schedule grid */
+    .det-sched {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap: 18px;
+    }
+    @@media (max-width: 600px) { .det-sched { grid-template-columns: repeat(2, 1fr); } }
+    .det-sched-label {
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--adm-muted);
+        margin-bottom: 4px;
+    }
+    .det-sched-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--adm-text);
+    }
+
+    /* Timeline */
+    .det-timeline { position: relative; padding-left: 20px; }
+    .det-timeline::before {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 6px;
+        bottom: 6px;
+        width: 2px;
+        background: var(--adm-border);
+        border-radius: 2px;
+    }
+    .det-tl-item {
+        position: relative;
+        padding-bottom: 18px;
+    }
+    .det-tl-item:last-child { padding-bottom: 0; }
+    .det-tl-dot {
+        position: absolute;
+        left: -20px;
+        top: 4px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--adm-light);
+        box-sizing: border-box;
+    }
+    .det-tl-item.is-active .det-tl-dot {
+        border-color: var(--adm-primary);
+        background: var(--adm-primary);
+        box-shadow: 0 0 0 4px var(--adm-primary-glow);
+    }
+    .det-tl-item.is-past .det-tl-dot {
+        background: var(--adm-primary);
+        border-color: var(--adm-primary);
+    }
+    .det-tl-status {
+        display: inline-block;
+        margin-bottom: 4px;
+    }
+    .det-tl-time {
+        font-size: 12px;
+        color: var(--adm-muted);
+        margin: 2px 0 2px;
+    }
+    .det-tl-note {
+        font-size: 13px;
+        color: var(--adm-text);
+    }
+    [data-adm-theme="dark"] .det-tl-dot { background: var(--adm-surface); }
+</style>
+}
+
+<a class="det-back" asp-action="AdminIndex">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    Back to Issues
+</a>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="alert alert-success" style="margin-bottom: 16px;">@TempData["SuccessMessage"]</div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="alert alert-danger" style="margin-bottom: 16px;">@TempData["ErrorMessage"]</div>
+}
+
+<div class="det-grid">
+    <div class="det-stack">
+
+        <!-- Issue summary card -->
+        <div class="det-card">
+            <div class="det-head-row">
+                <span class="det-cat-pill">
+                    <span style="font-size:15px;">@CategoryIcon(Model.Category)</span>
+                    @CategoryLabel(Model.Category)
+                </span>
+                <span class="@StatusBadgeClass(Model.Status)">@StatusLabel(Model.Status)</span>
+                <span class="iss-id">ISS-@Model.IssueId.ToString("D3")</span>
+            </div>
+
+            <h1 class="det-title">@Model.Title</h1>
+
+            <div class="det-meta">
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    @Model.Location
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    @Model.CitizenName
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    @Model.SubmittedAt.ToString("M/d/yyyy")
+                </span>
+            </div>
+
+            <p class="det-desc">@Model.Description</p>
+
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img class="det-img" src="@Model.ImageUrl" alt="Issue image" />
+            }
+        </div>
+
+        <!-- Admin notes -->
+        <div class="det-card">
+            <h2>
+                <span class="h-ico">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </span>
+                Admin Notes
+            </h2>
+            <form asp-action="SaveAdminNotes" asp-route-id="@Model.IssueId" method="post">
+                @Html.AntiForgeryToken()
+                <textarea name="adminNotes" class="det-textarea" placeholder="Add internal notes about this issue...">@Model.AdminNotes</textarea>
+                <button type="submit" class="det-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Save Notes
+                </button>
+            </form>
+        </div>
+
+        <!-- Maintenance schedule -->
+        @if (Model.Schedule != null)
+        {
+            <div class="det-card">
+                <h2>
+                    <span class="h-ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </span>
+                    Maintenance Schedule
+                </h2>
+                <div class="det-sched">
+                    <div>
+                        <div class="det-sched-label">Date</div>
+                        <div class="det-sched-value">@Model.Schedule.VisitDate.ToString("M/d/yyyy")</div>
+                    </div>
+                    <div>
+                        <div class="det-sched-label">Time</div>
+                        <div class="det-sched-value">@Model.Schedule.VisitDate.ToString("HH:mm")</div>
+                    </div>
+                    <div>
+                        <div class="det-sched-label">Assigned</div>
+                        <div class="det-sched-value">@(string.IsNullOrWhiteSpace(Model.Schedule.WorkerName) ? "—" : Model.Schedule.WorkerName)</div>
+                    </div>
+                    <div>
+                        <div class="det-sched-label">Est. Cost</div>
+                        <div class="det-sched-value">$@Model.Schedule.EstimatedCost.ToString("0.##")</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Right rail -->
+    <div class="det-stack">
+        <div class="det-card">
+            <h2>Actions</h2>
+            @if (primaryAction.HasValue)
+            {
+                <form asp-action="ChangeStatus" asp-route-id="@Model.IssueId" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="newStatus" value="@primaryAction.Value.next" />
+                    <button type="submit" class="det-btn det-btn-success">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        @primaryAction.Value.label
+                    </button>
+                </form>
+            }
+            else
+            {
+                <div style="color: var(--adm-muted); font-size: 13px; padding: 6px 0;">No further actions available.</div>
+            }
+
+            @if (canReject)
+            {
+                <form asp-action="ChangeStatus" asp-route-id="@Model.IssueId" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="newStatus" value="@IssueStatus.Rejected" />
+                    <button type="submit" class="det-btn det-btn-danger"
+                            onclick="return confirm('Reject this issue?');">
+                        Reject Issue
+                    </button>
+                </form>
+            }
+        </div>
+
+        <div class="det-card">
+            <h2>Status Timeline</h2>
+            <div class="det-timeline">
+                @{
+                    var ordered = Model.Timeline.OrderBy(t => t.ChangedAt).ToList();
+                }
+                @for (int idx = 0; idx < ordered.Count; idx++)
+                {
+                    var entry = ordered[idx];
+                    bool isCurrent = idx == ordered.Count - 1;
+                    string cls = isCurrent ? "det-tl-item is-active" : "det-tl-item is-past";
+                    <div class="@cls">
+                        <span class="det-tl-dot"></span>
+                        <div class="det-tl-status">
+                            <span class="@StatusBadgeClass(entry.Status)">@StatusLabel(entry.Status)</span>
+                        </div>
+                        <div class="det-tl-time">@entry.ChangedAt.ToString("M/d/yyyy, h:mm:ss tt")</div>
+                        @if (!string.IsNullOrWhiteSpace(entry.Note))
+                        {
+                            <div class="det-tl-note">@entry.Note</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>

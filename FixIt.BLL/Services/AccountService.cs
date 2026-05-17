@@ -5,6 +5,9 @@ using FixIt.DAL.Entities;
 using Microsoft.AspNetCore.Identity;
 using FixIt.BLL.DTOs;
 using FixIt.Common.Helpers;
+using FixIt.DAL.UnitOfWork;
+using Microsoft.AspNetCore.Http;
+using Microsoft.EntityFrameworkCore;
 
 namespace FixIt.BLL.Services;
 
@@ -16,15 +19,21 @@ public class AccountService : IAccountService
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly ITwoFactorService _twoFactorService;
+    private readonly IUnitOfWork _unitOfWork;
+    private readonly IHttpContextAccessor _httpContextAccessor;
 
     public AccountService(
         UserManager<ApplicationUser> userManager,
         SignInManager<ApplicationUser> signInManager,
-        ITwoFactorService twoFactorService)
+        ITwoFactorService twoFactorService,
+        IUnitOfWork unitOfWork,
+        IHttpContextAccessor httpContextAccessor)
     {
         _userManager = userManager;
         _signInManager = signInManager;
         _twoFactorService = twoFactorService;
+        _unitOfWork = unitOfWork;
+        _httpContextAccessor = httpContextAccessor;
     }
 
     /// <inheritdoc/>
@@ -85,7 +94,11 @@ public class AccountService : IAccountService
             isPersistent: dto.RememberMe,
             lockoutOnFailure: true);
 
-        if (result.Succeeded) return null; // null = success
+        if (result.Succeeded)
+        {
+            await RecordLoginAsync(user.Id);
+            return null; // null = success
+        }
         if (result.IsLockedOut) return "Your account has been locked. Please try again later.";
         
         return "Invalid email or password. Please try again.";
@@ -217,6 +230,7 @@ public class AccountService : IAccountService
         if (isValid)
         {
             await _signInManager.SignInAsync(user, isPersistent: rememberMe);
+            await RecordLoginAsync(user.Id);
         }
         else
         {
@@ -259,6 +273,7 @@ public class AccountService : IAccountService
             await _userManager.UpdateAsync(user);
             
             await _signInManager.SignInAsync(user, isPersistent: rememberMe);
+            await RecordLoginAsync(user.Id);
             return true;
         }
 
@@ -269,5 +284,99 @@ public class AccountService : IAccountService
     {
         var user = await _userManager.FindByIdAsync(userId);
         return user?.IsTwoFactorEnabled ?? false;
+    }
+
+    // Added ForgotPasswordAsync implementation
+    public async Task<(bool success, string? token, string? userId)> ForgotPasswordAsync(string email)
+    {
+        // Use the email provided directly (Identity handles normalization)
+        var user = await _userManager.FindByEmailAsync(email.Trim());
+        // If user not found or email not confirmed, silently succeed without token to avoid enumeration
+        if (user == null || !(await _userManager.IsEmailConfirmedAsync(user)))
+        {
+            return (true, null, null);
+        }
+        // Generate reset token
+        var token = await _userManager.GeneratePasswordResetTokenAsync(user);
+        return (true, token, user.Id);
+    }
+
+    // Added ResetPasswordAsync implementation
+    public async Task<bool> ResetPasswordAsync(string userId, string token, string newPassword)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return false;
+        var result = await _userManager.ResetPasswordAsync(user, token, newPassword);
+        if (result.Succeeded)
+        {
+            // Automatically confirm email if password reset was successful via email link
+            if (!user.EmailConfirmed)
+            {
+                user.EmailConfirmed = true;
+                await _userManager.UpdateAsync(user);
+            }
+            return true;
+        }
+        return false;
+    }
+
+    public async Task<IdentityResult> ChangePasswordAsync(string userId, string oldPassword, string newPassword)
+    {
+        var user = await _userManager.FindByIdAsync(userId);
+        if (user == null) return IdentityResult.Failed(new IdentityError { Description = "User not found" });
+
+        var result = await _userManager.ChangePasswordAsync(user, oldPassword, newPassword);
+        if (result.Succeeded)
+        {
+            await _signInManager.RefreshSignInAsync(user);
+        }
+        return result;
+    }
+
+    public async Task<IEnumerable<LoginActivityDto>> GetLoginActivityAsync(string userId)
+    {
+        var logs = await _unitOfWork.LoginHistories
+            .GetAll()
+            .Where(l => l.UserId == userId)
+            .OrderByDescending(l => l.Timestamp)
+            .Take(10)
+            .ToListAsync();
+
+        return logs.Select(l => new LoginActivityDto
+        {
+            Device = l.Device,
+            Location = l.Location,
+            IpAddress = l.IpAddress,
+            Timestamp = l.Timestamp,
+            IsCurrentSession = (DateTime.UtcNow - l.Timestamp).TotalMinutes < 60 // Simplification for demo
+        });
+    }
+
+    private async Task RecordLoginAsync(string userId)
+    {
+        var context = _httpContextAccessor.HttpContext;
+        if (context == null) return;
+
+        var userAgent = context.Request.Headers["User-Agent"].ToString();
+        var ipAddress = context.Connection.RemoteIpAddress?.ToString() ?? "Unknown";
+
+        // Basic UserAgent parsing for demo
+        string device = "Unknown Device";
+        if (userAgent.Contains("Windows")) device = "Chrome on Windows";
+        else if (userAgent.Contains("iPhone")) device = "iPhone";
+        else if (userAgent.Contains("Android")) device = "Android Device";
+        else if (userAgent.Contains("Macintosh")) device = "MacBook / iMac";
+
+        var history = new LoginHistory
+        {
+            UserId = userId,
+            Device = device,
+            IpAddress = ipAddress,
+            Location = "Cairo, Egypt", // In real app, use IP-to-Location service
+            Timestamp = DateTime.UtcNow
+        };
+
+        await _unitOfWork.LoginHistories.AddAsync(history);
+        await _unitOfWork.CompleteAsync();
     }
 }

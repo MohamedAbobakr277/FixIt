@@ -1,0 +1,219 @@
+@model FixIt.Common.DTOs.CitizenProfileDto
+@{
+    ViewData["Title"] = "My Profile";
+}
+
+<div class="page-wrapper">
+    <div class="section-container">
+        
+        <!-- Profile Header -->
+        <div class="card-fixit profile-card mb-4">
+            <div class="profile-layout">
+                <div class="profile-avatar-container">
+                    @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                    {
+                        <img src="@Model.ProfilePicture" alt="@Model.FullName" class="profile-avatar" />
+                    }
+                    else
+                    {
+                        <div class="profile-avatar-placeholder">
+                            <i class="bi bi-person"></i>
+                        </div>
+                    }
+                </div>
+                <div class="profile-info">
+                    <h1 class="profile-name">@Model.FullName</h1>
+                    <div class="profile-meta">
+                        <span class="meta-item"><i class="bi bi-envelope"></i> @Model.Email</span>
+                        <span class="meta-item"><i class="bi bi-calendar3"></i> Member since @Model.MemberSince.ToString("MMMM d, yyyy")</span>
+                    </div>
+                </div>
+                <div class="profile-actions ms-auto">
+                    <a asp-action="Settings" class="btn-outline-fixit">
+                        <i class="bi bi-gear"></i> Edit Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-row mb-4">
+            <div class="stat-mini-card">
+                <div class="stat-mini-icon"><i class="bi bi-file-earmark-plus"></i></div>
+                <div class="stat-mini-data">
+                    <div class="stat-mini-value">@Model.IssuesReported</div>
+                    <div class="stat-mini-label">Issues Reported</div>
+                </div>
+            </div>
+            <div class="stat-mini-card">
+                <div class="stat-mini-icon success"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-mini-data">
+                    <div class="stat-mini-value">@Model.ResolvedIssues</div>
+                    <div class="stat-mini-label">Resolved</div>
+                </div>
+            </div>
+            <div class="stat-mini-card">
+                <div class="stat-mini-icon warning"><i class="bi bi-star"></i></div>
+                <div class="stat-mini-data">
+                    <div class="stat-mini-value">@Model.RatingsGiven</div>
+                    <div class="stat-mini-label">Ratings Given</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Issue History -->
+                <div class="card-fixit mb-4">
+                    <h3 class="card-title-fixit mb-4">Issue History</h3>
+                    <div class="history-list">
+                        @if (Model.IssueHistory.Any())
+                        {
+                            @foreach (var issue in Model.IssueHistory)
+                            {
+                                <div class="history-item">
+                                    <div class="history-dot"></div>
+                                    <div class="history-content">
+                                        <div class="d-flex justify-content-between">
+                                            <a asp-controller="Issue" asp-action="Details" asp-route-id="@issue.IssueId" class="history-title">@issue.Title</a>
+                                            <span class="status-badge status-@issue.Status.ToString().ToLower()">@issue.Status</span>
+                                        </div>
+                                        <p class="history-meta">@issue.Category • Reported on @issue.SubmittedAt.ToString("MMM d")</p>
+                                    </div>
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center py-4">No issues reported yet</p>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <!-- Recent Ratings -->
+                <div class="card-fixit">
+                    <h3 class="card-title-fixit mb-4">Ratings Submitted</h3>
+                    <div class="ratings-mini-list">
+                        @if (Model.RecentRatings.Any())
+                        {
+                            @foreach (var rating in Model.RecentRatings)
+                            {
+                                <div class="rating-mini-item">
+                                    <div class="rating-mini-header">
+                                        <div class="rating-mini-stars">
+                                            @for (int i = 1; i <= 5; i++)
+                                            {
+                                                <i class="bi bi-star-fill @(i <= rating.Stars ? "text-warning" : "text-muted opacity-25")"></i>
+                                            }
+                                        </div>
+                                        <span class="rating-mini-date">@rating.RatedAt.ToString("MMM d")</span>
+                                    </div>
+                                    <div class="rating-mini-issue">Issue #@rating.IssueId: @rating.IssueTitle</div>
+                                    @if (!string.IsNullOrEmpty(rating.Comment))
+                                    {
+                                        <p class="rating-mini-comment">"@rating.Comment"</p>
+                                    }
+                                </div>
+                            }
+                        }
+                        else
+                        {
+                            <p class="text-muted text-center py-4">No ratings submitted yet</p>
+                        }
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .profile-card { padding: 32px; }
+        .profile-layout { display: flex; align-items: center; gap: 32px; }
+        .profile-avatar-container { width: 100px; height: 100px; flex-shrink: 0; }
+        .profile-avatar, .profile-avatar-placeholder { width: 100%; height: 100%; border-radius: var(--radius-lg); object-fit: cover; }
+        .profile-avatar-placeholder { background: var(--bg-surface-2); display: flex; align-items: center; justify-content: center; font-size: 40px; color: var(--text-light); border: 1.5px solid var(--border); }
+        .profile-name { font-family: var(--font-heading); font-weight: 800; color: var(--text-heading); margin-bottom: 8px; }
+        .profile-meta { display: flex; gap: 24px; }
+        .meta-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-muted); }
+        .meta-item i { color: var(--primary); }
+
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+        .stat-mini-card { 
+            background: var(--bg-card); 
+            border: 1px solid var(--border); 
+            border-radius: var(--radius-lg); 
+            padding: 24px; 
+            display: flex; 
+            flex-direction: column;
+            align-items: center; 
+            text-align: center;
+            gap: 16px; 
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); 
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .stat-mini-card::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; height: 4px;
+            background: var(--primary);
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        .stat-mini-card:hover { 
+            transform: translateY(-8px); 
+            box-shadow: 0 12px 30px rgba(0,0,0,0.08); 
+            border-color: var(--primary-light);
+        }
+        .stat-mini-card:hover::before { opacity: 1; }
+        
+        .stat-mini-icon { 
+            width: 56px; 
+            height: 56px; 
+            border-radius: 16px; 
+            background: var(--primary-glow); 
+            color: var(--primary); 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            font-size: 24px;
+            transition: transform 0.5s ease;
+        }
+        .stat-mini-card:hover .stat-mini-icon { transform: scale(1.1) rotate(5deg); }
+        .stat-mini-icon.success { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .stat-mini-icon.warning { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+        .stat-mini-value { font-size: 28px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.02em; line-height: 1; }
+        .stat-mini-label { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .history-list { display: flex; flex-direction: column; gap: 24px; position: relative; padding-left: 20px; }
+        .history-list::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 2px; background: var(--border); }
+        .history-item { position: relative; padding-left: 20px; }
+        .history-dot { position: absolute; left: -26px; top: 6px; width: 12px; height: 12px; border-radius: 50%; background: var(--bg-body); border: 2.5px solid var(--primary); z-index: 1; }
+        .history-title { font-weight: 600; color: var(--text-heading); text-decoration: none; font-size: 15px; }
+        .history-title:hover { color: var(--primary); }
+        .history-meta { font-size: 13px; color: var(--text-muted); margin-top: 4px; margin-bottom: 0; }
+
+        .ratings-mini-list { display: flex; flex-direction: column; gap: 20px; }
+        .rating-mini-item { border-bottom: 1px solid var(--border); padding-bottom: 16px; }
+        .rating-mini-item:last-child { border-bottom: none; padding-bottom: 0; }
+        .rating-mini-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+        .rating-mini-stars { font-size: 12px; }
+        .rating-mini-date { font-size: 11px; color: var(--text-light); }
+        .rating-mini-issue { font-size: 13px; font-weight: 600; color: var(--text-heading); margin-bottom: 4px; }
+        .rating-mini-comment { font-size: 12.5px; color: var(--text-muted); font-style: italic; margin-bottom: 0; }
+
+        @@media (max-width: 768px) {
+            .profile-layout { flex-direction: column; text-align: center; gap: 20px; }
+            .profile-meta { flex-direction: column; gap: 10px; align-items: center; }
+            .stats-row { grid-template-columns: 1fr; }
+            .profile-actions { width: 100%; margin-top: 20px; }
+            .profile-actions .btn-outline-fixit { width: 100%; justify-content: center; }
+        }
+    </style>
+}

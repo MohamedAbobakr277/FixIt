@@ -1,5 +1,5 @@
 using AutoMapper;
-using FixIt.BLL.Services;
+using FixIt.BLL.Interfaces;
 using FixIt.Common.DTOs;
 using FixIt.DAL.Entities;
 using FixIt.DAL.UnitOfWork;

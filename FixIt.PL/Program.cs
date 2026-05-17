@@ -24,6 +24,7 @@ if (!string.IsNullOrEmpty(encryptionKey) && !string.IsNullOrEmpty(encryptionIv))
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
 
 // ── Database ──
 builder.Services.AddDbContext<FixItDbContext>(options =>
@@ -91,11 +92,17 @@ builder.Services.AddAutoMapper(cfg => cfg.AddProfile<MappingProfile>());
 
 // ── Services ──
 builder.Services.AddScoped<IAccountService, AccountService>();
-builder.Services.AddScoped<IEmailSenderService, SmtpEmailSenderService>();
 builder.Services.AddScoped<ITwoFactorService, TwoFactorService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<IIssueDetailsService, IssueDetailsService>();
+builder.Services.AddScoped<IAdminIssueService, AdminIssueService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
+builder.Services.AddScoped<IRatingAdminService, RatingAdminService>();
+builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
+builder.Services.AddScoped<IScheduleService, ScheduleService>();
+builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<ICitizenDashboardService, CitizenDashboardService>();
+builder.Services.AddScoped<IEmailSenderService, SmtpEmailSenderService>();
 
 // ── FluentValidation ──
 // One registration covers all validators in the same assembly
