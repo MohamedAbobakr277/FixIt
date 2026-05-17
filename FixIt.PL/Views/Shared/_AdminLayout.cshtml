@@ -1,0 +1,148 @@
+@using Microsoft.AspNetCore.Identity
+@using FixIt.DAL.Entities
+@inject SignInManager<ApplicationUser> SignInManager
+@inject UserManager<ApplicationUser> UserManager
+<!DOCTYPE html>
+<html lang="en" data-adm-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="FixIt Admin — Manage and oversee community issue reports." />
+    <title>@ViewData["Title"] - FixIt Admin</title>
+    <link rel="icon" type="image/png" href="~/images/logo-icon.png" asp-append-version="true" />
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
+    @RenderSection("Styles", required: false)
+</head>
+<body>
+
+@{
+    var currentUser = SignInManager.IsSignedIn(User)
+        ? await UserManager.GetUserAsync(User)
+        : null;
+    var displayName = currentUser?.FullName ?? User.Identity?.Name ?? "Admin";
+    var initials = displayName.Length > 0 ? displayName[0].ToString().ToUpper() : "A";
+
+    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+    var currentAction = ViewContext.RouteData.Values["action"]?.ToString();
+
+    string NavClass(string ctrl, string? action = null)
+    {
+        bool match = currentController == ctrl && (action == null || currentAction == action);
+        return match ? "adm-nav-link active" : "adm-nav-link";
+    }
+}
+
+<div class="adm-shell" id="admShell">
+
+    <!-- ══ TOP BAR ══ -->
+    <header class="adm-topbar">
+        <div class="adm-topbar-left">
+            <a class="adm-topbar-brand" asp-controller="Home" asp-action="Index">
+                <img src="~/images/logo-icon.png" alt="FixIt Logo" class="adm-brand-logo" />
+                <span class="adm-brand-text">FixIt</span>
+            </a>
+        </div>
+            
+        <nav class="adm-nav-horizontal">
+            <a class="@NavClass("Admin","Dashboard")" asp-controller="Admin" asp-action="Dashboard">
+                <span class="adm-nav-label">Overview</span>
+            </a>
+            <a class="@NavClass("Issue")" asp-controller="Issue" asp-action="AdminIndex">
+                <span class="adm-nav-label">Issues</span>
+            </a>
+            <a class="@NavClass("Admin", "Schedule")" asp-controller="Admin" asp-action="Schedule">
+                <span class="adm-nav-label">Schedule</span>
+            </a>
+            <a class="@NavClass("Admin", "Reports")" asp-controller="Admin" asp-action="Reports">
+                <span class="adm-nav-label">Reports</span>
+            </a>
+            <a class="@NavClass("Admin", "Ratings")" asp-controller="Admin" asp-action="Ratings">
+                <span class="adm-nav-label">Ratings</span>
+            </a>
+        </nav>
+        <div class="adm-topbar-right">
+            <button class="adm-icon-btn" id="admThemeToggle" title="Toggle Theme">🌙</button>
+            <button class="adm-icon-btn" title="Search">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+            </button>
+            <button class="adm-icon-btn" title="Notifications" style="position: relative;">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                <span style="position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; background: #ef4444; border-radius: 50%; border: 1px solid #fff;"></span>
+            </button>
+            <div class="dropdown" style="margin-left: 4px;">
+                <div class="adm-avatar" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;" title="@displayName">@initials</div>
+                <div class="dropdown-menu dropdown-menu-end shadow-sm adm-dropdown" style="margin-top: 10px;">
+                    <div class="adm-dropdown-header">
+                        <div class="adm-dropdown-name">@displayName</div>
+                        <div class="adm-dropdown-role">Administrator</div>
+                    </div>
+                    <a class="dropdown-item" href="#">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+                        My Profile
+                    </a>
+                    <a class="dropdown-item" href="#">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                        Settings
+                    </a>
+                    <form asp-controller="Account" asp-action="Logout" method="post" style="margin: 4px 0 0 0; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 4px;">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="dropdown-item text-danger">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
+                            Log Out
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- ══ MAIN ══ -->
+    <div class="adm-main">
+
+        <!-- Page Content -->
+        <main class="adm-content" role="main">
+            @RenderBody()
+        </main>
+
+    </div>
+</div>
+
+<script src="~/lib/jquery/dist/jquery.min.js"></script>
+<script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+(function () {
+    const shell    = document.getElementById('admShell');
+    const sidebar  = document.getElementById('admSidebar');
+    const colBtn   = document.getElementById('sidebarCollapseBtn');
+    const themeBtn = document.getElementById('admThemeToggle');
+    const html     = document.documentElement;
+
+    // Persist sidebar state
+    const collapsed = localStorage.getItem('admSidebarCollapsed') === 'true';
+    if (collapsed) { sidebar.classList.add('collapsed'); shell.classList.add('sidebar-collapsed'); }
+
+    colBtn?.addEventListener('click', () => {
+        const isNowCollapsed = sidebar.classList.toggle('collapsed');
+        shell.classList.toggle('sidebar-collapsed', isNowCollapsed);
+        localStorage.setItem('admSidebarCollapsed', isNowCollapsed);
+    });
+
+    // Theme toggle
+    const savedTheme = localStorage.getItem('admTheme') || 'light';
+    html.setAttribute('data-adm-theme', savedTheme);
+    themeBtn.textContent = savedTheme === 'dark' ? '☀️' : '🌙';
+
+    themeBtn?.addEventListener('click', () => {
+        const current = html.getAttribute('data-adm-theme');
+        const next = current === 'dark' ? 'light' : 'dark';
+        html.setAttribute('data-adm-theme', next);
+        themeBtn.textContent = next === 'dark' ? '☀️' : '🌙';
+        localStorage.setItem('admTheme', next);
+    });
+})();
+</script>
+@await RenderSectionAsync("Scripts", required: false)
+
+</body>
+</html>

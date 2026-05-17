@@ -26,4 +26,5 @@ public class Issue
     public MaintenanceSchedule? MaintenanceSchedule { get; set; }
     public MaintenanceReport? MaintenanceReport { get; set; }
     public Rating? Rating { get; set; }
+    public ICollection<IssueStatusHistory> StatusHistory { get; set; } = new List<IssueStatusHistory>();
 }

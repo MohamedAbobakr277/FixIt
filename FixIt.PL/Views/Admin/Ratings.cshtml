@@ -1,0 +1,144 @@
+@model FixIt.Common.DTOs.AdminRatingsPageDto
+
+@{
+    ViewData["Title"] = "Citizen Ratings";
+    Layout = "_AdminLayout";
+    
+    // Calculate max count for proportional scaling of bars
+    int maxCount = Model.Distribution.Values.Any() ? Model.Distribution.Values.Max() : 0;
+}
+
+<div class="adm-page-header">
+    <h1 class="adm-page-title">Citizen Ratings</h1>
+    <p class="adm-page-subtitle">View feedback and ratings from citizens</p>
+</div>
+
+<!-- ── STATS CARDS ── -->
+<div class="adm-stats-grid mb-5">
+    <div class="adm-stat-card">
+        <div class="adm-stat-label">Average Rating</div>
+        <div class="adm-stat-value">
+            <span class="text-warning">★</span> @Model.AverageRating.ToString("F1")
+        </div>
+        <div class="adm-stat-trend">
+            <span class="adm-trend-text">Based on @Model.TotalRatings ratings</span>
+        </div>
+    </div>
+    <div class="adm-stat-card">
+        <div class="adm-stat-label">Total Ratings</div>
+        <div class="adm-stat-value">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-primary" style="vertical-align: middle;"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path><circle cx="9" cy="7" r="4"></circle><path d="M23 21v-2a4 4 0 0 0-3-3.87"></path><path d="M16 3.13a4 4 0 0 1 0 7.75"></path></svg>
+            @Model.TotalRatings
+        </div>
+        <div class="adm-stat-trend">
+            <span class="adm-trend-text">Lifetime feedback</span>
+        </div>
+    </div>
+    <div class="adm-stat-card">
+        <div class="adm-stat-label">Positive Ratings</div>
+        <div class="adm-stat-value">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" class="me-2 text-success" style="vertical-align: middle;"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"></polyline><polyline points="17 6 23 6 23 12"></polyline></svg>
+            @Model.PositiveRatings
+        </div>
+        <div class="adm-stat-trend">
+            <span class="adm-trend-pill up">4-5 Stars</span>
+        </div>
+    </div>
+</div>
+
+<div class="adm-dashboard-grid">
+    <!-- ── RECENT RATINGS ── -->
+    <div class="adm-card">
+        <div class="adm-card-header">
+            <h3 class="adm-card-title">Recent Ratings</h3>
+            <span class="adm-card-badge">Last 10 updates</span>
+        </div>
+        <div class="p-3">
+            @if (!Model.RecentRatings.Any())
+            {
+                <div class="text-center py-5 text-muted">
+                    <p>No ratings yet</p>
+                </div>
+            }
+            else
+            {
+                foreach (var rating in Model.RecentRatings)
+                {
+                    <div class="adm-rating-item mb-3">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div class="d-flex align-items-center gap-3">
+                                <div class="avatar-circle">@(rating.CitizenName.Length > 0 ? rating.CitizenName[0].ToString().ToUpper() : "?")</div>
+                                <div>
+                                    <div class="fw-bold">@rating.CitizenName</div>
+                                    <div class="text-muted x-small">@rating.SubmittedAt.ToString("MMM dd, yyyy")</div>
+                                </div>
+                            </div>
+                            <div class="text-warning">
+                                <partial name="_StarDisplay" model="rating.Stars" />
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <small class="text-muted">Issue: </small>
+                            <span class="fw-600 x-small text-primary">@rating.IssueTitle</span>
+                        </div>
+                        @if (!string.IsNullOrEmpty(rating.Comment))
+                        {
+                            <p class="mb-0 fst-italic text-body">"@rating.Comment"</p>
+                        }
+                    </div>
+                }
+            }
+        </div>
+    </div>
+
+    <!-- ── RATING DISTRIBUTION ── -->
+    <div class="adm-card" style="height: fit-content;">
+        <div class="adm-card-header">
+            <h3 class="adm-card-title">Rating Distribution</h3>
+        </div>
+        <div class="p-4">
+            @for (int i = 5; i >= 1; i--)
+            {
+                var count = Model.Distribution.ContainsKey(i) ? Model.Distribution[i] : 0;
+                var width = maxCount > 0 ? (count * 100 / maxCount) : 0;
+                
+                <div class="d-flex align-items-center mb-3">
+                    <div style="width: 40px;" class="fw-bold">@i <span class="text-warning">★</span></div>
+                    <div class="flex-grow-1 mx-2" style="height: 8px; background: var(--adm-surface-2); border-radius: 4px; overflow: hidden;">
+                        <div style="width: @width%; height: 100%; background: @(i >= 4 ? "#fbbf24" : i == 3 ? "#94a3b8" : "#f87171"); border-radius: 4px;"></div>
+                    </div>
+                    <div style="width: 25px; text-align: right;" class="text-muted small">@count</div>
+                </div>
+            }
+        </div>
+    </div>
+</div>
+
+<style>
+    .fw-600 { font-weight: 600; }
+    .x-small { font-size: 11px; }
+    
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        background: var(--adm-primary);
+        color: #fff;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 16px;
+    }
+
+    .adm-rating-item {
+        padding: 20px;
+        background: var(--adm-surface-2);
+        border-radius: var(--adm-radius-sm);
+        transition: transform 0.3s ease;
+    }
+    
+    .adm-rating-item:hover {
+        transform: translateX(4px);
+    }
+</style>

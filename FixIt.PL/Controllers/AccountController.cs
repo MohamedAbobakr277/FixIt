@@ -1,3 +1,4 @@
+using System.Threading.Tasks;
 using FixIt.Common.DTOs;
 using FixIt.BLL.Interfaces;
 using FluentValidation;
@@ -15,6 +16,8 @@ public class AccountController : Controller
     private readonly IAccountService _accountService;
     private readonly IValidator<RegisterDto> _registerValidator;
     private readonly IValidator<LoginDto> _loginValidator;
+    private readonly IValidator<ForgotPasswordDto> _forgotPasswordValidator;
+    private readonly IValidator<ResetPasswordDto> _resetPasswordValidator;
     private readonly IEmailSenderService _emailSender;
     private readonly SignInManager<ApplicationUser> _signInManager;
     private readonly UserManager<ApplicationUser> _userManager;
@@ -23,6 +26,8 @@ public class AccountController : Controller
         IAccountService accountService,
         IValidator<RegisterDto> registerValidator,
         IValidator<LoginDto> loginValidator,
+        IValidator<ForgotPasswordDto> forgotPasswordValidator,
+        IValidator<ResetPasswordDto> resetPasswordValidator,
         IEmailSenderService emailSender,
         SignInManager<ApplicationUser> signInManager,
         UserManager<ApplicationUser> userManager)
@@ -30,6 +35,8 @@ public class AccountController : Controller
         _accountService = accountService;
         _registerValidator = registerValidator;
         _loginValidator = loginValidator;
+        _forgotPasswordValidator = forgotPasswordValidator;
+        _resetPasswordValidator = resetPasswordValidator;
         _emailSender = emailSender;
         _signInManager = signInManager;
         _userManager = userManager;
@@ -59,7 +66,7 @@ public class AccountController : Controller
         }
 
         var (errors, userId, token) = await _accountService.RegisterAsync(dto);
-        if (errors == null && userId != null && token != null) // success
+        if (errors == null && userId != null && token != null)
         {
             // Encode the token so special chars (+, /, =) survive URL transmission
             var encodedToken = System.Net.WebUtility.UrlEncode(token);
@@ -71,32 +78,18 @@ public class AccountController : Controller
 
             if (callbackUrl != null)
             {
-                var htmlMessage = $@"
-                    <h2>Welcome to FixIt!</h2>
-                    <p>Please confirm your email address to activate your account by clicking the link below:</p>
-                    <p><a href='{System.Text.Encodings.Web.HtmlEncoder.Default.Encode(callbackUrl)}'>Confirm My Account</a></p>
-                    <br/>
-                    <p>Or copy and paste this link into your browser:</p>
-                    <p>{callbackUrl}</p>";
-
-                await _emailSender.SendEmailAsync(dto.Email, "Confirm your email address - FixIt", htmlMessage);
+                var htmlMessage = $@"<h2>Welcome to FixIt!</h2><p>Please confirm your email by clicking <a href='{callbackUrl}'>here</a>.</p>";
+                await _emailSender.SendEmailAsync(dto.Email, "Confirm your email", htmlMessage);
             }
-
             return RedirectToAction(nameof(RegisterConfirmation));
         }
-
-        foreach (var error in errors!)
-            ModelState.AddModelError(string.Empty, error);
-
+        foreach (var error in errors!) ModelState.AddModelError(string.Empty, error);
         return View(dto);
     }
 
     // ── GET /Account/RegisterConfirmation ──────────────────────────────────
     [HttpGet]
-    public IActionResult RegisterConfirmation()
-    {
-        return View();
-    }
+    public IActionResult RegisterConfirmation() => View();
 
     // ── GET /Account/ConfirmEmail ──────────────────────────────────────────
     [HttpGet]
@@ -111,7 +104,6 @@ public class AccountController : Controller
         var decodedCode = System.Net.WebUtility.UrlDecode(code);
         var isConfirmed = await _accountService.ConfirmEmailAsync(userId, decodedCode);
         ViewData["IsConfirmed"] = isConfirmed;
-
         return View();
     }
 
@@ -120,7 +112,11 @@ public class AccountController : Controller
     public IActionResult Login(string? returnUrl = null)
     {
         if (User.Identity?.IsAuthenticated == true)
+        {
+            if (User.IsInRole("Admin"))
+                return RedirectToAction("Dashboard", "Admin");
             return RedirectToAction("Index", "Home");
+        }
 
         ViewData["ReturnUrl"] = returnUrl;
         return View(new LoginDto());
@@ -134,8 +130,7 @@ public class AccountController : Controller
         var validation = await _loginValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            foreach (var error in validation.Errors)
-                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            foreach (var error in validation.Errors) ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
             ViewData["ReturnUrl"] = returnUrl;
             return View(dto);
         }
@@ -196,6 +191,73 @@ public class AccountController : Controller
         }
 
         ModelState.AddModelError(string.Empty, "Invalid verification code.");
+        return View(dto);
+    }
+
+    // ── GET /Account/ForgotPassword ────────────────────────────────────────
+    [HttpGet]
+    public IActionResult ForgotPassword()
+    {
+        return View(new ForgotPasswordDto());
+    }
+
+    // ── POST /Account/ForgotPassword ───────────────────────────────────────
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ForgotPassword(ForgotPasswordDto dto)
+    {
+        var validation = await _forgotPasswordValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+        {
+            foreach (var error in validation.Errors)
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            return View(dto);
+        }
+
+        var (success, token, userId) = await _accountService.ForgotPasswordAsync(dto.Email);
+        if (success && token != null && userId != null)
+        {
+            var encoded = System.Net.WebUtility.UrlEncode(token);
+            var url = Url.Action("ResetPassword", "Account", new { userId = userId, code = encoded }, Request.Scheme);
+            var html = $"<p><a href='{url}'>Click here to reset your password</a></p>";
+            await _emailSender.SendEmailAsync(dto.Email, "Reset your password", html);
+        }
+        return RedirectToAction(nameof(ForgotPasswordConfirmation));
+    }
+
+    // ── GET /Account/ForgotPasswordConfirmation ────────────────────────────────
+    [HttpGet]
+    public IActionResult ForgotPasswordConfirmation() => View();
+
+    // ── GET /Account/ResetPassword ──────────────────────────────────────────────
+    [HttpGet]
+    public IActionResult ResetPassword(string userId, string code)
+    {
+        var model = new ResetPasswordDto { UserId = userId, Token = code };
+        return View(model);
+    }
+
+    // ── POST /Account/ResetPassword ─────────────────────────────────────────────
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> ResetPassword(ResetPasswordDto dto)
+    {
+        var validation = await _resetPasswordValidator.ValidateAsync(dto);
+        if (!validation.IsValid)
+        {
+            foreach (var error in validation.Errors)
+                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
+            return View(dto);
+        }
+
+        var decodedToken = System.Net.WebUtility.UrlDecode(dto.Token);
+        var result = await _accountService.ResetPasswordAsync(dto.UserId, decodedToken, dto.NewPassword);
+        if (result)
+        {
+            TempData["SuccessMessage"] = "Your password has been reset successfully.";
+            return RedirectToAction("Login");
+        }
+        ModelState.AddModelError(string.Empty, "Invalid token or user.");
         return View(dto);
     }
 
@@ -312,6 +374,15 @@ public class AccountController : Controller
     {
         if (!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl))
             return Redirect(returnUrl);
+
+        // Admin accounts go directly to the Admin Dashboard
+        if (User.IsInRole("Admin"))
+            return RedirectToAction("Dashboard", "Admin");
+
+        // Citizen accounts go to Citizen Dashboard
+        if (User.IsInRole("Citizen"))
+            return RedirectToAction("Dashboard", "Citizen");
+
         return RedirectToAction("Index", "Home");
     }
 
@@ -387,22 +458,22 @@ public class AccountController : Controller
 
             var existingLogins = await _userManager.GetLoginsAsync(user);
 
-bool alreadyLinked = existingLogins.Any(l =>
-    l.LoginProvider == info.LoginProvider &&
-    l.ProviderKey == info.ProviderKey);
+            bool alreadyLinked = existingLogins.Any(l =>
+                l.LoginProvider == info.LoginProvider &&
+                l.ProviderKey == info.ProviderKey);
 
-if (!alreadyLinked)
-{
-    var linkResult = await _userManager.AddLoginAsync(user, info);
+            if (!alreadyLinked)
+            {
+                var linkResult = await _userManager.AddLoginAsync(user, info);
 
-    if (!linkResult.Succeeded)
-    {
-        foreach (var error in linkResult.Errors)
-            ModelState.AddModelError(string.Empty, error.Description);
+                if (!linkResult.Succeeded)
+                {
+                    foreach (var error in linkResult.Errors)
+                        ModelState.AddModelError(string.Empty, error.Description);
 
-        return View(nameof(Login));
-    }
-}
+                    return View(nameof(Login));
+                }
+            }
             await _signInManager.SignInAsync(user, isPersistent: false);
             TempData["SuccessMessage"] = "Account linked and successfully logged in.";
             return LocalRedirect(returnUrl);
@@ -410,5 +481,76 @@ if (!alreadyLinked)
 
         TempData["ErrorMessage"] = "Email claim not received from: " + info.LoginProvider;
         return RedirectToAction(nameof(Login), new { returnUrl });
+    }
+
+    [Authorize]
+    public async Task<IActionResult> Security()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        var isEnabled = await _accountService.IsTwoFactorEnabledAsync(userId);
+        if (isEnabled)
+        {
+            return RedirectToAction(nameof(TwoFactorEnabled));
+        }
+
+        return RedirectToAction(nameof(Setup2FA));
+    }
+
+    [Authorize]
+    public async Task<IActionResult> TwoFactorEnabled()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        var isEnabled = await _accountService.IsTwoFactorEnabledAsync(userId);
+        if (!isEnabled)
+        {
+            return RedirectToAction(nameof(Setup2FA));
+        }
+
+        return View();
+    }
+
+    // ── CHANGE PASSWORD ─────────────────────────────────────────────────────
+    [Authorize]
+    [HttpGet]
+    public IActionResult ChangePassword()
+    {
+        return View();
+    }
+
+    [Authorize]
+    [HttpPost]
+    public async Task<IActionResult> ChangePassword(ChangePasswordDto dto)
+    {
+        if (!ModelState.IsValid) return View(dto);
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var result = await _accountService.ChangePasswordAsync(userId, dto.OldPassword, dto.NewPassword);
+
+        if (result.Succeeded)
+        {
+            TempData["SuccessMessage"] = "Your password has been changed successfully.";
+            return RedirectToAction("Settings", "Citizen");
+        }
+
+        foreach (var error in result.Errors)
+        {
+            ModelState.AddModelError(string.Empty, error.Description);
+        }
+
+        return View(dto);
+    }
+
+    // ── LOGIN ACTIVITY ──────────────────────────────────────────────────────
+    [Authorize]
+    [HttpGet]
+    public async Task<IActionResult> LoginActivity()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier)!;
+        var activities = await _accountService.GetLoginActivityAsync(userId);
+        return View(activities);
     }
 }

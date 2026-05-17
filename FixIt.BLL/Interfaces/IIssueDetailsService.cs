@@ -1,6 +1,6 @@
 using FixIt.Common.DTOs;
 
-namespace FixIt.BLL.Services;
+namespace FixIt.BLL.Interfaces;
 
 public interface IIssueDetailsService
 {
