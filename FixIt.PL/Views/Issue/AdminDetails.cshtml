@@ -48,7 +48,7 @@
         _                      => ((IssueStatus, string)?)null
     };
 
-    bool canReject = Model.Status == IssueStatus.New || Model.Status == IssueStatus.Approved;
+    bool canReject = Model.Status == IssueStatus.New || Model.Status == IssueStatus.Approved || Model.Status == IssueStatus.Scheduled || Model.Status == IssueStatus.InProgress;
 }
 
 @section Styles {
@@ -297,11 +297,27 @@
 
 @if (TempData["SuccessMessage"] != null)
 {
-    <div class="alert alert-success" style="margin-bottom: 16px;">@TempData["SuccessMessage"]</div>
+    <div class="adm-alert adm-alert-success">
+        <div class="adm-alert-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <div>@TempData["SuccessMessage"]</div>
+    </div>
 }
 @if (TempData["ErrorMessage"] != null)
 {
-    <div class="alert alert-danger" style="margin-bottom: 16px;">@TempData["ErrorMessage"]</div>
+    <div class="adm-alert adm-alert-danger">
+        <div class="adm-alert-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+        </div>
+        <div>@TempData["ErrorMessage"]</div>
+    </div>
 }
 
 <div class="det-grid">
@@ -382,6 +398,58 @@
             </form>
         </div>
 
+        <!-- Schedule Form Container -->
+        @if (Model.Status == IssueStatus.Approved)
+        {
+            <div id="scheduleContainer" class="det-card" style="display: none; border: 2px solid var(--adm-primary); margin-top: 10px; padding: 28px;">
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--adm-text); margin-top: 0; margin-bottom: 22px; display: flex; align-items: center; gap: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-primary" style="color: var(--adm-primary);">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Schedule Maintenance
+                </h3>
+                <form id="schedForm" asp-controller="Admin" asp-action="CreateSchedule" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="IssueId" value="@Model.IssueId" />
+                    <input type="hidden" id="schedVisitDate" name="VisitDate" />
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px;">
+                        <div>
+                            <label class="form-label-fixit" style="font-size: 13px; font-weight: 600; color: var(--adm-text); margin-bottom: 6px; display: block;">Date *</label>
+                            <input type="date" id="schedDate" required class="form-control-fixit" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--adm-border); border-radius: 8px; background: var(--adm-bg); color: var(--adm-text); outline: none;" />
+                        </div>
+                        <div>
+                            <label class="form-label-fixit" style="font-size: 13px; font-weight: 600; color: var(--adm-text); margin-bottom: 6px; display: block;">Time *</label>
+                            <input type="time" id="schedTime" required class="form-control-fixit" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--adm-border); border-radius: 8px; background: var(--adm-bg); color: var(--adm-text); outline: none;" />
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                        <div>
+                            <label class="form-label-fixit" style="font-size: 13px; font-weight: 600; color: var(--adm-text); margin-bottom: 6px; display: block;">Estimated Cost ($)</label>
+                            <input type="number" name="EstimatedCost" min="0.01" step="0.01" value="10.00" required class="form-control-fixit" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--adm-border); border-radius: 8px; background: var(--adm-bg); color: var(--adm-text); outline: none;" />
+                        </div>
+                        <div>
+                            <label class="form-label-fixit" style="font-size: 13px; font-weight: 600; color: var(--adm-text); margin-bottom: 6px; display: block;">Assigned Worker/Team</label>
+                            <input type="text" name="WorkerName" placeholder="Worker or team name" required class="form-control-fixit" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--adm-border); border-radius: 8px; background: var(--adm-bg); color: var(--adm-text); outline: none;" />
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button type="submit" class="det-btn" style="background: #e9af70; border: 1px solid #e9af70; color: #fff; font-weight: 600; padding: 10px 22px; border-radius: 8px; margin-top: 0; cursor: pointer;">
+                            Confirm Schedule
+                        </button>
+                        <button type="button" id="cancelSchedBtn" class="det-btn" style="background: transparent; border: 1.5px solid var(--adm-border); color: var(--adm-text); font-weight: 500; padding: 10px 22px; border-radius: 8px; margin-top: 0; cursor: pointer;">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
+
         <!-- Maintenance schedule -->
         @if (Model.Schedule != null)
         {
@@ -423,13 +491,36 @@
     <div class="det-stack">
         <div class="det-card">
             <h2>Actions</h2>
-            @if (primaryAction.HasValue)
+            
+            @if (Model.Status == IssueStatus.Approved)
+            {
+                <button type="button" id="showScheduleBtn" class="det-btn det-btn-success" style="background: linear-gradient(135deg, var(--adm-primary), var(--adm-accent)); border: none; font-weight: 600; width: 100%; justify-content: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Schedule Maintenance
+                </button>
+            }
+            else if (Model.Status == IssueStatus.InProgress)
+            {
+                <a href="/Admin/Reports?issueId=@Model.IssueId" class="det-btn det-btn-success" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 600; text-decoration: none; text-align: center; width: 100%; justify-content: center; padding: 11px 16px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Mark Resolved
+                </a>
+            }
+            else if (primaryAction.HasValue)
             {
                 <form asp-action="ChangeStatus" asp-route-id="@Model.IssueId" method="post">
                     @Html.AntiForgeryToken()
                     <input type="hidden" name="newStatus" value="@primaryAction.Value.next" />
                     <button type="submit" class="det-btn det-btn-success">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
                             <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
                             <polyline points="22 4 12 14.01 9 11.01"></polyline>
                         </svg>
@@ -459,7 +550,8 @@
             <h2>Status Timeline</h2>
             <div class="det-timeline">
                 @{
-                    var ordered = Model.Timeline.OrderBy(t => t.ChangedAt).ToList();
+                    // Sort ascending so older statuses (like Scheduled) appear before newer statuses (like In Progress)
+                    var ordered = Model.Timeline.OrderBy(t => t.ChangedAt).ThenBy(t => t.Status).ToList();
                 }
                 @for (int idx = 0; idx < ordered.Count; idx++)
                 {
@@ -482,3 +574,33 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+<script>
+    document.getElementById('showScheduleBtn')?.addEventListener('click', function () {
+        var container = document.getElementById('scheduleContainer');
+        if (container) {
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+
+    document.getElementById('cancelSchedBtn')?.addEventListener('click', function () {
+        var container = document.getElementById('scheduleContainer');
+        if (container) {
+            container.style.display = 'none';
+        }
+    });
+
+    document.getElementById('schedForm')?.addEventListener('submit', function (e) {
+        var dateVal = document.getElementById('schedDate').value;
+        var timeVal = document.getElementById('schedTime').value;
+        if (dateVal && timeVal) {
+            document.getElementById('schedVisitDate').value = dateVal + 'T' + timeVal;
+        } else {
+            e.preventDefault();
+            alert('Please select both Date and Time.');
+        }
+    });
+</script>
+}
