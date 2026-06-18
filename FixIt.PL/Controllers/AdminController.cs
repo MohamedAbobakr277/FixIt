@@ -75,20 +75,20 @@ public class AdminController : Controller
         var validation = await _scheduleValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            foreach (var error in validation.Errors)
-                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-            return View(dto);
+            var errors = string.Join(" ", validation.Errors.Select(e => e.ErrorMessage));
+            TempData["ErrorMessage"] = $"Validation failed: {errors}";
+            return RedirectToAction("AdminDetails", "Issue", new { id = dto.IssueId });
         }
 
         var success = await _scheduleService.CreateScheduleAsync(dto);
         if (success)
         {
             TempData["SuccessMessage"] = "Maintenance scheduled successfully!";
-            return RedirectToAction(nameof(Schedule));
+            return RedirectToAction("AdminDetails", "Issue", new { id = dto.IssueId });
         }
 
         TempData["ErrorMessage"] = "Failed to create schedule. Issue may not be approved.";
-        return View(dto);
+        return RedirectToAction("AdminDetails", "Issue", new { id = dto.IssueId });
     }
 
     // ── GET /Admin/Reports ───────────────────────────────────────────────
@@ -131,9 +131,9 @@ public class AdminController : Controller
         var validation = await _reportValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            foreach (var error in validation.Errors)
-                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-            return View("CreateReport", dto);
+            var errors = string.Join(" ", validation.Errors.Select(e => e.ErrorMessage));
+            TempData["ErrorMessage"] = $"Validation failed: {errors}";
+            return RedirectToAction("Reports", new { issueId = dto.IssueId });
         }
 
         var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -150,6 +150,6 @@ public class AdminController : Controller
         }
 
         TempData["ErrorMessage"] = "Failed to submit report. Issue may not be in progress.";
-        return View("CreateReport", dto);
+        return RedirectToAction("Reports", new { issueId = dto.IssueId });
     }
 }
