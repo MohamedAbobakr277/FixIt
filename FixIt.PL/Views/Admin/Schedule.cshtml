@@ -6,122 +6,399 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="container mt-4">
-    <div class="row mb-4">
-        <div class="col-md-6">
-            <div class="card bg-primary text-white">
-                <div class="card-body">
-                    <h5 class="card-title">Scheduled</h5>
-                    <h2 class="display-4">@Model.ScheduledCount</h2>
-                </div>
-            </div>
-        </div>
-        <div class="col-md-6">
-            <div class="card bg-warning text-dark">
-                <div class="card-body">
-                    <h5 class="card-title">In Progress</h5>
-                    <h2 class="display-4">@Model.InProgressCount</h2>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    @if (Model.InProgressItems.Any())
-    {
-        <div class="card mb-4">
-            <div class="card-header bg-warning text-dark">
-                <h5><i class="bi bi-tools"></i> Currently In Progress</h5>
-            </div>
-            <div class="card-body">
-                <div class="row">
-                    @foreach (var item in Model.InProgressItems)
-                    {
-                        <div class="col-md-6 col-lg-4 mb-3">
-                            <div class="card h-100">
-                                <div class="card-body">
-                                    <h6 class="card-title">@item.IssueTitle</h6>
-                                    <p class="card-text">
-                                        <small class="text-muted">
-                                            <i class="bi bi-geo-alt"></i> @item.Location<br />
-                                            <i class="bi bi-person"></i> @(item.WorkerName ?? "Not assigned")
-                                        </small>
-                                    </p>
-                                    <span class="badge bg-warning text-dark">@item.Status</span>
-                                </div>
-                                <div class="card-footer">
-                                    <a href="/Issue/Details/@item.IssueId" class="btn btn-sm btn-outline-primary">
-                                        <i class="bi bi-eye"></i> View
-                                    </a>
-                                </div>
-                            </div>
-                        </div>
-                    }
-                </div>
-            </div>
-        </div>
+@section Styles {
+<style>
+    /* Premium Page Header styling matching the project aesthetics */
+    .sch-page-head {
+        margin-bottom: 32px;
+    }
+    .sch-page-title {
+        font-family: var(--adm-font-heading);
+        font-size: clamp(1.8rem, 4vw, 2.2rem);
+        font-weight: 800;
+        color: var(--adm-text);
+        margin-bottom: 6px;
+        letter-spacing: -0.5px;
+    }
+    .sch-page-subtitle {
+        font-size: 14.5px;
+        color: var(--adm-muted);
+        font-weight: 500;
     }
 
-    @if (Model.UpcomingItems.Any())
-    {
-        <div class="card">
-            <div class="card-header bg-primary text-white">
-                <h5><i class="bi bi-calendar"></i> Scheduled Maintenance</h5>
+    /* Stats Grid styling matching screenshot */
+    .sch-stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+        gap: 24px;
+        margin-bottom: 32px;
+    }
+    .sch-stat-card {
+        background: var(--adm-surface);
+        border: 1.5px solid var(--adm-border);
+        border-radius: var(--adm-radius);
+        padding: 28px;
+        display: flex;
+        align-items: center;
+        gap: 24px;
+        box-shadow: var(--adm-card-shadow);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    .sch-stat-card:hover {
+        transform: translateY(-4px);
+        box-shadow: var(--adm-card-shadow-hover);
+        border-color: var(--adm-primary);
+    }
+    .sch-stat-icon-wrapper {
+        width: 56px;
+        height: 56px;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        flex-shrink: 0;
+    }
+    .sch-stat-icon-wrapper.scheduled {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+    }
+    .sch-stat-icon-wrapper.in-progress {
+        background: rgba(6, 182, 212, 0.12);
+        color: #06b6d4;
+    }
+    .sch-stat-content {
+        display: flex;
+        flex-direction: column;
+    }
+    .sch-stat-number {
+        font-size: 32px;
+        font-weight: 800;
+        color: var(--adm-text);
+        line-height: 1.1;
+    }
+    .sch-stat-label {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--adm-muted);
+        margin-top: 2px;
+    }
+
+    /* Section Cards styling */
+    .sch-section-card {
+        background: var(--adm-surface);
+        border: 1.5px solid var(--adm-border);
+        border-radius: var(--adm-radius);
+        box-shadow: var(--adm-card-shadow);
+        overflow: hidden;
+        margin-bottom: 32px;
+        transition: all 0.3s ease;
+    }
+    .sch-section-header {
+        padding: 20px 28px;
+        border-bottom: 1px solid var(--adm-border);
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--adm-text);
+        display: flex;
+        flex-direction: column;
+    }
+    .sch-section-header-title {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .sch-section-subtitle {
+        font-size: 13px;
+        color: var(--adm-muted);
+        font-weight: 500;
+    }
+    .sch-section-body {
+        padding: 28px;
+    }
+
+    /* Item Cards inside Sections */
+    .sch-item-card {
+        background: var(--adm-surface-2);
+        border: 1px solid var(--adm-border);
+        border-radius: 14px;
+        padding: 20px 24px;
+        display: flex;
+        align-items: center;
+        gap: 20px;
+        margin-bottom: 16px;
+        transition: all 0.25s ease;
+    }
+    .sch-item-card:last-child {
+        margin-bottom: 0;
+    }
+    .sch-item-card:hover {
+        transform: scale(1.01) translateX(4px);
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.04);
+        background: var(--adm-surface);
+        border-color: rgba(0, 151, 167, 0.3);
+    }
+    .sch-item-card.in-progress {
+        border-left: 4px solid #06b6d4;
+    }
+    .sch-item-card.scheduled {
+        border-left: 4px solid #f59e0b;
+    }
+    
+    .sch-item-icon {
+        width: 44px;
+        height: 44px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        flex-shrink: 0;
+    }
+    .sch-item-icon.bg-info-light {
+        background: rgba(6, 182, 212, 0.12);
+        color: #06b6d4;
+    }
+    .sch-item-icon.bg-warning-light {
+        background: rgba(245, 158, 11, 0.12);
+        color: #f59e0b;
+    }
+
+    .sch-item-info {
+        flex: 1;
+        min-width: 0;
+    }
+    .sch-item-title {
+        font-size: 15.5px;
+        font-weight: 700;
+        color: var(--adm-text);
+        margin-bottom: 6px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .sch-item-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        font-size: 13px;
+        color: var(--adm-muted);
+        font-weight: 500;
+    }
+    .sch-item-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .sch-item-actions {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+    }
+
+    .sch-view-btn {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        border: 1px solid var(--adm-border);
+        background: var(--adm-surface);
+        color: var(--adm-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        text-decoration: none;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .sch-view-btn:hover {
+        background: var(--adm-primary-glow);
+        border-color: var(--adm-primary);
+        color: var(--adm-primary);
+        transform: scale(1.1);
+    }
+
+    /* Timeline styling */
+    .sch-timeline {
+        position: relative;
+        padding-left: 24px;
+    }
+    .sch-timeline::before {
+        content: '';
+        position: absolute;
+        left: 4px;
+        top: 8px;
+        bottom: 8px;
+        width: 2px;
+        background: var(--adm-border);
+    }
+    .sch-timeline-group {
+        position: relative;
+        margin-bottom: 32px;
+    }
+    .sch-timeline-group:last-child {
+        margin-bottom: 0;
+    }
+    .sch-timeline-date {
+        font-size: 15px;
+        font-weight: 700;
+        color: var(--adm-text);
+        margin-bottom: 16px;
+        display: flex;
+        align-items: center;
+        position: relative;
+    }
+    .sch-timeline-date::before {
+        content: '';
+        position: absolute;
+        left: -24px;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: var(--adm-primary);
+        border: 2px solid var(--adm-surface);
+        box-shadow: 0 0 0 3px rgba(0, 151, 167, 0.2);
+    }
+    .sch-timeline-items {
+        display: flex;
+        flex-direction: column;
+        gap: 12px;
+    }
+
+    /* Dark Mode refinements for Light Backgrounds inside items */
+    [data-adm-theme="dark"] .sch-item-card:hover {
+        background: rgba(255, 255, 255, 0.02);
+    }
+</style>
+}
+
+<div class="sch-page-head">
+    <h1 class="sch-page-title">Maintenance Schedule</h1>
+    <p class="sch-page-subtitle">View and manage scheduled maintenance work</p>
+</div>
+
+<div class="sch-stats-grid">
+    <!-- Scheduled Stats Card -->
+    <div class="sch-stat-card">
+        <div class="sch-stat-icon-wrapper scheduled">
+            <i class="bi bi-calendar-check"></i>
+        </div>
+        <div class="sch-stat-content">
+            <div class="sch-stat-number">@Model.ScheduledCount</div>
+            <div class="sch-stat-label">Scheduled</div>
+        </div>
+    </div>
+    
+    <!-- In Progress Stats Card -->
+    <div class="sch-stat-card">
+        <div class="sch-stat-icon-wrapper in-progress">
+            <i class="bi bi-clock-history"></i>
+        </div>
+        <div class="sch-stat-content">
+            <div class="sch-stat-number">@Model.InProgressCount</div>
+            <div class="sch-stat-label">In Progress</div>
+        </div>
+    </div>
+</div>
+
+<!-- Currently In Progress Section -->
+<div class="sch-section-card">
+    <div class="sch-section-header">
+        <div class="sch-section-header-title">
+            <i class="bi bi-clock-fill text-info"></i> Currently In Progress
+        </div>
+    </div>
+    <div class="sch-section-body">
+        @if (Model.InProgressItems.Any())
+        {
+            @foreach (var item in Model.InProgressItems)
+            {
+                <div class="sch-item-card in-progress">
+                    <div class="sch-item-icon bg-info-light">
+                        <i class="bi bi-@GetCategoryIcon(item.Category)"></i>
+                    </div>
+                    <div class="sch-item-info">
+                        <div class="sch-item-title">@item.IssueTitle</div>
+                        <div class="sch-item-meta">
+                            <span><i class="bi bi-geo-alt"></i> @item.Location</span>
+                            <span><i class="bi bi-person"></i> @(item.WorkerName ?? "Not assigned")</span>
+                        </div>
+                    </div>
+                    <div class="sch-item-actions">
+                        <span class="adm-badge adm-badge-inprogress">In Progress</span>
+                        <a href="/Issue/AdminDetails/@item.IssueId" class="sch-view-btn" title="View Details">
+                            <i class="bi bi-eye"></i>
+                        </a>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <div class="text-center py-4 text-muted">
+                <i class="bi bi-info-circle me-2"></i> No maintenance currently in progress.
             </div>
-            <div class="card-body">
+        }
+    </div>
+</div>
+
+<!-- Scheduled Maintenance Section -->
+<div class="sch-section-card">
+    <div class="sch-section-header">
+        <div class="sch-section-header-title">
+            <i class="bi bi-calendar-week-fill text-warning"></i> Scheduled Maintenance
+        </div>
+        <div class="sch-section-subtitle mt-1">Upcoming maintenance work sorted by date</div>
+    </div>
+    <div class="sch-section-body">
+        @if (Model.UpcomingItems.Any())
+        {
+            <div class="sch-timeline">
                 @foreach (var group in Model.UpcomingItems.GroupBy(x => x.VisitDate.Date).OrderBy(x => x.Key))
                 {
-                    <div class="mb-4">
-                        <h6 class="text-primary mb-3">
-                            <i class="bi bi-calendar-day"></i> @group.Key.ToString("MMMM dd, yyyy")
-                        </h6>
-                        <div class="table-responsive">
-                            <table class="table table-hover">
-                                <thead>
-                                    <tr>
-                                        <th>Category</th>
-                                        <th>Title</th>
-                                        <th>Time</th>
-                                        <th>Worker</th>
-                                        <th>Cost</th>
-                                        <th>Action</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach (var item in group.OrderBy(x => x.VisitDate))
-                                    {
-                                        <tr>
-                                            <td>
-                                                <i class="bi bi-@GetCategoryIcon(item.Category)"></i>
-                                                @item.Category
-                                            </td>
-                                            <td>@item.IssueTitle</td>
-                                            <td>@item.VisitDate.ToString("h:mm tt")</td>
-                                            <td>@(item.WorkerName ?? "Not assigned")</td>
-                                            <td>@item.EstimatedCost.ToString("C")</td>
-                                            <td>
-                                                <a href="/Issue/Details/@item.IssueId" class="btn btn-sm btn-outline-primary">
-                                                    <i class="bi bi-eye"></i>
-                                                </a>
-                                            </td>
-                                        </tr>
-                                    }
-                                </tbody>
-                            </table>
+                    <div class="sch-timeline-group">
+                        <div class="sch-timeline-date">
+                            <i class="bi bi-calendar-event me-2 text-primary"></i> @group.Key.ToString("dddd, MMM dd")
+                        </div>
+                        <div class="sch-timeline-items">
+                            @foreach (var item in group.OrderBy(x => x.VisitDate))
+                            {
+                                <div class="sch-item-card scheduled">
+                                    <div class="sch-item-icon bg-warning-light">
+                                        <i class="bi bi-@GetCategoryIcon(item.Category)"></i>
+                                    </div>
+                                    <div class="sch-item-info">
+                                        <div class="sch-item-title">@item.IssueTitle</div>
+                                        <div class="sch-item-meta">
+                                            <span><i class="bi bi-clock"></i> @item.VisitDate.ToString("hh:mm tt")</span>
+                                            <span><i class="bi bi-person"></i> @(item.WorkerName ?? "Not assigned")</span>
+                                            <span><i class="bi bi-currency-dollar"></i> @item.EstimatedCost.ToString("C0")</span>
+                                        </div>
+                                    </div>
+                                    <div class="sch-item-actions">
+                                        <span class="adm-badge adm-badge-scheduled">Scheduled</span>
+                                        <a href="/Issue/AdminDetails/@item.IssueId" class="sch-view-btn" title="View Details">
+                                            <i class="bi bi-eye"></i>
+                                        </a>
+                                    </div>
+                                </div>
+                            }
                         </div>
                     </div>
                 }
             </div>
-        </div>
-    }
-
-    @if (!Model.InProgressItems.Any() && !Model.UpcomingItems.Any())
-    {
-        <div class="text-center py-5">
-            <i class="bi bi-calendar-x text-muted" style="font-size: 3rem;"></i>
-            <h4 class="text-muted mt-3">No maintenance scheduled</h4>
-            <p class="text-muted">Approved issues will appear here once scheduled.</p>
-        </div>
-    }
+        }
+        else
+        {
+            <div class="text-center py-5 text-muted">
+                <i class="bi bi-calendar-x text-muted mb-3" style="font-size: 3rem;"></i>
+                <h5 class="fw-bold">No maintenance scheduled</h5>
+                <p class="small">Approved issues will appear here once scheduled.</p>
+            </div>
+        }
+    </div>
 </div>
 
 @functions {
@@ -137,7 +414,7 @@
             "cleaning" => "brush",
             "landscaping" => "tree",
             "other" => "gear",
-            _ => "question-circle"
+            _ => "tools"
         };
     }
 }
