@@ -14,6 +14,7 @@ using Microsoft.EntityFrameworkCore;
 using AutoMapper.QueryableExtensions;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using FixIt.Common.Enums;
 
 namespace FixIt.BLL.Services;
 
@@ -83,6 +84,15 @@ public class IssueService : IIssueService
         }
 
         await _unitOfWork.Issues.AddAsync(issue);
+        
+        // Add status history entry
+        issue.StatusHistory.Add(new IssueStatusHistory
+        {
+            Status = IssueStatus.New,
+            ChangedAt = DateTime.UtcNow,
+            Note = "Issue created by citizen."
+        });
+
         await _unitOfWork.CompleteAsync();
 
         return issue.IssueId;
