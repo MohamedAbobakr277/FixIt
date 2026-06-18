@@ -105,6 +105,16 @@ public class ScheduleService : IScheduleService
         issue.UpdatedAt = DateTime.Now;
         _unitOfWork.Issues.Update(issue);
 
+        // Add history entry
+        var history = new IssueStatusHistory
+        {
+            IssueId = dto.IssueId,
+            Status = IssueStatus.Scheduled,
+            ChangedAt = DateTime.Now,
+            Note = $"Scheduled for {dto.VisitDate:yyyy-MM-dd HH:mm} with worker {dto.WorkerName}."
+        };
+        await _unitOfWork.StatusHistories.AddAsync(history);
+
         await _unitOfWork.CompleteAsync();
         return true;
     }
