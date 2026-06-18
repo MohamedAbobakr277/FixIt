@@ -92,6 +92,17 @@ public class ReportService : IReportService
         issue.UpdatedAt = DateTime.Now;
         _unitOfWork.Issues.Update(issue);
 
+        // Add history entry
+        var history = new IssueStatusHistory
+        {
+            IssueId = dto.IssueId,
+            Status = IssueStatus.Resolved,
+            ChangedAt = DateTime.Now,
+            ChangedById = adminId,
+            Note = "Maintenance report submitted."
+        };
+        await _unitOfWork.StatusHistories.AddAsync(history);
+
         await _unitOfWork.CompleteAsync();
         return true;
     }
