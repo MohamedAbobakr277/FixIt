@@ -26,6 +26,13 @@ public class CitizenProfileDto
     
     public List<IssueListDto> IssueHistory { get; set; } = new();
     public List<RatingDetailsDto> RecentRatings { get; set; } = new();
+
+    // Notification Preferences
+    public bool EmailIssueUpdates { get; set; }
+    public bool EmailMaintenanceAlerts { get; set; }
+    public bool EmailWeeklyReports { get; set; }
+    public bool AppRealTimePush { get; set; }
+    public bool AppDirectMessages { get; set; }
 }
 
 public class RatingDetailsDto

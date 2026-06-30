@@ -39,6 +39,7 @@ public class AdminIssueDetailsDto
     public ScheduleDto? Schedule { get; set; }
     public ReportDto? Report { get; set; }
     public List<TimelineEntryDto> Timeline { get; set; } = new();
+    public IEnumerable<IssueCommentDto> Comments { get; set; } = new List<IssueCommentDto>();
 }
 
 public class TimelineEntryDto

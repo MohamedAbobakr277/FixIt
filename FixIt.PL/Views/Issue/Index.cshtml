@@ -389,6 +389,45 @@
             animation: slideUpFade 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         
+        .pagination-container .pagination {
+            display: flex;
+            gap: 8px;
+            background: var(--bg-surface);
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.03);
+            border: 1px solid rgba(0,0,0,0.05);
+            margin: 0;
+        }
+
+        .pagination-container .page-item .page-link {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-weight: 600;
+            font-size: 14px;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .pagination-container .page-item:not(.active):not(.disabled) .page-link:hover {
+            background: rgba(0, 151, 167, 0.1);
+            color: var(--primary);
+        }
+
+        .pagination-container .page-item.active .page-link {
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            color: white;
+            box-shadow: 0 4px 12px var(--primary-glow);
+        }
+
+        .pagination-container .page-item.disabled .page-link {
+            color: var(--text-muted);
+            opacity: 0.5;
+            background: transparent;
+        }
+        
         @@media (max-width: 768px) {
             .filter-controls {
                 flex-direction: column;

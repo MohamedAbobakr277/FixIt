@@ -1360,3 +1360,420 @@
     background: #ef4444;
     box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
 }
+
+/* ══════════════════════════════════════════════════════════
+   CITIZEN CSS VARIABLE BRIDGE
+   Maps citizen variable names → admin equivalents so that
+   shared views (Profile, Settings) look identical.
+══════════════════════════════════════════════════════════ */
+.adm-shell {
+    --primary:          var(--adm-primary);
+    --primary-dark:     var(--adm-primary-dark);
+    --primary-light:    var(--adm-primary-light);
+    --primary-glow:     var(--adm-primary-glow);
+    --accent:           var(--adm-accent);
+
+    --bg-body:          var(--adm-bg);
+    --bg-surface:       var(--adm-surface);
+    --bg-surface-2:     var(--adm-surface-2);
+    --bg-card:          var(--adm-surface);
+
+    --text-heading:     var(--adm-text);
+    --text-body:        var(--adm-text);
+    --text-muted:       var(--adm-muted);
+    --text-light:       var(--adm-light);
+
+    --border:           var(--adm-border);
+    --border-hover:     var(--adm-primary);
+
+    --card-shadow:      var(--adm-card-shadow);
+    --card-shadow-hover: var(--adm-card-shadow-hover);
+
+    --radius-sm:        var(--adm-radius-sm);
+    --radius-md:        12px;
+    --radius-lg:        var(--adm-radius);
+    --radius-xl:        24px;
+    --radius-full:      50px;
+
+    --font-heading:     var(--adm-font-heading);
+    --font-body:        var(--adm-font);
+    --transition:       var(--adm-transition);
+}
+
+/* ── Page / Layout helpers ─────────────────────────────── */
+.adm-shell .page-wrapper {
+    padding-top: 0;
+    min-height: 100vh;
+    background: var(--adm-bg);
+}
+.adm-shell .section-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 24px;
+}
+.adm-shell .section-title {
+    font-family: var(--adm-font-heading);
+    font-size: clamp(1.5rem, 3vw, 2rem);
+    font-weight: 700;
+    color: var(--adm-text);
+    margin-bottom: 4px;
+}
+.adm-shell .section-desc {
+    font-size: 14px;
+    color: var(--adm-muted);
+    max-width: 560px;
+    line-height: 1.7;
+    margin-bottom: 24px;
+}
+
+/* ── Card ──────────────────────────────────────────────── */
+.adm-shell .card-fixit {
+    background: var(--adm-surface);
+    border: 1.5px solid var(--adm-border);
+    border-radius: var(--adm-radius);
+    padding: 28px;
+    box-shadow: var(--adm-card-shadow);
+    transition: var(--adm-transition);
+}
+.adm-shell .card-fixit:hover {
+    box-shadow: var(--adm-card-shadow-hover);
+}
+.adm-shell .card-title-fixit {
+    font-size: 17px;
+    font-weight: 700;
+    color: var(--adm-text);
+    margin-bottom: 0;
+}
+
+/* ── Buttons ───────────────────────────────────────────── */
+.adm-shell .btn-primary-fixit {
+    background: linear-gradient(135deg, var(--adm-primary), var(--adm-primary-light));
+    color: #fff;
+    border: none;
+    padding: 12px 26px;
+    border-radius: var(--adm-radius-sm);
+    font-family: var(--adm-font);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--adm-transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    box-shadow: 0 2px 12px rgba(0,151,167,0.25);
+    position: relative;
+    overflow: hidden;
+    border-radius: 50px;
+}
+.adm-shell .btn-primary-fixit:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0,151,167,0.35);
+    color: #fff;
+}
+.adm-shell .btn-outline-fixit {
+    background: var(--adm-surface);
+    color: var(--adm-text);
+    border: 1.5px solid var(--adm-border);
+    padding: 10px 22px;
+    border-radius: 50px;
+    font-family: var(--adm-font);
+    font-size: 13.5px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--adm-transition);
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    text-decoration: none;
+}
+.adm-shell .btn-outline-fixit:hover {
+    border-color: var(--adm-primary);
+    color: var(--adm-primary);
+    background: var(--adm-primary-glow);
+    transform: translateY(-2px);
+}
+
+/* ── Form controls ─────────────────────────────────────── */
+.adm-shell .form-label-fixit {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--adm-muted);
+    margin-bottom: 8px;
+    display: block;
+}
+.adm-shell .form-control-fixit {
+    width: 100%;
+    padding: 11px 14px;
+    border: 1.5px solid var(--adm-border);
+    border-radius: var(--adm-radius-sm);
+    font-family: var(--adm-font);
+    font-size: 14px;
+    transition: var(--adm-transition);
+    outline: none;
+    background: var(--adm-surface);
+    color: var(--adm-text);
+}
+.adm-shell .form-control-fixit:focus {
+    border-color: var(--adm-primary);
+    box-shadow: 0 0 0 3px var(--adm-primary-glow);
+}
+
+/* ── Profile components ────────────────────────────────── */
+.adm-shell .profile-card  { padding: 32px; }
+.adm-shell .profile-layout {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    flex-wrap: wrap;
+}
+.adm-shell .profile-avatar-container {
+    width: 100px;
+    height: 100px;
+    flex-shrink: 0;
+    position: relative;
+}
+.adm-shell .profile-avatar,
+.adm-shell .profile-avatar-placeholder {
+    width: 100%;
+    height: 100%;
+    border-radius: var(--adm-radius);
+    object-fit: cover;
+}
+.adm-shell .profile-avatar-placeholder {
+    background: var(--adm-surface-2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 38px;
+    color: var(--adm-light);
+    border: 1.5px solid var(--adm-border);
+}
+.adm-shell .profile-avatar-container.large {
+    width: 120px;
+    height: 120px;
+}
+.adm-shell .profile-name {
+    font-family: var(--adm-font-heading);
+    font-weight: 800;
+    color: var(--adm-text);
+    margin-bottom: 8px;
+    font-size: 1.75rem;
+}
+.adm-shell .profile-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+}
+.adm-shell .meta-item {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13.5px;
+    color: var(--adm-muted);
+}
+.adm-shell .meta-item i { color: var(--adm-primary); }
+.adm-shell .profile-actions { flex-shrink: 0; }
+
+/* Avatar edit button */
+.adm-shell .avatar-edit-btn {
+    position: absolute;
+    bottom: 0; right: 0;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--adm-primary);
+    color: #fff;
+    border: 3px solid var(--adm-surface);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: var(--adm-transition);
+    font-size: 14px;
+}
+.adm-shell .avatar-edit-btn:hover {
+    transform: scale(1.1);
+    background: var(--adm-primary-dark);
+}
+
+/* ── Admin role badge ──────────────────────────────────── */
+.adm-shell .admin-role-badge {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(99,102,241,0.1);
+    color: #6366f1;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 100px;
+    letter-spacing: 0.03em;
+}
+.adm-shell .admin-role-badge-sm {
+    display: inline-flex;
+    align-items: center;
+    background: rgba(99,102,241,0.1);
+    color: #6366f1;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 2px 10px;
+    border-radius: 100px;
+}
+
+/* ── Stat mini cards ───────────────────────────────────── */
+.adm-shell .stats-row {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    margin-top: 24px;
+}
+.adm-shell .stat-mini-card {
+    background: var(--adm-surface);
+    border: 1px solid var(--adm-border);
+    border-radius: var(--adm-radius);
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 16px;
+    box-shadow: var(--adm-card-shadow);
+    transition: all 0.4s cubic-bezier(0.4,0,0.2,1);
+    position: relative;
+    overflow: hidden;
+}
+.adm-shell .stat-mini-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--adm-primary);
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+.adm-shell .stat-mini-card:hover {
+    transform: translateY(-8px);
+    box-shadow: var(--adm-card-shadow-hover);
+    border-color: var(--adm-primary);
+}
+.adm-shell .stat-mini-card:hover::before { opacity: 1; }
+.adm-shell .stat-mini-icon {
+    width: 56px;
+    height: 56px;
+    border-radius: 16px;
+    background: var(--adm-primary-glow);
+    color: var(--adm-primary);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    transition: transform 0.5s ease;
+}
+.adm-shell .stat-mini-card:hover .stat-mini-icon { transform: scale(1.1) rotate(5deg); }
+.adm-shell .stat-mini-icon.success { background: rgba(34,197,94,0.1); color: #16a34a; }
+.adm-shell .stat-mini-icon.warning { background: rgba(251,191,36,0.1); color: #fbbf24; }
+.adm-shell .stat-mini-data { display: flex; flex-direction: column; gap: 4px; }
+.adm-shell .stat-mini-value {
+    font-size: 28px;
+    font-weight: 800;
+    color: var(--adm-text);
+    letter-spacing: -0.02em;
+    line-height: 1;
+}
+.adm-shell .stat-mini-label {
+    font-size: 11px;
+    color: var(--adm-muted);
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+/* ── Quick link cards ──────────────────────────────────── */
+.adm-shell .admin-quick-links {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 16px;
+}
+.adm-shell .quick-link-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    padding: 24px 16px;
+    border: 1.5px solid var(--adm-border);
+    border-radius: var(--adm-radius);
+    background: var(--adm-surface);
+    text-decoration: none;
+    color: var(--adm-muted);
+    transition: var(--adm-transition);
+    text-align: center;
+    font-size: 13px;
+    font-weight: 600;
+}
+.adm-shell .quick-link-card i {
+    font-size: 26px;
+    color: var(--adm-primary);
+    transition: transform 0.3s ease;
+}
+.adm-shell .quick-link-card:hover {
+    border-color: var(--adm-primary);
+    background: var(--adm-primary-glow);
+    color: var(--adm-primary);
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+}
+.adm-shell .quick-link-card:hover i { transform: scale(1.2); }
+
+/* ── Settings sidebar nav ──────────────────────────────── */
+.adm-shell .settings-nav .nav-link {
+    text-align: left;
+    padding: 12px 16px;
+    color: var(--adm-muted);
+    font-weight: 500;
+    border-radius: var(--adm-radius-sm);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: var(--adm-transition);
+    background: none;
+    border: none;
+    width: 100%;
+    font-family: var(--adm-font);
+    font-size: 14px;
+}
+.adm-shell .settings-nav .nav-link i { font-size: 18px; }
+.adm-shell .settings-nav .nav-link:hover {
+    background: var(--adm-surface-2);
+    color: var(--adm-primary);
+}
+.adm-shell .settings-nav .nav-link.active {
+    background: var(--adm-primary-glow);
+    color: var(--adm-primary);
+    font-weight: 700;
+}
+
+/* ── Toggle switches ───────────────────────────────────── */
+.adm-shell .form-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; }
+.adm-shell .form-switch .form-check-input:checked {
+    background-color: var(--adm-primary);
+    border-color: var(--adm-primary);
+}
+.adm-shell .fw-800 { font-weight: 800; }
+.adm-shell .text-primary { color: var(--adm-primary) !important; }
+
+/* ── Notification group ────────────────────────────────── */
+.adm-shell .notification-group { padding-bottom: 16px; }
+.adm-shell .form-check-label { color: var(--adm-text); font-size: 14px; }
+
+/* ── Responsive ────────────────────────────────────────── */
+@media (max-width: 992px) {
+    .adm-shell .sticky-top { position: static !important; }
+    .adm-shell .stats-row { grid-template-columns: 1fr; }
+}
+@media (max-width: 768px) {
+    .adm-shell .profile-layout { flex-direction: column; text-align: center; }
+    .adm-shell .profile-meta { justify-content: center; }
+    .adm-shell .admin-quick-links { grid-template-columns: repeat(2, 1fr); }
+    .adm-shell .profile-actions { margin-left: 0 !important; }
+}

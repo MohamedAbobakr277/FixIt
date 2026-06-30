@@ -12,9 +12,7 @@ namespace FixIt.DAL.Data.Configurations
                 .HasMaxLength(300)
                 .IsRequired(false);
 
-            builder.Property(c => c.ProfilePicture)
-                .HasMaxLength(500)
-                .IsRequired(false);
+
 
             // One Citizen → Many Issues
             builder.HasMany(c => c.Issues)
