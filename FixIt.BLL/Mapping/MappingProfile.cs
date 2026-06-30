@@ -34,7 +34,6 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.ImageUrl, opt => opt.Ignore())
             .ForMember(dest => dest.IssueId, opt => opt.Ignore())
             .ForMember(dest => dest.Status, opt => opt.Ignore())
-            .ForMember(dest => dest.Priority, opt => opt.Ignore())
             .ForMember(dest => dest.AdminNotes, opt => opt.Ignore())
             .ForMember(dest => dest.SubmittedAt, opt => opt.Ignore())
             .ForMember(dest => dest.UpdatedAt, opt => opt.Ignore())
@@ -62,6 +61,12 @@ public class MappingProfile : Profile
 
         // Report mappings
         CreateMap<MaintenanceReport, ReportDto>();
+
+        // Comment mappings
+        CreateMap<IssueComment, IssueCommentDto>()
+            .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : "Unknown"))
+            .ForMember(dest => dest.UserProfileImageUrl, opt => opt.MapFrom(src => src.User != null ? src.User.ProfileImageUrl : null))
+            .ForMember(dest => dest.UserType, opt => opt.MapFrom(src => src.User != null ? (src.User is Admin ? "Admin" : "Citizen") : "User"));
     }
 }
 

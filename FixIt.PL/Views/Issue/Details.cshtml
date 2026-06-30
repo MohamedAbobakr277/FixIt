@@ -1,4 +1,6 @@
 @model FixIt.Common.DTOs.IssueDetailsDto
+@using FixIt.Common.Enums
+@using System.Security.Claims
 @{
     ViewData["Title"] = $"Issue #{Model.IssueId} - {Model.Title}";
     
@@ -29,390 +31,377 @@
     bool isRejected = Model.Status == "Rejected";
 }
 
-@section Header {
-    <div class="det-hero">
-        <div class="det-hero-bg"></div>
-        <div class="det-hero-container">
-            <a asp-controller="Home" asp-action="Index" class="det-back">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-                    <line x1="19" y1="12" x2="5" y2="12"></line>
-                    <polyline points="12 19 5 12 12 5"></polyline>
-                </svg>
-                Back to Dashboard
-            </a>
-            
-            <div class="det-hero-meta">
-                <span class="det-hero-id">ISS-@Model.IssueId.ToString("D3")</span>
-                <span class="det-hero-cat">@Model.Category</span>
-            </div>
-            
-            <h1 class="det-hero-title">@Model.Title</h1>
-            
-            <div class="det-hero-info">
-                <span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    @Model.Location
-                </span>
-                <span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    @Model.SubmittedAt.ToString("MMMM dd, yyyy")
-                </span>
-            </div>
-        </div>
-    </div>
+@section Styles {
+    <style>
+        .issue-hero {
+            background: linear-gradient(145deg, var(--bg-surface) 0%, rgba(0, 188, 212, 0.03) 100%);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 48px;
+            margin-bottom: 40px;
+            box-shadow: var(--card-shadow);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .issue-hero::after {
+            content: ''; position: absolute; top: -50%; right: -10%; width: 400px; height: 400px;
+            background: radial-gradient(circle, var(--primary-glow) 0%, transparent 70%);
+            opacity: 0.5; pointer-events: none;
+        }
+
+        .issue-details-title { font-size: 36px; font-weight: 800; color: var(--text-heading); margin: 0 0 24px 0; letter-spacing: -0.5px; line-height: 1.3; }
+        
+        .issue-meta-tags { display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 24px; position: relative; z-index: 1; }
+        .meta-tag { padding: 6px 16px; border-radius: 20px; font-size: 13px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; display: inline-flex; align-items: center; gap: 6px; }
+        .meta-tag.status-new { background: rgba(0, 188, 212, 0.1); color: var(--primary); }
+        .meta-tag.status-approved { background: rgba(59, 130, 246, 0.1); color: #3b82f6; }
+        .meta-tag.status-scheduled { background: rgba(139, 92, 246, 0.1); color: #8b5cf6; }
+        .meta-tag.status-inprogress { background: rgba(245, 158, 11, 0.1); color: #f59e0b; }
+        .meta-tag.status-resolved { background: rgba(16, 185, 129, 0.1); color: #10b981; }
+        .meta-tag.status-closed { background: rgba(100, 116, 139, 0.1); color: #64748b; }
+        .meta-tag.status-rejected { background: rgba(239, 68, 68, 0.1); color: #ef4444; }
+        .meta-tag.id { background: var(--bg-surface-2); color: var(--text-muted); border: 1px solid var(--border); }
+
+        .issue-hero-info { display: flex; flex-wrap: wrap; gap: 32px; position: relative; z-index: 1; }
+        .hero-info-item { display: flex; align-items: center; gap: 10px; font-size: 15px; color: var(--text-muted); font-weight: 600; }
+        .hero-info-item i { font-size: 18px; color: var(--primary); background: var(--primary-glow); padding: 8px; border-radius: 50%; }
+
+        .section-header-line { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
+        .section-header-line h3 { font-size: 16px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-heading); margin: 0; }
+        .section-header-line i { color: var(--primary); font-size: 20px; }
+
+        .desc-text { font-size: 16px; line-height: 1.8; color: var(--text-body); margin-bottom: 32px; }
+        
+        .issue-image { width: 100%; border-radius: var(--radius-lg); box-shadow: var(--card-shadow); border: 1px solid var(--border); max-height: 450px; object-fit: cover; }
+        
+        /* Timeline */
+        .timeline-container { position: relative; padding-left: 32px; margin-top: 24px; }
+        .timeline-container::before { content: ''; position: absolute; left: 11px; top: 12px; bottom: 12px; width: 2px; background: var(--border); }
+        .timeline-item { position: relative; margin-bottom: 32px; }
+        .timeline-item:last-child { margin-bottom: 0; }
+        
+        .timeline-dot { position: absolute; left: -32px; top: 0; width: 24px; height: 24px; border-radius: 50%; background: var(--bg-body); border: 2px solid var(--border); display: flex; align-items: center; justify-content: center; z-index: 1; }
+        .timeline-item.past .timeline-dot { background: var(--primary); border-color: var(--primary); color: white; }
+        .timeline-item.active .timeline-dot { border-color: var(--primary); border-width: 3px; box-shadow: 0 0 0 6px var(--primary-glow); }
+        .timeline-item.active .timeline-dot::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: var(--primary); }
+        .timeline-item.rejected .timeline-dot { border-color: #ef4444; border-width: 3px; box-shadow: 0 0 0 6px rgba(239,68,68,0.1); }
+        .timeline-item.rejected .timeline-dot::after { content: ''; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
+
+        .timeline-content { padding-left: 20px; }
+        .timeline-title { font-size: 15px; font-weight: 800; color: var(--text-heading); margin-bottom: 4px; }
+        .timeline-item.active .timeline-title { color: var(--primary); }
+        .timeline-item.rejected .timeline-title { color: #ef4444; }
+        .timeline-date { font-size: 13px; color: var(--text-muted); font-weight: 600; margin-bottom: 6px; }
+        .timeline-desc { font-size: 14px; color: var(--text-body); line-height: 1.5; }
+
+        .info-box { background: var(--bg-surface-2); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 32px; margin-bottom: 32px; }
+        .info-box.highlight { background: var(--primary-glow); border-color: rgba(0, 188, 212, 0.2); }
+        
+        .rating-box { background: rgba(245, 158, 11, 0.05); border: 1px solid rgba(245, 158, 11, 0.2); border-radius: var(--radius-lg); padding: 32px; margin-top: 40px; text-align: center; }
+        .star-grp { display: flex; flex-direction: row-reverse; justify-content: center; gap: 12px; margin: 24px 0; }
+        .star-lbl { color: #e2e8f0; cursor: pointer; transition: transform 0.2s; }
+        .star-lbl:hover { transform: scale(1.1); }
+        .star-lbl:hover, .star-lbl:hover ~ .star-lbl, input[type="radio"]:checked ~ .star-lbl { color: #f59e0b; }
+        
+        .btn-back { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 700; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 24px; transition: var(--transition); text-decoration: none; }
+        .btn-back:hover { color: var(--primary); transform: translateX(-4px); }
+    </style>
 }
 
-<style>
-    /* Premium Single Card Theme */
-    body { background-color: #f1f5f9 !important; font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
+<div class="page-wrapper">
+    <div class="section-container">
+        <a asp-controller="Home" asp-action="Index" class="btn-back">
+            <i class="bi bi-arrow-left"></i> Back to Dashboard
+        </a>
 
-    .big-wrapper { 
-        width: 100%;
-        max-width: 1100px; 
-        margin: 50px auto 100px; 
-        padding: 0 24px; 
-    }
-
-    .bc-back { 
-        display: inline-flex; align-items: center; gap: 8px; 
-        font-size: 15px; font-weight: 600; color: #64748b; 
-        margin-bottom: 24px; text-decoration: none; 
-        transition: color 0.2s;
-    }
-    .bc-back:hover { color: var(--primary, #00bcd4); }
-
-    .big-card {
-        background: #ffffff;
-        border-radius: 24px;
-        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.1), 0 0 0 1px rgba(0,0,0,0.02);
-        overflow: hidden;
-    }
-
-    /* Card Internal Header */
-    .bc-header {
-        background: linear-gradient(135deg, #0f172a, #1e293b);
-        padding: 60px;
-        color: #ffffff;
-        position: relative;
-    }
-    .bc-header::before {
-        content: ''; position: absolute; top:0; right:0; width: 500px; height: 100%;
-        background: radial-gradient(circle at top right, rgba(0, 188, 212, 0.25), transparent 70%);
-        pointer-events: none;
-    }
-
-    .bc-tags { display: flex; gap: 12px; margin-bottom: 24px; position: relative; z-index: 1; }
-    .bc-tag { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; }
-    .bc-tag.status { background: var(--primary, #00bcd4); color: white; box-shadow: 0 4px 12px rgba(0,188,212,0.3); }
-    .bc-tag.id { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); }
-
-    .bc-title { font-size: 36px; font-weight: 800; margin: 0 0 24px; line-height: 1.2; position: relative; z-index: 1; letter-spacing: -0.5px; }
-    
-    .bc-meta { display: flex; flex-wrap: wrap; gap: 24px; font-size: 15px; color: #94a3b8; font-weight: 500; position: relative; z-index: 1; }
-    .bc-meta span { display: flex; align-items: center; gap: 8px; }
-
-    /* Card Body Layout */
-    .bc-body {
-        display: grid;
-        grid-template-columns: minmax(0, 1fr) 360px;
-        padding: 60px;
-        gap: 60px;
-    }
-    @@media (max-width: 992px) { .bc-body { grid-template-columns: 1fr; padding: 40px; gap: 40px; } }
-
-    .bc-main { display: flex; flex-direction: column; gap: 48px; }
-
-    /* Main Sections */
-    .bc-section-title {
-        font-size: 18px; font-weight: 800; color: #0f172a; margin-bottom: 24px; text-transform: uppercase; letter-spacing: 0.5px;
-        display: flex; align-items: center; gap: 12px;
-    }
-    .bc-section-title svg { color: var(--primary, #00bcd4); }
-
-    .bc-desc-text { font-size: 16px; line-height: 1.8; color: #475569; }
-    .bc-img { width: 100%; border-radius: 12px; margin-top: 24px; box-shadow: 0 8px 24px rgba(0,0,0,0.06); border: 1px solid #e2e8f0; }
-
-    /* Stylish Inner Boxes */
-    .bc-box {
-        background: #f8fafc;
-        border: 1px solid #e2e8f0;
-        border-radius: 16px;
-        padding: 32px;
-    }
-    .bc-box.blue { border-left: 4px solid #3b82f6; }
-    .bc-box.green { border-left: 4px solid #10b981; }
-
-    .bc-info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; }
-    .bc-info-label { font-size: 12px; font-weight: 800; color: #64748b; text-transform: uppercase; margin-bottom: 8px; letter-spacing: 0.5px; }
-    .bc-info-value { font-size: 16px; font-weight: 700; color: #0f172a; }
-
-    .bc-images { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 24px; }
-    .bc-images div { position: relative; border-radius: 8px; overflow: hidden; border: 1px solid #e2e8f0; }
-    .bc-images img { width: 100%; display: block; }
-    .bc-img-lbl { position: absolute; bottom:0; left:0; right:0; background: linear-gradient(transparent, rgba(0,0,0,0.8)); color:#fff; padding: 24px 12px 12px; font-size: 11px; font-weight: 800; text-align: center; text-transform: uppercase; letter-spacing: 1px;}
-
-    /* Sidebar / Timeline */
-    .bc-sidebar { border-left: 1px solid #e2e8f0; padding-left: 60px; }
-    @@media (max-width: 992px) { .bc-sidebar { border-left: none; padding-left: 0; border-top: 1px solid #e2e8f0; padding-top: 40px; } }
-
-    .tl-item { position: relative; padding-left: 40px; padding-bottom: 32px; }
-    .tl-item:last-child { padding-bottom: 0; }
-    .tl-item::before { content:''; position: absolute; left: 11px; top: 24px; bottom: -8px; width: 2px; background: #e2e8f0; }
-    .tl-item:last-child::before { display: none; }
-    .tl-item.past::before { background: var(--primary, #00bcd4); }
-
-    .tl-dot { position: absolute; left: 0; top: 0; width: 24px; height: 24px; border-radius: 50%; background: #ffffff; border: 2px solid #cbd5e1; display:flex; align-items:center; justify-content:center; }
-    .tl-item.past .tl-dot { background: var(--primary, #00bcd4); border-color: var(--primary, #00bcd4); color: white; }
-    .tl-item.active .tl-dot { border-color: var(--primary, #00bcd4); border-width: 3px; box-shadow: 0 0 0 6px rgba(0,188,212,0.1); }
-    .tl-item.active .tl-dot::after { content:''; width: 8px; height: 8px; border-radius: 50%; background: var(--primary, #00bcd4); }
-    .tl-item.rejected .tl-dot { border-color: #ef4444; border-width: 3px; box-shadow: 0 0 0 6px rgba(239,68,68,0.1); }
-    .tl-item.rejected .tl-dot::after { content:''; width: 8px; height: 8px; border-radius: 50%; background: #ef4444; }
-
-    .tl-title { font-size: 15px; font-weight: 800; color: #0f172a; margin-bottom: 4px; }
-    .tl-item.active .tl-title { color: var(--primary, #00bcd4); }
-    .tl-item.rejected .tl-title { color: #ef4444; }
-    .tl-date { font-size: 13px; color: #64748b; font-weight: 600; margin-bottom: 8px; }
-    .tl-desc { font-size: 14px; color: #475569; line-height: 1.5; }
-
-    /* Rating Boxes */
-    .bc-rating { margin-top: 48px; background: #fffbeb; border: 1px solid #fde68a; border-left: 4px solid #f59e0b; border-radius: 16px; padding: 32px; }
-    .bc-rating h3 { font-size: 16px; font-weight: 800; color: #b45309; margin: 0 0 20px; display: flex; align-items: center; gap: 10px; text-transform: uppercase; }
-    
-    .star-grp { display: flex; flex-direction: row-reverse; justify-content: flex-end; gap: 8px; margin-bottom: 20px; }
-    .star-lbl { color: #fcd34d; cursor: pointer; transition: transform 0.2s; }
-    .star-lbl:hover { transform: scale(1.1); }
-    .star-lbl:hover, .star-lbl:hover ~ .star-lbl, input[type="radio"]:checked ~ .star-lbl { color: #f59e0b; }
-
-    .rating-input { width: 100%; padding: 16px; border: 1px solid #fcd34d; border-radius: 8px; background: #ffffff; font-family: inherit; font-size: 14px; margin-bottom: 16px; outline: none; }
-    .rating-input:focus { border-color: #f59e0b; box-shadow: 0 0 0 3px rgba(245,158,11,0.1); }
-    .rating-btn { width: 100%; padding: 14px; background: #f59e0b; color: white; border: none; border-radius: 8px; font-weight: 800; font-size: 14px; text-transform: uppercase; cursor: pointer; transition: all 0.2s; }
-    .rating-btn:hover { background: #d97706; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(245,158,11,0.2); }
-</style>
-
-<div class="big-wrapper">
-    <a asp-controller="Home" asp-action="Index" class="bc-back">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><line x1="19" y1="12" x2="5" y2="12"></line><polyline points="12 19 5 12 12 5"></polyline></svg>
-        Back to Dashboard
-    </a>
-
-    <div class="big-card">
-        <!-- Inside Card Header -->
-        <div class="bc-header">
-            <div class="bc-tags">
-                <span class="bc-tag status">@Model.Status</span>
-                <span class="bc-tag id">ISS-@Model.IssueId.ToString("D3")</span>
+        <div class="issue-hero">
+            <div class="issue-meta-tags">
+                <span class="meta-tag status-@Model.Status.ToLower()">@Model.Status</span>
+                <span class="meta-tag id">ISS-@Model.IssueId.ToString("D3")</span>
             </div>
             
-            <h1 class="bc-title">@Model.Title</h1>
+            <h1 class="issue-details-title">@Model.Title</h1>
             
-            <div class="bc-meta">
-                <span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                    Submitted: @Model.SubmittedAt.ToString("MMM dd, yyyy")
-                </span>
-                <span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path></svg>
-                    Category: @Model.Category
-                </span>
-                <span>
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path><circle cx="12" cy="10" r="3"></circle></svg>
-                    Location: @Model.Location
-                </span>
+            <div class="issue-hero-info">
+                <div class="hero-info-item">
+                    <i class="bi bi-calendar3"></i>
+                    <span>Submitted on<br/><strong>@Model.SubmittedAt.ToString("MMM dd, yyyy")</strong></span>
+                </div>
+                <div class="hero-info-item">
+                    <i class="bi bi-tag-fill"></i>
+                    <span>Category<br/><strong>@Model.Category</strong></span>
+                </div>
+                <div class="hero-info-item">
+                    <i class="bi bi-geo-alt-fill"></i>
+                    <span>Location<br/><strong>@Model.Location</strong></span>
+                </div>
             </div>
         </div>
 
-        <!-- Inside Card Body -->
-        <div class="bc-body">
-            
-            <!-- Left Main Content -->
-            <div class="bc-main">
-                
-                <!-- Description Section -->
-                <div>
-                    <div class="bc-section-title">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
-                        Issue Description
+        <div class="row g-5">
+            <div class="col-lg-8">
+                <div class="card-fixit p-4 p-md-5 mb-4">
+                    <div class="section-header-line">
+                        <i class="bi bi-card-text"></i>
+                        <h3>Issue Description</h3>
                     </div>
-                    <div class="bc-desc-text">@Model.Description</div>
+                    <p class="desc-text">@Model.Description</p>
+                    
                     @if (!string.IsNullOrEmpty(Model.ImageUrl))
                     {
-                        <img class="bc-img" src="@Model.ImageUrl" alt="Issue Image" />
+                        <img class="issue-image mb-5" src="@Model.ImageUrl" alt="Issue Image" />
                     }
-                </div>
 
-                <!-- Schedule Section -->
-                @if (Model.Schedule != null)
-                {
-                    <div class="bc-box blue">
-                        <div class="bc-section-title" style="margin-bottom: 24px;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
-                            Maintenance Scheduled
-                        </div>
-                        <div class="bc-info-grid">
-                            <div>
-                                <div class="bc-info-label">Visit Date</div>
-                                <div class="bc-info-value">@Model.Schedule.VisitDate.ToString("MMMM dd, yyyy h:mm tt")</div>
-                            </div>
-                            <div>
-                                <div class="bc-info-label">Assigned Worker</div>
-                                <div class="bc-info-value">@Model.Schedule.WorkerName</div>
-                            </div>
-                        </div>
-                    </div>
-                }
-
-                <!-- Report Section -->
-                @if (Model.Report != null)
-                {
-                    <div class="bc-box green">
-                        <div class="bc-section-title" style="margin-bottom: 24px;">
-                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                            Completion Report
-                        </div>
-                        <div style="margin-bottom: 24px;">
-                            <div class="bc-info-label">Summary of Work</div>
-                            <div class="bc-info-value" style="line-height: 1.6;">@Model.Report.Summary</div>
-                        </div>
-                        @if (!string.IsNullOrEmpty(Model.Report.WorkerNotes))
-                        {
-                            <div>
-                                <div class="bc-info-label">Worker Notes</div>
-                                <div class="bc-desc-text">@Model.Report.WorkerNotes</div>
-                            </div>
-                        }
-
-                        @if (!string.IsNullOrEmpty(Model.Report.BeforeImageUrl) || !string.IsNullOrEmpty(Model.Report.AfterImageUrl))
-                        {
-                            <div class="bc-images">
-                                @if (!string.IsNullOrEmpty(Model.Report.BeforeImageUrl))
-                                {
-                                    <div>
-                                        <img src="@Model.Report.BeforeImageUrl" alt="Before" />
-                                        <div class="bc-img-lbl">Before</div>
-                                    </div>
-                                }
-                                @if (!string.IsNullOrEmpty(Model.Report.AfterImageUrl))
-                                {
-                                    <div>
-                                        <img src="@Model.Report.AfterImageUrl" alt="After" />
-                                        <div class="bc-img-lbl">After</div>
-                                    </div>
-                                }
-                            </div>
-                        }
-                    </div>
-                }
-            </div>
-
-            <!-- Right Sidebar -->
-            <div class="bc-sidebar">
-                <div class="bc-section-title">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-                    Status Tracker
-                </div>
-                
-                <div class="bc-timeline">
-                    @if (isRejected)
+                    @if (Model.Schedule != null)
                     {
-                        <div class="tl-item past">
-                            <div class="tl-dot"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></div>
-                            <div class="tl-title">New</div>
-                            <div class="tl-date">@Model.SubmittedAt.ToString("MMM dd, yyyy h:mm tt")</div>
-                            <div class="tl-desc">Issue submitted successfully</div>
-                        </div>
-                        <div class="tl-item rejected">
-                            <div class="tl-dot"></div>
-                            <div class="tl-title">Rejected</div>
-                            <div class="tl-date">@Model.UpdatedAt.ToString("MMM dd, yyyy h:mm tt")</div>
-                            <div class="tl-desc">Issue was rejected by administration</div>
-                        </div>
-                    }
-                    else
-                    {
-                        var orderedStatuses = statuses.OrderBy(s => GetWeight(s.Key)).ToList();
-                        bool foundActive = false;
-                        
-                        foreach (var stage in orderedStatuses)
-                        {
-                            int stageWeight = GetWeight(stage.Key);
-                            bool isActive = currentWeight == stageWeight;
-                            bool isPast = currentWeight > stageWeight;
-                            
-                            if (!isActive && !isPast) continue;
-                            
-                            string cls = isActive && !foundActive ? "tl-item active" : "tl-item past";
-                            if (isActive) foundActive = true;
-                            
-                            DateTime? stageDate = null;
-                            if (stage.Key == "New") stageDate = Model.SubmittedAt;
-                            else if (stage.Key == "Scheduled" && Model.Schedule != null) stageDate = Model.Schedule.VisitDate;
-                            else if (stage.Key == "Resolved" && Model.Report != null) stageDate = Model.Report.SubmittedAt;
-                            else if (stageWeight == currentWeight) stageDate = Model.UpdatedAt;
-
-                            <div class="@cls">
-                                <div class="tl-dot">
-                                    @if(isPast) { <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> }
+                        <div class="info-box highlight">
+                            <div class="section-header-line">
+                                <i class="bi bi-tools"></i>
+                                <h3>Maintenance Scheduled</h3>
+                            </div>
+                            <div class="row g-4">
+                                <div class="col-sm-6">
+                                    <div class="small fw-bold text-uppercase text-muted mb-1">Visit Date</div>
+                                    <div class="fs-6 fw-bold">@Model.Schedule.VisitDate.ToString("MMMM dd, yyyy h:mm tt")</div>
                                 </div>
-                                <div class="tl-title">@stage.Display</div>
-                                @if (stageDate.HasValue)
-                                {
-                                    <div class="tl-date">@stageDate.Value.ToString("MMM dd, yyyy h:mm tt")</div>
-                                }
-                                <div class="tl-desc">@stage.Desc</div>
+                                <div class="col-sm-6">
+                                    <div class="small fw-bold text-uppercase text-muted mb-1">Assigned Worker</div>
+                                    <div class="fs-6 fw-bold">@Model.Schedule.WorkerName</div>
+                                </div>
                             </div>
-                        }
-                    }
-                </div>
-
-                @if (Model.Status == "Resolved" && Model.Rating == null)
-                {
-                    <div class="bc-rating">
-                        <h3>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                            Rate Resolution
-                        </h3>
-                        <form asp-controller="Rating" asp-action="Create" method="post">
-                            <input type="hidden" name="IssueId" value="@Model.IssueId" />
-                            
-                            <div class="star-grp">
-                                @for (int i = 5; i >= 1; i--)
-                                {
-                                    <input type="radio" id="star@(i)" name="Stars" value="@i" required style="display: none;" />
-                                    <label for="star@(i)" class="star-lbl">
-                                        <svg width="32" height="32" viewBox="0 0 24 24" fill="currentColor"><path d="M12 17.27L18.18 21l-1.64-7.03L22 9.24l-7.19-.61L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21z" /></svg>
-                                    </label>
-                                }
-                            </div>
-
-                            <textarea name="Comment" class="rating-input" rows="3" placeholder="Add a comment (optional)"></textarea>
-                            
-                            <button type="submit" class="rating-btn">Submit Feedback</button>
-                        </form>
-                    </div>
-                }
-                else if (Model.Rating != null)
-                {
-                    <div class="bc-rating">
-                        <h3>
-                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
-                            Your Feedback
-                        </h3>
-                        <div style="font-size: 32px; font-weight: 800; color: #b45309; margin-bottom: 8px;">
-                            @Model.Rating.Stars<span style="font-size: 16px; color: #d97706;"> / 5</span>
                         </div>
-                        <div style="color: #f59e0b; font-size: 20px; margin-bottom: 12px; letter-spacing: 2px;">
-                            @for (int i = 1; i <= 5; i++)
+                    }
+
+                    @if (Model.Report != null)
+                    {
+                        <div class="info-box">
+                            <div class="section-header-line">
+                                <i class="bi bi-check-circle-fill text-success"></i>
+                                <h3>Completion Report</h3>
+                            </div>
+                            <div class="mb-4">
+                                <div class="small fw-bold text-uppercase text-muted mb-2">Summary of Work</div>
+                                <p class="desc-text mb-0">@Model.Report.Summary</p>
+                            </div>
+                            
+                            @if (!string.IsNullOrEmpty(Model.Report.WorkerNotes))
                             {
-                                <span>@(i <= Model.Rating.Stars ? "★" : "☆")</span>
+                                <div class="mb-4">
+                                    <div class="small fw-bold text-uppercase text-muted mb-2">Worker Notes</div>
+                                    <p class="desc-text mb-0">@Model.Report.WorkerNotes</p>
+                                </div>
+                            }
+
+                            @if (!string.IsNullOrEmpty(Model.Report.BeforeImageUrl) || !string.IsNullOrEmpty(Model.Report.AfterImageUrl))
+                            {
+                                <div class="row g-3 mt-4">
+                                    @if (!string.IsNullOrEmpty(Model.Report.BeforeImageUrl))
+                                    {
+                                        <div class="col-sm-6">
+                                            <div class="small fw-bold text-uppercase text-muted mb-2 text-center">Before</div>
+                                            <img class="issue-image" src="@Model.Report.BeforeImageUrl" alt="Before" style="max-height: 250px;" />
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.Report.AfterImageUrl))
+                                    {
+                                        <div class="col-sm-6">
+                                            <div class="small fw-bold text-uppercase text-muted mb-2 text-center">After</div>
+                                            <img class="issue-image" src="@Model.Report.AfterImageUrl" alt="After" style="max-height: 250px;" />
+                                        </div>
+                                    }
+                                </div>
                             }
                         </div>
-                        @if (!string.IsNullOrEmpty(Model.Rating.Comment))
+                    }
+                </div>
+
+                <!-- Two-Way Communication -->
+                <div class="card-fixit p-4 p-md-5 mb-4">
+                    <div class="section-header-line">
+                        <i class="bi bi-chat-dots-fill"></i>
+                        <h3>Two-Way Communication</h3>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; max-height: 400px; overflow-y: auto; padding-right: 8px;">
+                        @if (Model.Comments == null || !Model.Comments.Any())
                         {
-                            <p style="font-size: 14px; color: #92400e; font-style: italic; line-height: 1.6; margin: 0;">"@Model.Rating.Comment"</p>
+                            <div style="text-align: center; color: var(--text-muted); font-size: 14px; padding: 20px;">
+                                No comments yet. You can leave a message for the administration here.
+                            </div>
+                        }
+                        else
+                        {
+                            foreach (var comment in Model.Comments.OrderBy(c => c.CreatedAt))
+                            {
+                                bool isMyComment = comment.UserId == User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+                                <div style="display: flex; gap: 12px; width: 100%; justify-content: @(isMyComment ? "flex-end" : "flex-start");">
+                                    @if (!isMyComment)
+                                    {
+                                        @if (string.IsNullOrEmpty(comment.UserProfileImageUrl))
+                                        {
+                                            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-surface-2); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-heading); flex-shrink: 0;">
+                                                @(string.IsNullOrWhiteSpace(comment.UserName) ? "?" : comment.UserName[0].ToString().ToUpper())
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" />
+                                        }
+                                    }
+                                    
+                                    <div style="background: @(isMyComment ? "var(--primary-glow)" : "var(--bg-surface-2)"); padding: 12px 16px; border-radius: 12px; border: 1px solid @(isMyComment ? "var(--primary)" : "var(--border)"); max-width: 80%;">
+                                        <div style="display: flex; justify-content: space-between; gap: 16px; margin-bottom: 4px;">
+                                            <strong style="font-size: 13px; color: var(--text-heading);">@(isMyComment ? "You" : comment.UserName + " (Admin)")</strong>
+                                            <span style="font-size: 11px; color: var(--text-muted);">@comment.CreatedAt.ToString("MMM d, h:mm tt")</span>
+                                        </div>
+                                        <p style="margin: 0; font-size: 14px; color: var(--text-body); line-height: 1.5;">@comment.Text</p>
+                                    </div>
+
+                                    @if (isMyComment)
+                                    {
+                                        @if (string.IsNullOrEmpty(comment.UserProfileImageUrl))
+                                        {
+                                            <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary); border: 1.5px solid var(--primary-dark); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0;">
+                                                @(string.IsNullOrWhiteSpace(comment.UserName) ? "U" : comment.UserName[0].ToString().ToUpper())
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" />
+                                        }
+                                    }
+                                </div>
+                            }
                         }
                     </div>
-                }
 
+                    <form asp-controller="Issue" asp-action="AddComment" method="post">
+                        @Html.AntiForgeryToken()
+                        <input type="hidden" name="IssueId" value="@Model.IssueId" />
+                        <textarea name="Text" class="form-control mb-3" placeholder="Type a message..." required style="min-height: 80px; border-radius: var(--radius-md); padding: 12px; font-size: 14px; resize: vertical; border: 1px solid var(--border);"></textarea>
+                        <button type="submit" class="btn btn-primary" style="font-weight: 600; border-radius: var(--radius-md); padding: 10px 20px;">
+                            <i class="bi bi-send-fill me-2"></i> Send Message
+                        </button>
+                    </form>
+                </div>
+            </div>
+
+            <div class="col-lg-4">
+                <div class="card-fixit p-4 p-md-5 sticky-top" style="top: 100px;">
+                    <div class="section-header-line">
+                        <i class="bi bi-clock-history"></i>
+                        <h3>Status Tracker</h3>
+                    </div>
+                    
+                    <div class="timeline-container">
+                        @if (isRejected)
+                        {
+                            <div class="timeline-item past">
+                                <div class="timeline-dot"><i class="bi bi-check"></i></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">New</div>
+                                    <div class="timeline-date">@Model.SubmittedAt.ToString("MMM dd, yyyy h:mm tt")</div>
+                                    <div class="timeline-desc">Issue submitted successfully</div>
+                                </div>
+                            </div>
+                            <div class="timeline-item rejected">
+                                <div class="timeline-dot"></div>
+                                <div class="timeline-content">
+                                    <div class="timeline-title">Rejected</div>
+                                    <div class="timeline-date">@Model.UpdatedAt.ToString("MMM dd, yyyy h:mm tt")</div>
+                                    <div class="timeline-desc">Issue was rejected by administration</div>
+                                </div>
+                            </div>
+                        }
+                        else
+                        {
+                            var orderedStatuses = statuses.OrderBy(s => GetWeight(s.Key)).ToList();
+                            bool foundActive = false;
+                            
+                            foreach (var stage in orderedStatuses)
+                            {
+                                int stageWeight = GetWeight(stage.Key);
+                                bool isActive = currentWeight == stageWeight;
+                                bool isPast = currentWeight > stageWeight;
+                                
+                                if (!isActive && !isPast) continue;
+                                
+                                string cls = isActive && !foundActive ? "timeline-item active" : "timeline-item past";
+                                if (isActive) foundActive = true;
+                                
+                                DateTime? stageDate = null;
+                                if (stage.Key == "New") stageDate = Model.SubmittedAt;
+                                else if (stage.Key == "Scheduled" && Model.Schedule != null) stageDate = Model.Schedule.VisitDate;
+                                else if (stage.Key == "Resolved" && Model.Report != null) stageDate = Model.Report.SubmittedAt;
+                                else if (stageWeight == currentWeight) stageDate = Model.UpdatedAt;
+
+                                <div class="@cls">
+                                    <div class="timeline-dot">
+                                        @if(isPast) { <i class="bi bi-check"></i> }
+                                    </div>
+                                    <div class="timeline-content">
+                                        <div class="timeline-title">@stage.Display</div>
+                                        @if (stageDate.HasValue)
+                                        {
+                                            <div class="timeline-date">@stageDate.Value.ToString("MMM dd, yyyy h:mm tt")</div>
+                                        }
+                                        <div class="timeline-desc">@stage.Desc</div>
+                                    </div>
+                                </div>
+                            }
+                        }
+                    </div>
+
+                    @if (Model.Status == "Resolved" && Model.Rating == null)
+                    {
+                        <div class="rating-box">
+                            <div class="section-header-line">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <h3>Rate Resolution</h3>
+                            </div>
+                            <form asp-controller="Rating" asp-action="Create" method="post">
+                                <input type="hidden" name="IssueId" value="@Model.IssueId" />
+                                
+                                <div class="star-grp">
+                                    @for (int i = 5; i >= 1; i--)
+                                    {
+                                        <input type="radio" id="star@(i)" name="Stars" value="@i" required style="display: none;" />
+                                        <label for="star@(i)" class="star-lbl">
+                                            <i class="bi bi-star-fill fs-3"></i>
+                                        </label>
+                                    }
+                                </div>
+
+                                <textarea name="Comment" class="form-control-fixit mb-3" rows="3" placeholder="Add a comment (optional)"></textarea>
+                                
+                                <button type="submit" class="btn-primary-fixit w-100">Submit Feedback</button>
+                            </form>
+                        </div>
+                    }
+                    else if (Model.Rating != null)
+                    {
+                        <div class="rating-box">
+                            <div class="section-header-line">
+                                <i class="bi bi-star-fill text-warning"></i>
+                                <h3>Your Feedback</h3>
+                            </div>
+                            <div class="d-flex align-items-center gap-2 mb-3">
+                                <div class="fs-1 fw-bold text-warning">@Model.Rating.Stars</div>
+                                <div class="text-warning fs-4">
+                                    @for (int i = 1; i <= 5; i++)
+                                    {
+                                        <i class="bi @(i <= Model.Rating.Stars ? "bi-star-fill" : "bi-star")"></i>
+                                    }
+                                </div>
+                            </div>
+                            @if (!string.IsNullOrEmpty(Model.Rating.Comment))
+                            {
+                                <p class="fst-italic text-muted mb-0">"@Model.Rating.Comment"</p>
+                            }
+                        </div>
+                    }
+                </div>
             </div>
         </div>
     </div>

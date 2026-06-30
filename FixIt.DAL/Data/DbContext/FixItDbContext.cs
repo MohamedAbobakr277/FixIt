@@ -32,4 +32,7 @@ public class FixItDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<MaintenanceReport> MaintenanceReports { get; set; }
     public DbSet<Rating> Ratings { get; set; }
     public DbSet<LoginHistory> LoginHistories { get; set; }
+    public DbSet<IssueComment> IssueComments { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<AdminNotification> AdminNotifications { get; set; }
 }

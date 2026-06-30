@@ -10,6 +10,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Authorization;
 using FluentValidation;
 using System.Security.Claims;
+using System.Text.Json;
 
 namespace FixIt.PL.Controllers;
 
@@ -19,6 +20,7 @@ public class IssueController : Controller
     private readonly IIssueService _issueService;
     private readonly IIssueDetailsService _issueDetailsService;
     private readonly IAdminIssueService _adminIssueService;
+    private readonly IAiClassificationService _aiClassificationService;
     private readonly UserManager<ApplicationUser> _userManager;
     private readonly IValidator<FixIt.BLL.DTOs.CreateIssueDto> _createIssueValidator;
 
@@ -26,12 +28,14 @@ public class IssueController : Controller
         IIssueService issueService,
         IIssueDetailsService issueDetailsService,
         IAdminIssueService adminIssueService,
+        IAiClassificationService aiClassificationService,
         UserManager<ApplicationUser> userManager,
         IValidator<FixIt.BLL.DTOs.CreateIssueDto> createIssueValidator)
     {
         _issueService = issueService;
         _issueDetailsService = issueDetailsService;
         _adminIssueService = adminIssueService;
+        _aiClassificationService = aiClassificationService;
         _userManager = userManager;
         _createIssueValidator = createIssueValidator;
     }
@@ -87,6 +91,50 @@ public class IssueController : Controller
         }
     }
 
+    [HttpPost]
+    [Authorize(Roles = AppConstants.CitizenRole)]
+    [IgnoreAntiforgeryToken]
+    public async Task<IActionResult> ClassifyFromImage(IFormFile image)
+    {
+        if (image == null || image.Length == 0)
+        {
+            return BadRequest(new { error = "No image uploaded." });
+        }
+
+        // Validate file type
+        var allowedTypes = new[] { "image/jpeg", "image/png", "image/webp" };
+        if (!allowedTypes.Contains(image.ContentType.ToLowerInvariant()))
+        {
+            return BadRequest(new { error = "Invalid image format. Use JPG, PNG, or WebP." });
+        }
+
+        // Read image bytes
+        using var ms = new MemoryStream();
+        await image.CopyToAsync(ms);
+        var imageBytes = ms.ToArray();
+
+        var result = await _aiClassificationService.ClassifyIssueFromImageAsync(
+            imageBytes, image.ContentType);
+
+        if (result == null)
+        {
+            return StatusCode(503, new { error = "AI classification service is currently unavailable." });
+        }
+
+        return Json(new
+        {
+            title = result.SuggestedTitle,
+            description = result.SuggestedDescription,
+            category = result.SuggestedCategory.ToString(),
+            categoryValue = (int)result.SuggestedCategory,
+            priority = result.SuggestedPriority.ToString(),
+            priorityValue = (int)result.SuggestedPriority,
+            categoryReason = result.CategoryReason,
+            priorityReason = result.PriorityReason,
+            confidence = result.Confidence
+        });
+    }
+
     [Authorize(Roles = AppConstants.CitizenRole)]
     public async Task<IActionResult> Details(int id)
     {
@@ -98,6 +146,36 @@ public class IssueController : Controller
         }
 
         return View(issue);
+    }
+
+    [HttpPost]
+    [ValidateAntiForgeryToken]
+    public async Task<IActionResult> AddComment(AddCommentDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            TempData["ErrorMessage"] = "Invalid comment.";
+            return User.IsInRole(AppConstants.AdminRole) 
+                ? RedirectToAction(nameof(AdminDetails), new { id = dto.IssueId }) 
+                : RedirectToAction(nameof(Details), new { id = dto.IssueId });
+        }
+
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        try
+        {
+            await _issueDetailsService.AddCommentAsync(dto.IssueId, userId, dto.Text);
+            TempData["SuccessMessage"] = "Comment added successfully.";
+        }
+        catch (Exception ex)
+        {
+            TempData["ErrorMessage"] = "Failed to add comment.";
+        }
+
+        return User.IsInRole(AppConstants.AdminRole) 
+            ? RedirectToAction(nameof(AdminDetails), new { id = dto.IssueId }) 
+            : RedirectToAction(nameof(Details), new { id = dto.IssueId });
     }
 
     // ─────────────────────────────── ADMIN ─────────────────────────────────
