@@ -4,169 +4,431 @@
 }
 
 @section Styles {
-    <link rel="stylesheet" href="~/css/auth.css" asp-append-version="true" />
+    <style>
+        /* ── Premium AI Styles ── */
+        .ai-panel {
+            background: linear-gradient(135deg, rgba(0,188,212,.03) 0%, rgba(0,151,167,.06) 100%);
+            border: 1.5px solid rgba(0,188,212,.15);
+            border-radius: var(--radius-lg);
+            padding: 30px;
+            margin-top: 16px;
+            position: relative;
+            overflow: hidden;
+            display: none;
+        }
+        .ai-panel.active { display: block; animation: fadeInPage 0.4s ease forwards; }
+
+        .ai-panel-header { display: flex; align-items: center; gap: 16px; margin-bottom: 24px; }
+        .ai-icon-large {
+            width: 48px; height: 48px;
+            background: linear-gradient(135deg, var(--primary), var(--primary-light));
+            border-radius: 14px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 22px; color: white;
+            box-shadow: 0 8px 16px rgba(0,188,212,.25);
+        }
+        .ai-panel-title { font-size: 18px; font-weight: 800; color: var(--text-heading); margin: 0 0 4px; }
+        .ai-panel-subtitle { font-size: 14px; color: var(--text-muted); margin: 0; }
+
+        .ai-upload-box {
+            background: var(--bg-surface);
+            border: 2px dashed var(--border-hover);
+            border-radius: var(--radius-lg);
+            padding: 40px;
+            text-align: center;
+            transition: var(--transition);
+            position: relative;
+        }
+        .ai-upload-box:hover {
+            border-color: var(--primary);
+            background: var(--primary-glow);
+        }
+        .file-upload-input {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            opacity: 0; cursor: pointer; z-index: 2;
+        }
+        .ai-upload-icon {
+            font-size: 48px; margin-bottom: 16px; color: var(--text-light); transition: var(--transition);
+        }
+        .ai-upload-box:hover .ai-upload-icon { color: var(--primary); transform: translateY(-4px); }
+        .ai-upload-text { font-size: 16px; font-weight: 700; color: var(--text-heading); margin-bottom: 8px; }
+        .ai-upload-subtext { font-size: 13px; color: var(--text-muted); }
+
+        .image-preview {
+            display: none; position: relative; margin-top: 16px;
+            border-radius: var(--radius-lg); overflow: hidden;
+            border: 1px solid var(--border); box-shadow: var(--card-shadow);
+            background: #0f172a;
+        }
+        .image-preview img { 
+            width: 100%; 
+            height: 350px; 
+            object-fit: contain; 
+            display: block; 
+        }
+        .image-preview-remove {
+            position: absolute; top: 16px; right: 16px;
+            background: rgba(15, 23, 42, 0.8); color: white;
+            border: none; width: 36px; height: 36px; border-radius: 50%;
+            cursor: pointer; z-index: 3; font-size: 18px;
+            display: flex; align-items: center; justify-content: center; transition: var(--transition);
+        }
+        .image-preview-remove:hover { background: #ef4444; transform: scale(1.1); }
+
+        /* Output boxes */
+        .ai-output-box {
+            background: var(--bg-surface); border: 1.5px solid var(--border); border-radius: var(--radius-md);
+            padding: 20px; margin-bottom: 16px;
+        }
+        .ai-output-label { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--primary); margin-bottom: 8px; }
+        .ai-output-text { font-size: 15px; color: var(--text-heading); line-height: 1.6; font-weight: 500; }
+
+        .ai-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+        .ai-grid .ai-output-box { margin-bottom: 0; display: flex; align-items: flex-start; gap: 16px; }
+        .ai-grid-icon { font-size: 28px; background: var(--bg-surface-2); padding: 12px; border-radius: 12px; }
+        .ai-grid-content { flex: 1; }
+        .ai-grid-value { font-size: 16px; font-weight: 800; color: var(--text-heading); margin-bottom: 4px; }
+        .ai-grid-reason { font-size: 13px; color: var(--text-muted); line-height: 1.4; }
+
+        .ai-actions { display: flex; gap: 16px; margin-top: 24px; }
+        
+        /* Interactive States */
+        .ai-loading { display: none; text-align: center; padding: 40px 0; }
+        .ai-loading.visible { display: block; animation: fadeInPage 0.3s; }
+        .ai-spinner {
+            width: 48px; height: 48px; border: 4px solid var(--primary-glow);
+            border-top-color: var(--primary); border-radius: 50%;
+            animation: spin 0.8s linear infinite; margin: 0 auto 16px;
+        }
+
+        .ai-suggestions { display: none; margin-top: 24px; }
+        .ai-suggestions.visible { display: block; animation: fadeInPage 0.4s; }
+        .ai-error { display: none; text-align: center; padding: 24px; color: #ef4444; background: rgba(239,68,68,0.05); border: 1.5px solid rgba(239,68,68,0.2); border-radius: var(--radius-md); font-size: 15px; font-weight: 500; }
+        .ai-error.visible { display: block; }
+        .ai-success { display: none; align-items: center; gap: 12px; padding: 16px 20px; background: rgba(16,185,129,0.05); color: #059669; border: 1.5px solid rgba(16,185,129,0.2); border-radius: var(--radius-md); font-size: 15px; font-weight: 600; margin-top: 20px; }
+        .ai-success.visible { display: flex; animation: fadeInPage 0.3s; }
+
+        /* Priority Dots */
+        .priority-dot { width: 14px; height: 14px; border-radius: 50%; display: inline-block; }
+        .priority-dot.high { background: #ef4444; box-shadow: 0 0 12px rgba(239,68,68,0.4); }
+        .priority-dot.medium { background: #f59e0b; box-shadow: 0 0 12px rgba(245,158,11,0.4); }
+        .priority-dot.low { background: #10b981; box-shadow: 0 0 12px rgba(16,185,129,0.4); }
+
+        .section-header-line {
+            display: flex; align-items: center; gap: 16px; margin: 40px 0 24px;
+        }
+        .section-header-line h3 {
+            font-size: 15px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.1em; color: var(--text-heading); margin: 0;
+        }
+        .section-header-line::after {
+            content: ''; flex: 1; height: 1.5px; background: var(--border);
+        }
+
+        .submit-wrap { margin-top: 40px; display: flex; justify-content: flex-end; }
+        .field-error { font-size: 13px; color: #ef4444; font-weight: 500; margin-top: 6px; display: block; }
+    </style>
 }
 
-<div class="auth-page">
-    <div class="auth-glow auth-glow-1"></div>
-    <div class="auth-glow auth-glow-2"></div>
-
-    <div class="auth-card auth-card-wide">
-
-        <!-- Logo -->
-        <a class="auth-logo" asp-controller="Home" asp-action="Index">
-            <img src="~/images/logo-icon.png" alt="FixIt Logo" style="width: 40px; height: 40px; border-radius: var(--radius-md); object-fit: contain;" />
-            <span class="auth-logo-text">FixIt</span>
-        </a>
-
-        <h1 class="auth-title">Report an Issue</h1>
-        <p class="auth-subtitle">Help us improve your community by reporting issues</p>
-
-        <!-- Validation summary (server-side global errors) -->
-        <div asp-validation-summary="All" class="validation-summary-errors" style="display:none"></div>
-        @{
-            var hasSummaryErrors = !ViewData.ModelState.IsValid &&
-                                   ViewData.ModelState.ContainsKey(string.Empty) &&
-                                   ViewData.ModelState[string.Empty]!.Errors.Count > 0;
-        }
-        @if (hasSummaryErrors)
-        {
-            <div asp-validation-summary="ModelOnly" class="validation-summary-errors"></div>
-        }
-
-        <form asp-action="Create" method="post" enctype="multipart/form-data" id="createIssueForm" novalidate>
-            @Html.AntiForgeryToken()
-
-            <!-- Issue Details -->
-            <div class="section-label-sm">Issue Details</div>
-
-            <!-- Title -->
-            <div class="form-floating mb-3">
-                <input asp-for="Title"
-                       class="form-control"
-                       id="Title"
-                       placeholder="Brief description of the issue"
-                       autocomplete="off" />
-                <label for="Title">Issue Title *</label>
-                <span asp-validation-for="Title" class="field-error"></span>
+<div style="min-height: 100vh; background: var(--bg-body); padding-bottom: 100px;">
+    <!-- Premium Light Header -->
+    <div class="cta-section" style="padding: 140px 0 110px; background: linear-gradient(180deg, #ffffff 0%, #f1f5f9 100%); position: relative; overflow: hidden; border-bottom: 1px solid #e2e8f0; margin-top: 0;">
+        <!-- Premium Subtle Grid Background -->
+        <div style="position: absolute; inset: 0; background-image: radial-gradient(#cbd5e1 1px, transparent 1px); background-size: 32px 32px; opacity: 0.3; pointer-events: none;"></div>
+        
+        <!-- Soft Top Glow -->
+        <div style="position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 800px; height: 400px; background: radial-gradient(circle, rgba(0,188,212,0.08) 0%, transparent 70%); border-radius: 50%; pointer-events: none;"></div>
+        
+        <div class="section-container" style="text-align: center; position: relative; z-index: 2;">
+            <div style="display: inline-flex; align-items: center; justify-content: center; width: 64px; height: 64px; background: #ffffff; border-radius: 20px; box-shadow: 0 10px 20px rgba(0,0,0,0.03); margin-bottom: 24px; border: 1.5px solid #e2e8f0; color: var(--primary); font-size: 28px;">
+                <i class="bi bi-megaphone"></i>
             </div>
+            
+            <h1 style="font-family: var(--font-heading); font-size: clamp(2rem, 4vw, 3rem); font-weight: 800; color: #0f172a; margin: 0 0 16px; letter-spacing: -0.02em;">
+                Report an Issue
+            </h1>
+            <p style="font-size: 16px; color: #475569; max-width: 600px; margin: 0 auto; line-height: 1.6; font-weight: 500;">
+                Provide details about the issue or upload a photo to let our AI assist you automatically.
+            </p>
+        </div>
+    </div>
 
-            <!-- Description -->
-            <div class="form-floating mb-3">
-                <textarea asp-for="Description"
-                          class="form-control"
-                          id="Description"
-                          placeholder="Detailed description of the issue"
-                          style="height: 120px; resize: vertical;"
-                          autocomplete="off"></textarea>
-                <label for="Description">Description *</label>
-                <span asp-validation-for="Description" class="field-error"></span>
-            </div>
+    <!-- Main Content -->
+    <div class="section-container" style="margin-top: -60px; position: relative; z-index: 10;">
+        <div class="card-fixit" style="background: var(--bg-card); padding: 40px 50px; border-radius: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0,0,0,0.03);">
+            
+            <div asp-validation-summary="ModelOnly" class="alert alert-danger" style="border-radius: var(--radius-md);"></div>
 
-            <!-- Location and Category row -->
-            <div class="auth-row mb-3">
-                <div>
-                    <div class="form-floating">
-                        <input asp-for="Location"
-                               class="form-control"
-                               id="Location"
-                               placeholder="123 Main Street"
-                               autocomplete="street-address" />
-                        <label for="Location">Location *</label>
-                    </div>
-                    <span asp-validation-for="Location" class="field-error"></span>
+            <form asp-action="Create" method="post" enctype="multipart/form-data" id="createIssueForm" novalidate>
+                @Html.AntiForgeryToken()
+
+                <!-- Step 1: Upload Photo -->
+                <div class="section-header-line" style="margin-top: 0;">
+                    <h3>Step 1: Visual Evidence <span style="color:var(--text-muted); font-weight:500;">(Optional)</span></h3>
                 </div>
-
-                <div>
-                    <div class="form-floating">
-                        <select asp-for="Category"
-                                class="form-control"
-                                id="Category"
-                                asp-items="Html.GetEnumSelectList<FixIt.Common.Enums.IssueCategory>()">
-                            <option value="">Select category...</option>
-                        </select>
-                        <label for="Category">Category *</label>
-                    </div>
-                    <span asp-validation-for="Category" class="field-error"></span>
-                </div>
-            </div>
-
-            <!-- Image Upload -->
-            <div class="section-label-sm">
-                Attach Image <span class="optional-badge">Optional</span>
-            </div>
-
-            <div class="mb-3">
-                <div class="file-upload-wrapper">
-                    <input asp-for="Image"
-                           type="file"
-                           class="file-upload-input"
-                           id="Image"
-                           accept=".jpg,.jpeg,.png,.webp" />
-                    <label for="Image" class="file-upload-label">
-                        <span class="file-upload-icon">📷</span>
-                        <span class="file-upload-text">Choose image...</span>
-                    </label>
-                    <small class="text-muted">Allowed formats: JPG, PNG, WebP. Max size: 5MB</small>
+                
+                <div class="ai-upload-box" id="uploadBox">
+                    <input asp-for="Image" type="file" class="file-upload-input" id="Image" accept=".jpg,.jpeg,.png,.webp" />
+                    <div class="ai-upload-icon"><i class="bi bi-camera"></i></div>
+                    <div class="ai-upload-text" id="uploadText">Click or drag a photo here</div>
+                    <div class="ai-upload-subtext">JPG, PNG, WebP up to 5MB</div>
                 </div>
                 <span asp-validation-for="Image" class="field-error"></span>
-                
-                <!-- Image preview -->
-                <div id="imagePreview" class="image-preview" style="display: none;">
-                    <img id="previewImg" src="#" alt="Image preview" />
-                    <button type="button" class="image-preview-remove" id="removeImage">×</button>
+
+                <div id="imagePreview" class="image-preview">
+                    <img id="previewImg" src="#" alt="Issue Image Preview" />
+                    <button type="button" class="image-preview-remove" id="removeImage" title="Remove Image"><i class="bi bi-x"></i></button>
                 </div>
-            </div>
 
-            <button type="submit" class="auth-submit" id="createIssueSubmitBtn">
-                Submit Issue →
-            </button>
-        </form>
+                <!-- AI Panel -->
+                <div class="ai-panel" id="aiPanel">
+                    <div class="ai-panel-header">
+                        <div class="ai-icon-large"><i class="bi bi-magic"></i></div>
+                        <div>
+                            <h3 class="ai-panel-title">AI Smart Analysis</h3>
+                            <p class="ai-panel-subtitle">Automatically extract details from your photo</p>
+                        </div>
+                    </div>
 
-        <p class="auth-footer">
-            <a asp-action="Index">← Back to My Issues</a>
-        </p>
+                    <button type="button" class="btn-primary-fixit" style="width: 100%; justify-content: center; font-size: 16px; padding: 16px;" id="aiAnalyzeBtn">
+                        <i class="bi bi-stars"></i> Analyze Image
+                    </button>
+
+                    <div class="ai-loading" id="aiLoading">
+                        <div class="ai-spinner"></div>
+                        <div style="font-weight: 700; color: var(--text-heading); font-size: 16px; margin-bottom: 4px;">AI is thinking...</div>
+                        <div style="font-size: 14px; color: var(--text-muted);">This might take a few seconds.</div>
+                    </div>
+
+                    <div class="ai-error" id="aiError">
+                        <div style="margin-bottom: 12px;"><i class="bi bi-exclamation-triangle" style="font-size: 24px;"></i></div>
+                        <span id="aiErrorText">Something went wrong. Please fill out the form manually.</span>
+                        <div style="margin-top: 16px;">
+                            <button type="button" class="btn-outline-fixit" id="aiRetryBtnErr">Try Again</button>
+                        </div>
+                    </div>
+
+                    <div class="ai-suggestions" id="aiSuggestions">
+                        <div class="ai-output-box">
+                            <div class="ai-output-label">Suggested Title</div>
+                            <div class="ai-output-text" id="aiTitleValue"></div>
+                        </div>
+                        
+                        <div class="ai-output-box">
+                            <div class="ai-output-label">Suggested Description</div>
+                            <div class="ai-output-text" id="aiDescValue"></div>
+                        </div>
+
+                        <div class="ai-grid">
+                            <div class="ai-output-box">
+                                <div class="ai-grid-icon" id="aiCategoryEmoji">📂</div>
+                                <div class="ai-grid-content">
+                                    <div class="ai-output-label">Category</div>
+                                    <div class="ai-grid-value" id="aiCategoryValue"></div>
+                                    <div class="ai-grid-reason" id="aiCategoryReason"></div>
+                                </div>
+                            </div>
+                            <div class="ai-output-box">
+                                <div class="ai-grid-icon" style="display:flex; align-items:center; justify-content:center;">
+                                    <span class="priority-dot" id="aiPriorityDot"></span>
+                                </div>
+                                <div class="ai-grid-content">
+                                    <div class="ai-output-label">Priority</div>
+                                    <div class="ai-grid-value" id="aiPriorityValue"></div>
+                                    <div class="ai-grid-reason" id="aiPriorityReason"></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="ai-actions">
+                            <button type="button" class="btn-primary-fixit" style="flex: 1; justify-content: center;" id="aiAcceptBtn">
+                                <i class="bi bi-check2-circle"></i> Apply to Form
+                            </button>
+                            <button type="button" class="btn-outline-fixit" style="flex: 1; justify-content: center;" id="aiRetryBtn">
+                                <i class="bi bi-arrow-clockwise"></i> Re-analyze
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="ai-success" id="aiAcceptedBanner">
+                        <i class="bi bi-check-circle-fill" style="font-size: 20px;"></i>
+                        Details applied below. Feel free to edit them before submitting.
+                    </div>
+                </div>
+
+                <!-- Step 2: Details -->
+                <div class="section-header-line">
+                    <h3>Step 2: Issue Details</h3>
+                </div>
+
+                <div class="row g-4">
+                    <div class="col-md-12">
+                        <label class="form-label-fixit" for="Title">Issue Title *</label>
+                        <input asp-for="Title" class="form-control-fixit" id="Title" placeholder="E.g. Broken streetlight on Main St" />
+                        <span asp-validation-for="Title" class="field-error"></span>
+                    </div>
+
+                    <div class="col-md-12">
+                        <label class="form-label-fixit" for="Description">Detailed Description *</label>
+                        <textarea asp-for="Description" class="form-control-fixit" id="Description" rows="4" placeholder="Describe the problem, hazards, or any relevant details..."></textarea>
+                        <span asp-validation-for="Description" class="field-error"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label-fixit" for="Location">Exact Location *</label>
+                        <input asp-for="Location" class="form-control-fixit" id="Location" placeholder="Address or specific location markers" />
+                        <span asp-validation-for="Location" class="field-error"></span>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label class="form-label-fixit" for="Category">Category *</label>
+                        <select asp-for="Category" class="form-control-fixit" id="Category" asp-items="Html.GetEnumSelectList<FixIt.Common.Enums.IssueCategory>()">
+                            <option value="">-- Select a Category --</option>
+                        </select>
+                        <span asp-validation-for="Category" class="field-error"></span>
+                    </div>
+                </div>
+
+                <input type="hidden" asp-for="Priority" id="Priority" />
+
+                <div class="submit-wrap">
+                    <button type="submit" class="btn-primary-fixit" style="padding: 16px 40px; font-size: 16px;" id="createIssueSubmitBtn">
+                        Submit Report <i class="bi bi-arrow-right" style="margin-left: 4px;"></i>
+                    </button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>
 
 @section Scripts {
     @await Html.PartialAsync("_ValidationScriptsPartial")
     <script>
-        // Image preview functionality
+        const categoryEmojis = { 'Electrical': '⚡', 'Water': '💧', 'Plumbing': '🔧', 'Carpentry': '🪚', 'GeneralMaintenance': '🔩', 'Other': '📋' };
+        const categoryDisplayNames = { 'Electrical': 'Electrical', 'Water': 'Water', 'Plumbing': 'Plumbing', 'Carpentry': 'Carpentry', 'GeneralMaintenance': 'General Maintenance', 'Other': 'Other' };
+
         const fileInput = document.getElementById('Image');
-        const fileLabel = document.querySelector('.file-upload-text');
+        const uploadBox = document.getElementById('uploadBox');
+        const uploadText = document.getElementById('uploadText');
         const imagePreview = document.getElementById('imagePreview');
         const previewImg = document.getElementById('previewImg');
         const removeImageBtn = document.getElementById('removeImage');
 
-        fileInput.addEventListener('change', function(e) {
+        const titleInput = document.getElementById('Title');
+        const descInput = document.getElementById('Description');
+        const categorySelect = document.getElementById('Category');
+        const priorityInput = document.getElementById('Priority');
+
+        const aiPanel = document.getElementById('aiPanel');
+        const aiAnalyzeBtn = document.getElementById('aiAnalyzeBtn');
+        const aiLoading = document.getElementById('aiLoading');
+        const aiError = document.getElementById('aiError');
+        const aiSuggestions = document.getElementById('aiSuggestions');
+        const aiAcceptedBanner = document.getElementById('aiAcceptedBanner');
+
+        let currentAiResult = null;
+        let selectedFile = null;
+
+        function showAiState(state) {
+            aiAnalyzeBtn.style.display = state === 'ready' ? 'flex' : 'none';
+            aiLoading.classList.toggle('visible', state === 'loading');
+            aiError.classList.toggle('visible', state === 'error');
+            aiSuggestions.classList.toggle('visible', state === 'suggestions');
+            aiAcceptedBanner.classList.toggle('visible', state === 'accepted');
+        }
+
+        fileInput.addEventListener('change', function (e) {
             const file = e.target.files[0];
             if (file) {
-                // Update label text
-                fileLabel.textContent = file.name;
+                selectedFile = file;
+                uploadBox.style.display = 'none'; // hide upload box
                 
-                // Show preview
                 const reader = new FileReader();
-                reader.onload = function(e) {
+                reader.onload = function (e) {
                     previewImg.src = e.target.result;
                     imagePreview.style.display = 'block';
                 };
                 reader.readAsDataURL(file);
+
+                aiPanel.classList.add('active');
+                showAiState('ready');
             }
         });
 
-        removeImageBtn.addEventListener('click', function() {
+        removeImageBtn.addEventListener('click', function () {
             fileInput.value = '';
-            fileLabel.textContent = 'Choose image...';
+            selectedFile = null;
+            uploadBox.style.display = 'block';
             imagePreview.style.display = 'none';
             previewImg.src = '#';
+            aiPanel.classList.remove('active');
+            showAiState('');
         });
 
-        // Loading state on submit
+        async function analyzeWithAi() {
+            if (!selectedFile) return;
+
+            showAiState('loading');
+
+            try {
+                const formData = new FormData();
+                formData.append('image', selectedFile);
+
+                const response = await fetch('/Issue/ClassifyFromImage', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    const err = await response.json().catch(() => ({}));
+                    document.getElementById('aiErrorText').textContent =
+                        err.error || 'Could not analyze the image. Please fill in the details manually.';
+                    showAiState('error');
+                    return;
+                }
+
+                currentAiResult = await response.json();
+                
+                // Populate preview
+                document.getElementById('aiTitleValue').textContent = currentAiResult.title;
+                document.getElementById('aiDescValue').textContent = currentAiResult.description;
+                document.getElementById('aiCategoryEmoji').textContent = categoryEmojis[currentAiResult.category] || '📂';
+                document.getElementById('aiCategoryValue').textContent = categoryDisplayNames[currentAiResult.category] || currentAiResult.category;
+                document.getElementById('aiCategoryReason').textContent = currentAiResult.categoryReason;
+                
+                const priDot = document.getElementById('aiPriorityDot');
+                priDot.className = 'priority-dot ' + currentAiResult.priority.toLowerCase();
+                document.getElementById('aiPriorityValue').textContent = currentAiResult.priority;
+                document.getElementById('aiPriorityReason').textContent = currentAiResult.priorityReason;
+
+                showAiState('suggestions');
+
+            } catch (err) {
+                console.error('AI error:', err);
+                showAiState('error');
+            }
+        }
+
+        document.getElementById('aiAnalyzeBtn').addEventListener('click', analyzeWithAi);
+        
+        document.getElementById('aiAcceptBtn').addEventListener('click', () => {
+            if (!currentAiResult) return;
+            titleInput.value = currentAiResult.title;
+            descInput.value = currentAiResult.description;
+            categorySelect.value = currentAiResult.categoryValue;
+            priorityInput.value = currentAiResult.priorityValue;
+            showAiState('accepted');
+            
+            // Auto scroll to form
+            titleInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+
+        document.getElementById('aiRetryBtn').addEventListener('click', analyzeWithAi);
+        document.getElementById('aiRetryBtnErr').addEventListener('click', analyzeWithAi);
+
         document.getElementById('createIssueForm').addEventListener('submit', function () {
-            var btn = document.getElementById('createIssueSubmitBtn');
+            const btn = document.getElementById('createIssueSubmitBtn');
             btn.disabled = true;
-            btn.textContent = 'Submitting issue…';
+            btn.innerHTML = 'Submitting... <i class="bi bi-hourglass-split"></i>';
         });
     </script>
 }

@@ -3,7 +3,6 @@ namespace FixIt.DAL.Entities;
 public class Citizen : ApplicationUser
 {
     public string? Address { get; set; }
-    public string? ProfilePicture { get; set; }
 
     // Navigation properties
     public ICollection<Issue> Issues { get; set; } = new List<Issue>();

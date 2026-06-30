@@ -12,11 +12,13 @@ public class AdminIssueService : IAdminIssueService
 {
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
+    private readonly INotificationService _notificationService;
 
-    public AdminIssueService(IUnitOfWork unitOfWork, IMapper mapper)
+    public AdminIssueService(IUnitOfWork unitOfWork, IMapper mapper, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
+        _notificationService = notificationService;
     }
 
     public async Task<AdminIssueListPageDto> GetIssuesAsync(string? search, IssueStatus? status)
@@ -46,14 +48,13 @@ public class AdminIssueService : IAdminIssueService
 
     public async Task<AdminIssueDetailsDto?> GetIssueDetailsAsync(int issueId)
     {
-        var issue = await _unitOfWork.Issues.GetAll(
-            i => i.Citizen,
-            i => i.MaintenanceSchedule,
-            i => i.MaintenanceReport
-        )
-        .Include(i => i.StatusHistory)
-            .ThenInclude(h => h.ChangedBy)
-        .FirstOrDefaultAsync(i => i.IssueId == issueId);
+        var issue = await _unitOfWork.Issues.GetAll()
+            .Include(i => i.Citizen)
+            .Include(i => i.MaintenanceSchedule)
+            .Include(i => i.MaintenanceReport)
+            .Include(i => i.StatusHistory).ThenInclude(h => h.ChangedBy)
+            .Include(i => i.Comments).ThenInclude(c => c.User)
+            .FirstOrDefaultAsync(i => i.IssueId == issueId);
 
         if (issue == null) return null;
 
@@ -81,7 +82,22 @@ public class AdminIssueService : IAdminIssueService
         await _unitOfWork.StatusHistories.AddAsync(history);
         _unitOfWork.Issues.Update(issue);
 
-        return await _unitOfWork.CompleteAsync() > 0;
+        var success = await _unitOfWork.CompleteAsync() > 0;
+        
+        if (success && !string.IsNullOrEmpty(issue.CitizenId))
+        {
+            string notifTitle = $"Issue Status Update: {issue.Title}";
+            string notifMsg = $"Your issue has been marked as {newStatus}.";
+            
+            if (newStatus == IssueStatus.Resolved)
+                notifMsg = "Your issue has been resolved. Please log in to view the completion report and leave a rating.";
+            else if (newStatus == IssueStatus.Scheduled)
+                notifMsg = "Maintenance has been scheduled for your issue.";
+                
+            await _notificationService.SendNotificationAsync(issue.CitizenId, NotificationType.SMS, notifTitle, notifMsg);
+        }
+
+        return success;
     }
 
     public async Task<bool> SaveAdminNotesAsync(int issueId, string? notes)

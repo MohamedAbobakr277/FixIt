@@ -16,6 +16,7 @@ public class AdminController : Controller
     private readonly IRatingAdminService _ratingAdminService;
     private readonly IValidator<CreateScheduleDto> _scheduleValidator;
     private readonly IValidator<CreateReportDto> _reportValidator;
+    private readonly IAdminProfileService _profileService;
 
     public AdminController(
         IAdminDashboardService dashboardService,
@@ -23,7 +24,8 @@ public class AdminController : Controller
         IReportService reportService,
         IRatingAdminService ratingAdminService,
         IValidator<CreateScheduleDto> scheduleValidator,
-        IValidator<CreateReportDto> reportValidator)
+        IValidator<CreateReportDto> reportValidator,
+        IAdminProfileService profileService)
     {
         _dashboardService = dashboardService;
         _scheduleService = scheduleService;
@@ -31,12 +33,71 @@ public class AdminController : Controller
         _ratingAdminService = ratingAdminService;
         _scheduleValidator = scheduleValidator;
         _reportValidator = reportValidator;
+        _profileService = profileService;
     }
 
     public async Task<IActionResult> Dashboard()
     {
         var stats = await _dashboardService.GetDashboardStatsAsync();
         return View(stats);
+    }
+
+    public async Task<IActionResult> Profile()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        var data = await _profileService.GetAdminProfileAsync(userId);
+        return View("~/Views/Admin/Profile.cshtml", data);
+    }
+
+    public async Task<IActionResult> Settings()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        var data = await _profileService.GetAdminProfileAsync(userId);
+        return View("~/Views/Admin/Settings.cshtml", data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Settings(FixIt.BLL.DTOs.UpdateProfileDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId != null)
+            {
+                var data = await _profileService.GetAdminProfileAsync(userId);
+                return View("~/Views/Admin/Settings.cshtml", data);
+            }
+            return RedirectToAction("Dashboard");
+        }
+
+        var uid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (uid != null)
+        {
+            var success = await _profileService.UpdateAdminProfileAsync(uid, dto);
+            if (success)
+                TempData["SuccessMessage"] = "Profile updated successfully.";
+        }
+        return RedirectToAction(nameof(Settings));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateNotifications(FixIt.BLL.DTOs.UpdateNotificationsDto dto)
+    {
+        var uid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (uid != null)
+        {
+            var success = await _profileService.UpdateAdminNotificationsAsync(uid, dto);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Notification preferences updated.";
+                TempData["ActiveTab"] = "notifications";
+            }
+        }
+        return RedirectToAction(nameof(Settings));
     }
 
     [HttpGet]
@@ -152,4 +213,6 @@ public class AdminController : Controller
         TempData["ErrorMessage"] = "Failed to submit report. Issue may not be in progress.";
         return RedirectToAction("Reports", new { issueId = dto.IssueId });
     }
+
+
 }

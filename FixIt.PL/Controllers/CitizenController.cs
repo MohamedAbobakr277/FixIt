@@ -44,7 +44,7 @@ public class CitizenController : Controller
     }
 
     [HttpPost]
-    public async Task<IActionResult> Settings(UpdateProfileDto dto)
+    public async Task<IActionResult> Settings(FixIt.BLL.DTOs.UpdateProfileDto dto)
     {
         if (!ModelState.IsValid)
         {
@@ -65,5 +65,25 @@ public class CitizenController : Controller
         ModelState.AddModelError("", "An error occurred while updating your profile.");
         var profileData = await _dashboardService.GetProfileDataAsync(citizenId);
         return View(profileData);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateNotifications(FixIt.BLL.DTOs.UpdateNotificationsDto dto)
+    {
+        var citizenId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(citizenId)) return Challenge();
+
+        var success = await _dashboardService.UpdateNotificationsAsync(citizenId, dto);
+
+        if (success)
+        {
+            TempData["SuccessMessage"] = "Notification preferences updated successfully!";
+            // Redirect with a flag to show notifications tab active
+            TempData["ActiveTab"] = "notifications";
+            return RedirectToAction(nameof(Settings));
+        }
+
+        TempData["ErrorMessage"] = "An error occurred while saving notification preferences.";
+        return RedirectToAction(nameof(Settings));
     }
 }
