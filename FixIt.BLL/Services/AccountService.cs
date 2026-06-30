@@ -39,23 +39,42 @@ public class AccountService : IAccountService
     /// <inheritdoc/>
     public async Task<(IEnumerable<string>? Errors, string? UserId, string? Token)> RegisterAsync(RegisterDto dto)
     {
-        var citizen = new Citizen
-        {
-            FullName = dto.FullName.Trim(),
-            UserName = dto.Email.Trim().ToLower(),
-            Email = dto.Email.Trim().ToLower(),
-            PhoneNumber = dto.PhoneNumber?.Trim(),
-            Address = dto.Address?.Trim(),
-            CreatedAt = DateTime.UtcNow
-        };
+        ApplicationUser user;
+        string assignedRole;
 
-        var result = await _userManager.CreateAsync(citizen, dto.Password);
+        if (dto.Role == AppConstants.AdminRole)
+        {
+            user = new Admin
+            {
+                FullName = dto.FullName.Trim(),
+                UserName = dto.Email.Trim().ToLower(),
+                Email = dto.Email.Trim().ToLower(),
+                PhoneNumber = dto.PhoneNumber?.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
+            assignedRole = AppConstants.AdminRole;
+        }
+        else
+        {
+            user = new Citizen
+            {
+                FullName = dto.FullName.Trim(),
+                UserName = dto.Email.Trim().ToLower(),
+                Email = dto.Email.Trim().ToLower(),
+                PhoneNumber = dto.PhoneNumber?.Trim(),
+                Address = dto.Address?.Trim(),
+                CreatedAt = DateTime.UtcNow
+            };
+            assignedRole = AppConstants.CitizenRole;
+        }
+
+        var result = await _userManager.CreateAsync(user, dto.Password);
 
         if (result.Succeeded)
         {
-            await _userManager.AddToRoleAsync(citizen, AppConstants.CitizenRole);
-            var token = await _userManager.GenerateEmailConfirmationTokenAsync(citizen);
-            return (null, citizen.Id, token); // null = success
+            await _userManager.AddToRoleAsync(user, assignedRole);
+            var token = await _userManager.GenerateEmailConfirmationTokenAsync(user);
+            return (null, user.Id, token); // null = success
         }
 
         return (result.Errors.Select(e => e.Description), null, null);

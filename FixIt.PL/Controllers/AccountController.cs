@@ -8,6 +8,7 @@ using System.Security.Claims;
 using Microsoft.AspNetCore.Identity;
 using FixIt.DAL.Entities;
 using Microsoft.AspNetCore.Authorization;
+using FixIt.Common.Constants;
 
 namespace FixIt.PL.Controllers;
 
@@ -446,7 +447,14 @@ public class AccountController : Controller
             
             if (user == null)
             {
-                user = new ApplicationUser { UserName = email, Email = email };
+                var fullName = info.Principal.FindFirstValue(ClaimTypes.Name) ?? email;
+                user = new Citizen 
+                { 
+                    UserName = email, 
+                    Email = email, 
+                    FullName = fullName,
+                    CreatedAt = DateTime.UtcNow 
+                };
                 var createResult = await _userManager.CreateAsync(user);
                 if (!createResult.Succeeded)
                 {
@@ -454,6 +462,7 @@ public class AccountController : Controller
                         ModelState.AddModelError(string.Empty, error.Description);
                     return View(nameof(Login));
                 }
+                await _userManager.AddToRoleAsync(user, AppConstants.CitizenRole);
             }
 
             var existingLogins = await _userManager.GetLoginsAsync(user);

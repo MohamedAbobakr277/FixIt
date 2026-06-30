@@ -30,5 +30,9 @@ public class RegisterDtoValidator : AbstractValidator<RegisterDto>
             .Matches(@"^\+?[0-9\s\-\(\)]{7,20}$")
             .WithMessage("Please enter a valid phone number.")
             .When(x => !string.IsNullOrWhiteSpace(x.PhoneNumber));
+            
+        RuleFor(x => x.Role)
+            .Must(r => r == "Citizen" || r == "Admin")
+            .WithMessage("Invalid role selection.");
     }
 }
