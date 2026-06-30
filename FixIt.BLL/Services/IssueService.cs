@@ -23,12 +23,14 @@ public class IssueService : IIssueService
     private readonly IUnitOfWork _unitOfWork;
     private readonly IMapper _mapper;
     private readonly IWebHostEnvironment _environment;
+    private readonly INotificationService _notificationService;
 
-    public IssueService(IUnitOfWork unitOfWork, IMapper mapper, IWebHostEnvironment environment)
+    public IssueService(IUnitOfWork unitOfWork, IMapper mapper, IWebHostEnvironment environment, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _environment = environment;
+        _notificationService = notificationService;
     }
 
     public async Task<PaginatedList<IssueListDto>> GetCitizenIssuesAsync(string citizenId, IssueFilterDto filter)
@@ -94,6 +96,23 @@ public class IssueService : IIssueService
         });
 
         await _unitOfWork.CompleteAsync();
+
+        // 1. High-Priority Issue Alerts
+        string[] emergencyKeywords = { "dangerous", "fire", "accident", "burst", "leak", "power line", "hazard", "emergency" };
+        var isEmergency = emergencyKeywords.Any(k => 
+            dto.Title.Contains(k, StringComparison.OrdinalIgnoreCase) || 
+            dto.Description.Contains(k, StringComparison.OrdinalIgnoreCase));
+
+        if (isEmergency || issue.Category == IssueCategory.Electrical || issue.Category == IssueCategory.Water)
+        {
+            await _notificationService.CreateAdminNotificationAsync(
+                AdminNotificationType.HighPriorityIssue,
+                "🚨 High-Priority Issue Reported",
+                $"A high-priority issue '{issue.Title}' has been reported in {issue.Location}. Immediate attention required.",
+                issue.IssueId.ToString(),
+                $"/Issue/AdminDetails?id={issue.IssueId}"
+            );
+        }
 
         return issue.IssueId;
     }
