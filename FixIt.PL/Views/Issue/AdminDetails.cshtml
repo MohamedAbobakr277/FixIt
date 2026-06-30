@@ -1,5 +1,6 @@
 @model FixIt.BLL.DTOs.AdminIssueDetailsDto
 @using FixIt.Common.Enums
+@using System.Security.Claims
 @{
     ViewData["Title"] = $"ISS-{Model.IssueId:D3} – {Model.Title}";
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
@@ -368,6 +369,84 @@
             {
                 <img class="det-img" src="@Model.ImageUrl" alt="Issue image" />
             }
+        </div>
+
+        <!-- Comments Section -->
+        <div class="det-card">
+            <h2>
+                <span class="h-ico">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                    </svg>
+                </span>
+                Two-Way Communication
+            </h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; max-height: 400px; overflow-y: auto; padding-right: 8px;">
+                @if (Model.Comments == null || !Model.Comments.Any())
+                {
+                    <div style="text-align: center; color: var(--adm-muted); font-size: 13.5px; padding: 20px;">
+                        No comments yet. Start the conversation with the citizen here.
+                    </div>
+                }
+                else
+                {
+                    foreach (var comment in Model.Comments.OrderBy(c => c.CreatedAt))
+                    {
+                        bool isMyComment = comment.UserId == User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+                        <div style="display: flex; gap: 12px; width: 100%; justify-content: @(isMyComment ? "flex-end" : "flex-start");">
+                            @if (!isMyComment)
+                            {
+                                @if (string.IsNullOrEmpty(comment.UserProfileImageUrl))
+                                {
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--adm-bg); border: 1.5px solid var(--adm-border); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--adm-text); flex-shrink: 0;">
+                                        @(string.IsNullOrWhiteSpace(comment.UserName) ? "?" : comment.UserName[0].ToString().ToUpper())
+                                    </div>
+                                }
+                                else
+                                {
+                                    <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" />
+                                }
+                            }
+                            
+                            <div style="background: @(isMyComment ? "var(--adm-primary-glow)" : "var(--adm-bg)"); padding: 12px 16px; border-radius: 12px; border: 1px solid @(isMyComment ? "var(--adm-primary)" : "var(--adm-border)"); max-width: 80%;">
+                                <div style="display: flex; justify-content: space-between; gap: 16px; margin-bottom: 4px;">
+                                    <strong style="font-size: 13px; color: var(--adm-text);">@(isMyComment ? "You (Admin)" : comment.UserName)</strong>
+                                    <span style="font-size: 11px; color: var(--adm-muted);">@comment.CreatedAt.ToString("MMM d, h:mm tt")</span>
+                                </div>
+                                <p style="margin: 0; font-size: 13.5px; color: var(--adm-text); line-height: 1.5;">@comment.Text</p>
+                            </div>
+
+                            @if (isMyComment)
+                            {
+                                @if (string.IsNullOrEmpty(comment.UserProfileImageUrl))
+                                {
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--adm-primary); border: 1.5px solid var(--adm-primary); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0;">
+                                        @(string.IsNullOrWhiteSpace(comment.UserName) ? "A" : comment.UserName[0].ToString().ToUpper())
+                                    </div>
+                                }
+                                else
+                                {
+                                    <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" />
+                                }
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <form asp-controller="Issue" asp-action="AddComment" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="IssueId" value="@Model.IssueId" />
+                <textarea name="Text" class="det-textarea" placeholder="Type a message to the citizen..." required style="min-height: 80px;"></textarea>
+                <button type="submit" class="det-btn" style="margin-top: 12px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    Send Message
+                </button>
+            </form>
         </div>
 
         <!-- Admin notes -->

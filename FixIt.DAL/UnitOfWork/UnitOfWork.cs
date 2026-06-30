@@ -12,6 +12,8 @@ public interface IUnitOfWork : IDisposable
     IGenericRepository<MaintenanceReport> Reports { get; }
     IGenericRepository<IssueStatusHistory> StatusHistories { get; }
     IGenericRepository<LoginHistory> LoginHistories { get; }
+    IGenericRepository<Notification> Notifications { get; }
+    IGenericRepository<AdminNotification> AdminNotifications { get; }
     Task<int> CompleteAsync();
 }
 
@@ -25,6 +27,8 @@ public class UnitOfWork : IUnitOfWork
     private IGenericRepository<MaintenanceReport>? _reports;
     private IGenericRepository<IssueStatusHistory>? _statusHistories;
     private IGenericRepository<LoginHistory>? _loginHistories;
+    private IGenericRepository<Notification>? _notifications;
+    private IGenericRepository<AdminNotification>? _adminNotifications;
 
     public UnitOfWork(FixItDbContext context)
     {
@@ -48,6 +52,12 @@ public class UnitOfWork : IUnitOfWork
 
     public IGenericRepository<LoginHistory> LoginHistories
         => _loginHistories ??= new GenericRepository<LoginHistory>(_context);
+
+    public IGenericRepository<Notification> Notifications
+        => _notifications ??= new GenericRepository<Notification>(_context);
+        
+    public IGenericRepository<AdminNotification> AdminNotifications
+        => _adminNotifications ??= new GenericRepository<AdminNotification>(_context);
 
     public async Task<int> CompleteAsync()
         => await _context.SaveChangesAsync();
