@@ -10,6 +10,7 @@ using FixIt.BLL.Interfaces;
 using FixIt.BLL.Validators;
 using FixIt.Common.Constants;
 using FixIt.Common.Helpers;
+using FixIt.Common.Settings;
 using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -49,6 +50,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 // ── Configuration ──
 builder.Services.Configure<FixIt.Common.Settings.SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("GeminiSettings"));
 
 // ── Cookie Settings ──
 builder.Services.ConfigureApplicationCookie(options =>
@@ -102,7 +104,10 @@ builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IReportService, ReportService>();
 builder.Services.AddScoped<ICitizenDashboardService, CitizenDashboardService>();
+builder.Services.AddScoped<IAdminProfileService, AdminProfileService>();
 builder.Services.AddScoped<IEmailSenderService, SmtpEmailSenderService>();
+builder.Services.AddScoped<INotificationService, MockNotificationService>();
+builder.Services.AddHttpClient<IAiClassificationService, GeminiClassificationService>();
 
 // ── FluentValidation ──
 // One registration covers all validators in the same assembly
