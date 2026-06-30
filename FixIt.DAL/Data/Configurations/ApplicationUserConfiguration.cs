@@ -16,6 +16,10 @@ namespace FixIt.DAL.Data.Configurations
                 .IsRequired()
                 .HasDefaultValueSql("GETUTCDATE()");
 
+            builder.Property(u => u.ProfileImageUrl)
+                .HasMaxLength(500)
+                .IsRequired(false);
+
             // TPH Discriminator for Citizen / Admin
             builder.HasDiscriminator<string>("UserType")
                 .HasValue<Citizen>("Citizen")
