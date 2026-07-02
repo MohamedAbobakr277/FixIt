@@ -49,14 +49,17 @@
                             <form asp-action="Settings" method="post" class="settings-form" enctype="multipart/form-data">
                                 <div class="d-flex align-items-center gap-4 mb-5">
                                     <div class="profile-avatar-container large">
-                                        @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                                        @if (!string.IsNullOrWhiteSpace(Model.ProfilePicture))
                                         {
-                                            <img src="@Model.ProfilePicture" alt="@Model.FullName" class="profile-avatar" id="avatarPreview" />
+                                            <img src="@Model.ProfilePicture" alt="@Model.FullName" class="profile-avatar" id="avatarPreview" onerror="this.classList.add('d-none'); document.getElementById('avatarPlaceholder').classList.remove('d-none');" />
+                                            <div class="profile-avatar-placeholder d-none" id="avatarPlaceholder" style="display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:bold; color:var(--text-heading);">
+                                                @(string.IsNullOrWhiteSpace(Model.FullName) ? "U" : Model.FullName[0].ToString().ToUpper())
+                                            </div>
                                         }
                                         else
                                         {
-                                            <div class="profile-avatar-placeholder" id="avatarPlaceholder">
-                                                <i class="bi bi-person"></i>
+                                            <div class="profile-avatar-placeholder" id="avatarPlaceholder" style="display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:bold; color:var(--text-heading);">
+                                                @(string.IsNullOrWhiteSpace(Model.FullName) ? "U" : Model.FullName[0].ToString().ToUpper())
                                             </div>
                                             <img src="#" alt="@Model.FullName" class="profile-avatar d-none" id="avatarPreview" />
                                         }

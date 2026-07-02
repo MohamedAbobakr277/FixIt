@@ -397,7 +397,7 @@
                         <div style="display: flex; gap: 12px; width: 100%; justify-content: @(isMyComment ? "flex-end" : "flex-start");">
                             @if (!isMyComment)
                             {
-                                @if (string.IsNullOrEmpty(comment.UserProfileImageUrl))
+                                @if (string.IsNullOrWhiteSpace(comment.UserProfileImageUrl))
                                 {
                                     <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--adm-bg); border: 1.5px solid var(--adm-border); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--adm-text); flex-shrink: 0;">
                                         @(string.IsNullOrWhiteSpace(comment.UserName) ? "?" : comment.UserName[0].ToString().ToUpper())
@@ -405,7 +405,10 @@
                                 }
                                 else
                                 {
-                                    <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" />
+                                    <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                                    <div class="d-none" style="width: 32px; height: 32px; border-radius: 50%; background: var(--adm-bg); border: 1.5px solid var(--adm-border); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--adm-text); flex-shrink: 0;">
+                                        @(string.IsNullOrWhiteSpace(comment.UserName) ? "?" : comment.UserName[0].ToString().ToUpper())
+                                    </div>
                                 }
                             }
                             
@@ -419,7 +422,7 @@
 
                             @if (isMyComment)
                             {
-                                @if (string.IsNullOrEmpty(comment.UserProfileImageUrl))
+                                @if (string.IsNullOrWhiteSpace(comment.UserProfileImageUrl))
                                 {
                                     <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--adm-primary); border: 1.5px solid var(--adm-primary); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0;">
                                         @(string.IsNullOrWhiteSpace(comment.UserName) ? "A" : comment.UserName[0].ToString().ToUpper())
@@ -427,7 +430,10 @@
                                 }
                                 else
                                 {
-                                    <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" />
+                                    <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                                    <div class="d-none" style="width: 32px; height: 32px; border-radius: 50%; background: var(--adm-primary); border: 1.5px solid var(--adm-primary); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0;">
+                                        @(string.IsNullOrWhiteSpace(comment.UserName) ? "A" : comment.UserName[0].ToString().ToUpper())
+                                    </div>
                                 }
                             }
                         </div>

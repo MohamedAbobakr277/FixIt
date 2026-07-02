@@ -104,9 +104,10 @@
                 </div>
             </div>
             <div class="dropdown" style="margin-left: 4px;">
-                @if (!string.IsNullOrEmpty(currentUser?.ProfileImageUrl))
+                @if (!string.IsNullOrWhiteSpace(currentUser?.ProfileImageUrl))
                 {
-                    <img src="@currentUser.ProfileImageUrl" alt="Profile" data-bs-toggle="dropdown" aria-expanded="false" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 1px solid var(--adm-border);" title="@displayName" />
+                    <img src="@currentUser.ProfileImageUrl" alt="Profile" data-bs-toggle="dropdown" aria-expanded="false" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 1px solid var(--adm-border);" title="@displayName" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                    <div class="adm-avatar d-none" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;" title="@displayName">@initials</div>
                 }
                 else
                 {
