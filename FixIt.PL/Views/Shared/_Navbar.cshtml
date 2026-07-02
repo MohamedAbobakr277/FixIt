@@ -88,9 +88,12 @@
 
                 <div class="dropdown">
                     <div class="nav-user-dropdown-toggle" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer; padding: 0;">
-                        @if (!string.IsNullOrEmpty(currentUser?.ProfileImageUrl))
+                        @if (!string.IsNullOrWhiteSpace(currentUser?.ProfileImageUrl))
                         {
-                            <img src="@currentUser.ProfileImageUrl" alt="Profile" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;" />
+                            <img src="@currentUser.ProfileImageUrl" alt="Profile" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover;" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                            <div class="nav-user-avatar d-none" style="width: 34px; height: 34px; background: #0ea5e9; color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: 600; font-size: 0.95rem;">
+                                @initials
+                            </div>
                         }
                         else
                         {

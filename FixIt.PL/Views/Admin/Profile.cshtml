@@ -11,14 +11,17 @@
         <div class="card-fixit profile-card mb-4">
             <div class="profile-layout">
                 <div class="profile-avatar-container">
-                    @if (!string.IsNullOrEmpty(Model.ProfilePicture))
+                    @if (!string.IsNullOrWhiteSpace(Model.ProfilePicture))
                     {
-                        <img src="@Model.ProfilePicture" alt="@Model.FullName" class="profile-avatar" />
+                        <img src="@Model.ProfilePicture" alt="@Model.FullName" class="profile-avatar" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                        <div class="profile-avatar-placeholder d-none" style="display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:bold; color:var(--text-heading);">
+                            @(string.IsNullOrWhiteSpace(Model.FullName) ? "A" : Model.FullName[0].ToString().ToUpper())
+                        </div>
                     }
                     else
                     {
-                        <div class="profile-avatar-placeholder">
-                            <i class="bi bi-person"></i>
+                        <div class="profile-avatar-placeholder" style="display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:bold; color:var(--text-heading);">
+                            @(string.IsNullOrWhiteSpace(Model.FullName) ? "A" : Model.FullName[0].ToString().ToUpper())
                         </div>
                     }
                 </div>

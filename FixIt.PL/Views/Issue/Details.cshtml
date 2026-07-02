@@ -238,7 +238,7 @@
                                 <div style="display: flex; gap: 12px; width: 100%; justify-content: @(isMyComment ? "flex-end" : "flex-start");">
                                     @if (!isMyComment)
                                     {
-                                        @if (string.IsNullOrEmpty(comment.UserProfileImageUrl))
+                                        @if (string.IsNullOrWhiteSpace(comment.UserProfileImageUrl))
                                         {
                                             <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-surface-2); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-heading); flex-shrink: 0;">
                                                 @(string.IsNullOrWhiteSpace(comment.UserName) ? "?" : comment.UserName[0].ToString().ToUpper())
@@ -246,7 +246,10 @@
                                         }
                                         else
                                         {
-                                            <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" />
+                                            <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                                            <div class="d-none" style="width: 36px; height: 36px; border-radius: 50%; background: var(--bg-surface-2); border: 1.5px solid var(--border); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--text-heading); flex-shrink: 0;">
+                                                @(string.IsNullOrWhiteSpace(comment.UserName) ? "?" : comment.UserName[0].ToString().ToUpper())
+                                            </div>
                                         }
                                     }
                                     
@@ -260,7 +263,7 @@
 
                                     @if (isMyComment)
                                     {
-                                        @if (string.IsNullOrEmpty(comment.UserProfileImageUrl))
+                                        @if (string.IsNullOrWhiteSpace(comment.UserProfileImageUrl))
                                         {
                                             <div style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary); border: 1.5px solid var(--primary-dark); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0;">
                                                 @(string.IsNullOrWhiteSpace(comment.UserName) ? "U" : comment.UserName[0].ToString().ToUpper())
@@ -268,7 +271,10 @@
                                         }
                                         else
                                         {
-                                            <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" />
+                                            <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 36px; height: 36px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                                            <div class="d-none" style="width: 36px; height: 36px; border-radius: 50%; background: var(--primary); border: 1.5px solid var(--primary-dark); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0;">
+                                                @(string.IsNullOrWhiteSpace(comment.UserName) ? "U" : comment.UserName[0].ToString().ToUpper())
+                                            </div>
                                         }
                                     }
                                 </div>
