@@ -359,6 +359,40 @@
                         }
                     </div>
 
+                    <!-- Payment Section -->
+                    @if (Model.Status == "Resolved" || Model.Status == "Closed")
+                    {
+                        <div class="info-box" style="margin-top: 30px; text-align: center; border: 1px solid var(--border); background: var(--bg-surface); padding: 24px; border-radius: var(--radius-lg); box-shadow: var(--card-shadow);">
+                            <div class="section-header-line" style="justify-content: center; margin-bottom: 16px;">
+                                <i class="bi bi-credit-card-2-back text-primary" style="font-size: 24px;"></i>
+                                <h3 style="font-size: 15px; margin: 0; font-weight: 800;">Resolution Payment</h3>
+                            </div>
+
+                            @if (Model.IsPaid)
+                            {
+                                <div style="display: inline-flex; align-items: center; justify-content: center; width: 48px; height: 48px; background: rgba(46, 204, 113, 0.1); color: #2ecc71; border-radius: 50%; font-size: 24px; margin-bottom: 12px;">
+                                    <i class="bi bi-patch-check-fill"></i>
+                                </div>
+                                <h4 style="font-size: 16px; font-weight: 700; color: var(--text-heading); margin-bottom: 4px;">Payment Received</h4>
+                                <p class="text-muted small mb-0">The service resolution fee has been fully settled.</p>
+                            }
+                            else
+                            {
+                                <div class="mb-3">
+                                    <div class="fs-2 fw-bold" style="color: var(--primary-dark);">50.00 EGP</div>
+                                    <div class="text-muted small">Standard resolution service fee</div>
+                                </div>
+                                @if (Model.PaymentStatus == "Pending")
+                                {
+                                    <p class="text-warning small mb-3"><i class="bi bi-clock-history"></i> Payment initiated but not completed yet.</p>
+                                }
+                                <a href="@Url.Action("Checkout", "Payment", new { id = Model.IssueId })" class="btn-primary-fixit w-100" style="justify-content: center; text-decoration: none;">
+                                    <i class="bi bi-shield-check"></i> Pay Now with Stripe
+                                </a>
+                            }
+                        </div>
+                    }
+
                     @if (Model.Status == "Resolved" && Model.Rating == null)
                     {
                         <div class="rating-box">
