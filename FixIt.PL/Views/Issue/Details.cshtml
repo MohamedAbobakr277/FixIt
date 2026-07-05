@@ -374,7 +374,28 @@
                                     <i class="bi bi-patch-check-fill"></i>
                                 </div>
                                 <h4 style="font-size: 16px; font-weight: 700; color: var(--text-heading); margin-bottom: 4px;">Payment Received</h4>
-                                <p class="text-muted small mb-0">The service resolution fee has been fully settled.</p>
+                                <p class="text-muted small mb-3">The service resolution fee has been fully settled.</p>
+                                
+                                <div style="background: var(--bg-surface-2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; text-align: left; font-size: 13px;">
+                                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                        <span class="text-muted">Amount Paid:</span>
+                                        <strong style="color: var(--text-heading);">@((Model.PaidAmount ?? 50.00m).ToString("F2")) @(Model.PaidCurrency ?? "EGP")</strong>
+                                    </div>
+                                    @if (Model.PaymentCompletedAt.HasValue)
+                                    {
+                                        <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                                            <span class="text-muted">Paid On:</span>
+                                            <span style="font-weight: 500;">@Model.PaymentCompletedAt.Value.ToString("MMM dd, yyyy h:mm tt")</span>
+                                        </div>
+                                    }
+                                    @if (!string.IsNullOrEmpty(Model.PaymentTransactionId))
+                                    {
+                                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                                            <span class="text-muted">Txn ID:</span>
+                                            <span class="font-monospace text-truncate" style="max-width: 140px; font-size: 11px; background: var(--border); padding: 2px 6px; border-radius: 4px; color: var(--text-heading);" title="@Model.PaymentTransactionId">@Model.PaymentTransactionId</span>
+                                        </div>
+                                    }
+                                </div>
                             }
                             else
                             {
