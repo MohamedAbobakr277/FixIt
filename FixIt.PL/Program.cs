@@ -23,6 +23,9 @@ if (!string.IsNullOrEmpty(encryptionKey) && !string.IsNullOrEmpty(encryptionIv))
     EncryptionHelper.Initialize(encryptionKey, encryptionIv);
 }
 
+// ── Configure Stripe ──
+Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
@@ -107,6 +110,7 @@ builder.Services.AddScoped<ICitizenDashboardService, CitizenDashboardService>();
 builder.Services.AddScoped<IAdminProfileService, AdminProfileService>();
 builder.Services.AddScoped<IEmailSenderService, SmtpEmailSenderService>();
 builder.Services.AddScoped<INotificationService, MockNotificationService>();
+builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 builder.Services.AddHttpClient<IAiClassificationService, GeminiClassificationService>();
 
 // ── FluentValidation ──
