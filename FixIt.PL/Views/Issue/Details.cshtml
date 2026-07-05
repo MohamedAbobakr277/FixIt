@@ -379,8 +379,8 @@
                             else
                             {
                                 <div class="mb-3">
-                                    <div class="fs-2 fw-bold" style="color: var(--primary-dark);">50.00 EGP</div>
-                                    <div class="text-muted small">Standard resolution service fee</div>
+                                    <div class="fs-2 fw-bold" style="color: var(--primary-dark);">@((Model.Schedule?.EstimatedCost > 0 ? Model.Schedule.EstimatedCost : 50.00m).ToString("F2")) EGP</div>
+                                    <div class="text-muted small">Resolution service fee</div>
                                 </div>
                                 @if (Model.PaymentStatus == "Pending")
                                 {
@@ -389,6 +389,14 @@
                                 <a href="@Url.Action("Checkout", "Payment", new { id = Model.IssueId })" class="btn-primary-fixit w-100" style="justify-content: center; text-decoration: none;">
                                     <i class="bi bi-shield-check"></i> Pay Now with Stripe
                                 </a>
+                                @using Microsoft.AspNetCore.Hosting
+                                @inject IWebHostEnvironment Env
+                                @if (Env.IsDevelopment())
+                                {
+                                    <a href="@Url.Action("SimulateSuccess", "Payment", new { issueId = Model.IssueId })" class="btn-primary-fixit w-100" style="justify-content: center; text-decoration: none; margin-top: 8px; background: transparent; border: 1px dashed #2ecc71; color: #2ecc71;">
+                                        <i class="bi bi-bug"></i> [Dev] Simulate Payment Success
+                                    </a>
+                                }
                             }
                         </div>
                     }

@@ -39,6 +39,7 @@ public class StripePaymentService : IPaymentService
     {
         // 1. Verify issue exists, is resolved, and belongs to the citizen
         var issue = await _unitOfWork.Issues.GetAll()
+            .Include(i => i.MaintenanceSchedule)
             .FirstOrDefaultAsync(i => i.IssueId == issueId && i.CitizenId == citizenId);
 
         if (issue == null)
@@ -65,8 +66,12 @@ public class StripePaymentService : IPaymentService
             // and update the existing payment with the new Session ID.
         }
 
-        // 3. Define payment amount (flat service fee, e.g., 50.00 EGP)
+        // 3. Define payment amount (use EstimatedCost if available and > 0, otherwise flat service fee of 50.00 EGP)
         decimal amount = 50.00m;
+        if (issue.MaintenanceSchedule != null && issue.MaintenanceSchedule.EstimatedCost > 0)
+        {
+            amount = issue.MaintenanceSchedule.EstimatedCost;
+        }
         string currency = "egp";
 
         // Get application base URL
