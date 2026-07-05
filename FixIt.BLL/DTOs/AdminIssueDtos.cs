@@ -38,6 +38,12 @@ public class AdminIssueDetailsDto
     public string CitizenName { get; set; } = string.Empty;
     public ScheduleDto? Schedule { get; set; }
     public ReportDto? Report { get; set; }
+    public bool IsPaid { get; set; }
+    public string? PaymentStatus { get; set; }
+    public decimal? PaidAmount { get; set; }
+    public string? PaidCurrency { get; set; }
+    public DateTime? PaymentCompletedAt { get; set; }
+    public string? PaymentTransactionId { get; set; }
     public List<TimelineEntryDto> Timeline { get; set; } = new();
     public IEnumerable<IssueCommentDto> Comments { get; set; } = new List<IssueCommentDto>();
 }
