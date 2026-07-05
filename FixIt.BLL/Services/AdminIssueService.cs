@@ -58,7 +58,22 @@ public class AdminIssueService : IAdminIssueService
 
         if (issue == null) return null;
 
-        return _mapper.Map<AdminIssueDetailsDto>(issue);
+        var dto = _mapper.Map<AdminIssueDetailsDto>(issue);
+
+        var payment = await _unitOfWork.Payments.GetAll()
+            .FirstOrDefaultAsync(p => p.IssueId == issueId);
+
+        if (payment != null)
+        {
+            dto.IsPaid = payment.Status == PaymentStatus.Completed;
+            dto.PaymentStatus = payment.Status.ToString();
+            dto.PaidAmount = payment.Amount;
+            dto.PaidCurrency = payment.Currency;
+            dto.PaymentCompletedAt = payment.CompletedAt;
+            dto.PaymentTransactionId = payment.StripePaymentIntentId;
+        }
+
+        return dto;
     }
 
     public async Task<bool> ChangeStatusAsync(int issueId, IssueStatus newStatus, string adminId, string? note = null)

@@ -42,6 +42,10 @@ public class IssueDetailsService : IIssueDetailsService
         {
             dto.IsPaid = payment.Status == FixIt.Common.Enums.PaymentStatus.Completed;
             dto.PaymentStatus = payment.Status.ToString();
+            dto.PaidAmount = payment.Amount;
+            dto.PaidCurrency = payment.Currency;
+            dto.PaymentCompletedAt = payment.CompletedAt;
+            dto.PaymentTransactionId = payment.StripePaymentIntentId;
         }
 
         return dto;
