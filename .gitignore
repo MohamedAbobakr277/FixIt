@@ -6,6 +6,13 @@
 # dotenv files
 .env
 
+# ASP.NET Core secrets — never commit real appsettings overrides
+appsettings.Development.json
+appsettings.Production.json
+appsettings.Staging.json
+appsettings.secrets.json
+secrets.json
+
 # User-specific files
 *.rsuser
 *.suo

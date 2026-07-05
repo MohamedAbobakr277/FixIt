@@ -1,0 +1,34 @@
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=.;Database=FixItDb;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True;"
+  },
+  "SmtpSettings": {
+    "Host": "smtp.gmail.com",
+    "Port": 587,
+    "Username": "your-email@gmail.com",
+    "Password": "your-gmail-app-password",
+    "EnableSsl": true,
+    "FromEmail": "your-email@gmail.com",
+    "FromName": "FixIt App"
+  },
+  "Authentication": {
+    "Google": {
+      "ClientId": "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com",
+      "ClientSecret": "YOUR_GOOGLE_CLIENT_SECRET"
+    }
+  },
+  "EncryptionSettings": {
+    "Key": "YOUR_32_CHARACTER_ENCRYPTION_KEY!",
+    "IV":  "YOUR_16CHAR_IV_!!"
+  },
+  "GeminiSettings": {
+    "ApiKey": "YOUR_GEMINI_API_KEY",
+    "Model": "gemini-2.5-flash"
+  },
+  "Stripe": {
+    "SecretKey":     "sk_test_YOUR_STRIPE_TEST_SECRET_KEY",
+    "PublishableKey": "pk_test_YOUR_STRIPE_TEST_PUBLISHABLE_KEY",
+    "WebhookSecret":  "whsec_YOUR_STRIPE_WEBHOOK_SECRET",
+    "Domain": "http://localhost:5122"
+  }
+}
