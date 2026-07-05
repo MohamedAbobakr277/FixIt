@@ -33,7 +33,18 @@ public class IssueDetailsService : IIssueDetailsService
         if (issue == null)
             return null;
 
-        return _mapper.Map<IssueDetailsDto>(issue);
+        var dto = _mapper.Map<IssueDetailsDto>(issue);
+
+        var payment = await _unitOfWork.Payments.GetAll()
+            .FirstOrDefaultAsync(p => p.IssueId == issueId);
+
+        if (payment != null)
+        {
+            dto.IsPaid = payment.Status == FixIt.Common.Enums.PaymentStatus.Completed;
+            dto.PaymentStatus = payment.Status.ToString();
+        }
+
+        return dto;
     }
 
     public async Task<IssueCommentDto> AddCommentAsync(int issueId, string userId, string text)

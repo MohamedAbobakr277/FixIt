@@ -17,5 +17,7 @@ public class IssueDetailsDto
     public ScheduleDto? Schedule { get; set; }
     public ReportDto? Report { get; set; }
     public RatingDto? Rating { get; set; }
+    public bool IsPaid { get; set; }
+    public string? PaymentStatus { get; set; }
     public IEnumerable<IssueCommentDto> Comments { get; set; } = new List<IssueCommentDto>();
 }

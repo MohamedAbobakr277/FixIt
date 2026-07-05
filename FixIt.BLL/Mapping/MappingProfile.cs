@@ -62,6 +62,9 @@ public class MappingProfile : Profile
         // Report mappings
         CreateMap<MaintenanceReport, ReportDto>();
 
+        // Payment mappings
+        CreateMap<Payment, PaymentDto>();
+
         // Comment mappings
         CreateMap<IssueComment, IssueCommentDto>()
             .ForMember(dest => dest.UserName, opt => opt.MapFrom(src => src.User != null ? src.User.FullName : "Unknown"))
