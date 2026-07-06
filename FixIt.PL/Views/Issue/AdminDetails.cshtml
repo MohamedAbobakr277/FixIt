@@ -1,0 +1,754 @@
+@model FixIt.BLL.DTOs.AdminIssueDetailsDto
+@using FixIt.Common.Enums
+@using System.Security.Claims
+@{
+    ViewData["Title"] = $"ISS-{Model.IssueId:D3} – {Model.Title}";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+
+    string CategoryIcon(IssueCategory c) => c switch
+    {
+        IssueCategory.Electrical         => "⚡",
+        IssueCategory.Water              => "💧",
+        IssueCategory.Plumbing           => "🔧",
+        IssueCategory.Carpentry          => "🪚",
+        IssueCategory.GeneralMaintenance => "🛠",
+        _                                => "📌"
+    };
+
+    string CategoryLabel(IssueCategory c) => c switch
+    {
+        IssueCategory.GeneralMaintenance => "General Maintenance",
+        _ => c.ToString()
+    };
+
+    string StatusLabel(IssueStatus s) => s switch
+    {
+        IssueStatus.InProgress => "In Progress",
+        _ => s.ToString()
+    };
+
+    string StatusBadgeClass(IssueStatus s) => s switch
+    {
+        IssueStatus.New        => "adm-badge adm-badge-new",
+        IssueStatus.Approved   => "adm-badge adm-badge-approved",
+        IssueStatus.Scheduled  => "adm-badge adm-badge-scheduled",
+        IssueStatus.InProgress => "adm-badge adm-badge-inprogress",
+        IssueStatus.Resolved   => "adm-badge adm-badge-resolved",
+        IssueStatus.Closed     => "adm-badge adm-badge-closed",
+        IssueStatus.Rejected   => "adm-badge adm-badge-rejected",
+        _                      => "adm-badge"
+    };
+
+    (IssueStatus next, string label)? primaryAction = Model.Status switch
+    {
+        IssueStatus.New        => (IssueStatus.Approved,   "Approve Issue"),
+        IssueStatus.Approved   => (IssueStatus.Scheduled,  "Mark as Scheduled"),
+        IssueStatus.Scheduled  => (IssueStatus.InProgress, "Start Work"),
+        IssueStatus.InProgress => (IssueStatus.Resolved,   "Mark Resolved"),
+        IssueStatus.Resolved   => (IssueStatus.Closed,     "Close Issue"),
+        _                      => ((IssueStatus, string)?)null
+    };
+
+    bool canReject = Model.Status == IssueStatus.New || Model.Status == IssueStatus.Approved || Model.Status == IssueStatus.Scheduled || Model.Status == IssueStatus.InProgress;
+}
+
+@section Styles {
+<style>
+    .det-grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) 320px;
+        gap: 20px;
+        align-items: start;
+    }
+    @@media (max-width: 960px) { .det-grid { grid-template-columns: 1fr; } }
+
+    .det-stack { display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+
+    .det-card {
+        background: var(--adm-surface);
+        border: 1px solid var(--adm-border);
+        border-radius: var(--adm-radius);
+        box-shadow: var(--adm-card-shadow);
+        padding: 22px 24px;
+    }
+    .det-card h2 {
+        font-size: 15px;
+        font-weight: 600;
+        color: var(--adm-text);
+        margin: 0 0 14px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    .det-card h2 .h-ico {
+        color: var(--adm-muted);
+        display: inline-flex;
+    }
+
+    .det-back {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--adm-muted);
+        text-decoration: none;
+        font-size: 13.5px;
+        margin-bottom: 14px;
+    }
+    .det-back:hover { color: var(--adm-primary); }
+
+    /* Issue header card */
+    .det-head-row {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        flex-wrap: wrap;
+        margin-bottom: 12px;
+    }
+    .det-head-row .iss-id {
+        margin-left: auto;
+        color: var(--adm-muted);
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .det-cat-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        color: var(--adm-text);
+        font-size: 13px;
+        font-weight: 500;
+    }
+    .det-title {
+        font-size: 22px;
+        font-weight: 700;
+        color: var(--adm-text);
+        margin: 0 0 12px;
+        letter-spacing: -0.01em;
+        line-height: 1.25;
+    }
+    .det-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 18px;
+        color: var(--adm-muted);
+        font-size: 13px;
+        margin-bottom: 14px;
+    }
+    .det-meta span { display: inline-flex; align-items: center; gap: 6px; }
+    .det-meta svg { color: var(--adm-light); }
+    .det-desc {
+        color: var(--adm-text);
+        font-size: 13.5px;
+        line-height: 1.65;
+        margin: 0;
+    }
+    .det-img {
+        margin-top: 14px;
+        max-width: 100%;
+        border-radius: var(--adm-radius-sm);
+        border: 1px solid var(--adm-border);
+        display: block;
+    }
+
+    /* Admin notes */
+    .det-textarea {
+        width: 100%;
+        min-height: 110px;
+        resize: vertical;
+        padding: 12px 14px;
+        border: 1px solid var(--adm-border);
+        border-radius: 10px;
+        background: var(--adm-bg);
+        color: var(--adm-text);
+        font-size: 13.5px;
+        font-family: var(--adm-font);
+        line-height: 1.5;
+        outline: none;
+        transition: border-color .2s, box-shadow .2s;
+    }
+    .det-textarea:focus {
+        border-color: var(--adm-primary);
+        box-shadow: 0 0 0 3px var(--adm-primary-glow);
+    }
+    .det-btn {
+        margin-top: 12px;
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 9px 16px;
+        background: #0f172a;
+        color: #fff;
+        border: 1px solid #0f172a;
+        border-radius: 8px;
+        font-size: 13.5px;
+        font-weight: 500;
+        font-family: var(--adm-font);
+        cursor: pointer;
+        transition: background .15s, transform .1s;
+        text-decoration: none;
+    }
+    .det-btn:hover { background: #1e293b; color: #fff; }
+    .det-btn:active { transform: translateY(1px); }
+    [data-adm-theme="dark"] .det-btn { background: #1e293b; border-color: #334155; }
+    [data-adm-theme="dark"] .det-btn:hover { background: #334155; }
+
+    .det-btn-success {
+        background: #10b981;
+        border-color: #10b981;
+        color: #fff;
+        width: 100%;
+        justify-content: center;
+        padding: 11px 16px;
+        font-weight: 600;
+    }
+    .det-btn-success:hover { background: #059669; border-color: #059669; }
+
+    .det-btn-danger {
+        background: transparent;
+        border-color: var(--adm-border);
+        color: #dc2626;
+        width: 100%;
+        justify-content: center;
+        padding: 9px 16px;
+        margin-top: 8px;
+    }
+    .det-btn-danger:hover { background: rgba(220,38,38,0.08); color: #b91c1c; border-color: #dc2626; }
+
+    /* Schedule grid */
+    .det-sched {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0,1fr));
+        gap: 18px;
+    }
+    @@media (max-width: 600px) { .det-sched { grid-template-columns: repeat(2, 1fr); } }
+    .det-sched-label {
+        font-size: 11.5px;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--adm-muted);
+        margin-bottom: 4px;
+    }
+    .det-sched-value {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--adm-text);
+    }
+
+    /* Timeline */
+    .det-timeline { position: relative; padding-left: 20px; }
+    .det-timeline::before {
+        content: '';
+        position: absolute;
+        left: 5px;
+        top: 6px;
+        bottom: 6px;
+        width: 2px;
+        background: var(--adm-border);
+        border-radius: 2px;
+    }
+    .det-tl-item {
+        position: relative;
+        padding-bottom: 18px;
+    }
+    .det-tl-item:last-child { padding-bottom: 0; }
+    .det-tl-dot {
+        position: absolute;
+        left: -20px;
+        top: 4px;
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: #fff;
+        border: 2px solid var(--adm-light);
+        box-sizing: border-box;
+    }
+    .det-tl-item.is-active .det-tl-dot {
+        border-color: var(--adm-primary);
+        background: var(--adm-primary);
+        box-shadow: 0 0 0 4px var(--adm-primary-glow);
+    }
+    .det-tl-item.is-past .det-tl-dot {
+        background: var(--adm-primary);
+        border-color: var(--adm-primary);
+    }
+    .det-tl-status {
+        display: inline-block;
+        margin-bottom: 4px;
+    }
+    .det-tl-time {
+        font-size: 12px;
+        color: var(--adm-muted);
+        margin: 2px 0 2px;
+    }
+    .det-tl-note {
+        font-size: 13px;
+        color: var(--adm-text);
+    }
+    [data-adm-theme="dark"] .det-tl-dot { background: var(--adm-surface); }
+</style>
+}
+
+<a class="det-back" asp-action="AdminIndex">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="19" y1="12" x2="5" y2="12"></line>
+        <polyline points="12 19 5 12 12 5"></polyline>
+    </svg>
+    Back to Issues
+</a>
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div class="adm-alert adm-alert-success">
+        <div class="adm-alert-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <polyline points="20 6 9 17 4 12"></polyline>
+            </svg>
+        </div>
+        <div>@TempData["SuccessMessage"]</div>
+    </div>
+}
+@if (TempData["ErrorMessage"] != null)
+{
+    <div class="adm-alert adm-alert-danger">
+        <div class="adm-alert-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+            </svg>
+        </div>
+        <div>@TempData["ErrorMessage"]</div>
+    </div>
+}
+
+<div class="det-grid">
+    <div class="det-stack">
+
+        <!-- Issue summary card -->
+        <div class="det-card">
+            <div class="det-head-row">
+                <span class="det-cat-pill">
+                    <span style="font-size:15px;">@CategoryIcon(Model.Category)</span>
+                    @CategoryLabel(Model.Category)
+                </span>
+                <span class="@StatusBadgeClass(Model.Status)">@StatusLabel(Model.Status)</span>
+                <span class="iss-id">ISS-@Model.IssueId.ToString("D3")</span>
+            </div>
+
+            <h1 class="det-title">@Model.Title</h1>
+
+            <div class="det-meta">
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"></path>
+                        <circle cx="12" cy="10" r="3"></circle>
+                    </svg>
+                    @Model.Location
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
+                    </svg>
+                    @Model.CitizenName
+                </span>
+                <span>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    @Model.SubmittedAt.ToString("M/d/yyyy")
+                </span>
+            </div>
+
+            <p class="det-desc">@Model.Description</p>
+
+            @if (!string.IsNullOrEmpty(Model.ImageUrl))
+            {
+                <img class="det-img" src="@Model.ImageUrl" alt="Issue image" />
+            }
+        </div>
+
+        <!-- Comments Section -->
+        <div class="det-card">
+            <h2>
+                <span class="h-ico">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z"></path>
+                    </svg>
+                </span>
+                Two-Way Communication
+            </h2>
+            
+            <div style="display: flex; flex-direction: column; gap: 16px; margin-bottom: 24px; max-height: 400px; overflow-y: auto; padding-right: 8px;">
+                @if (Model.Comments == null || !Model.Comments.Any())
+                {
+                    <div style="text-align: center; color: var(--adm-muted); font-size: 13.5px; padding: 20px;">
+                        No comments yet. Start the conversation with the citizen here.
+                    </div>
+                }
+                else
+                {
+                    foreach (var comment in Model.Comments.OrderBy(c => c.CreatedAt))
+                    {
+                        bool isMyComment = comment.UserId == User.FindFirstValue(System.Security.Claims.ClaimTypes.NameIdentifier);
+                        <div style="display: flex; gap: 12px; width: 100%; justify-content: @(isMyComment ? "flex-end" : "flex-start");">
+                            @if (!isMyComment)
+                            {
+                                @if (string.IsNullOrWhiteSpace(comment.UserProfileImageUrl))
+                                {
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--adm-bg); border: 1.5px solid var(--adm-border); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--adm-text); flex-shrink: 0;">
+                                        @(string.IsNullOrWhiteSpace(comment.UserName) ? "?" : comment.UserName[0].ToString().ToUpper())
+                                    </div>
+                                }
+                                else
+                                {
+                                    <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                                    <div class="d-none" style="width: 32px; height: 32px; border-radius: 50%; background: var(--adm-bg); border: 1.5px solid var(--adm-border); display: flex; align-items: center; justify-content: center; font-weight: 600; color: var(--adm-text); flex-shrink: 0;">
+                                        @(string.IsNullOrWhiteSpace(comment.UserName) ? "?" : comment.UserName[0].ToString().ToUpper())
+                                    </div>
+                                }
+                            }
+                            
+                            <div style="background: @(isMyComment ? "var(--adm-primary-glow)" : "var(--adm-bg)"); padding: 12px 16px; border-radius: 12px; border: 1px solid @(isMyComment ? "var(--adm-primary)" : "var(--adm-border)"); max-width: 80%;">
+                                <div style="display: flex; justify-content: space-between; gap: 16px; margin-bottom: 4px;">
+                                    <strong style="font-size: 13px; color: var(--adm-text);">@(isMyComment ? "You (Admin)" : comment.UserName)</strong>
+                                    <span style="font-size: 11px; color: var(--adm-muted);">@comment.CreatedAt.ToString("MMM d, h:mm tt")</span>
+                                </div>
+                                <p style="margin: 0; font-size: 13.5px; color: var(--adm-text); line-height: 1.5;">@comment.Text</p>
+                            </div>
+
+                            @if (isMyComment)
+                            {
+                                @if (string.IsNullOrWhiteSpace(comment.UserProfileImageUrl))
+                                {
+                                    <div style="width: 32px; height: 32px; border-radius: 50%; background: var(--adm-primary); border: 1.5px solid var(--adm-primary); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0;">
+                                        @(string.IsNullOrWhiteSpace(comment.UserName) ? "A" : comment.UserName[0].ToString().ToUpper())
+                                    </div>
+                                }
+                                else
+                                {
+                                    <img src="@comment.UserProfileImageUrl" alt="@comment.UserName" style="width: 32px; height: 32px; border-radius: 50%; object-fit: cover; flex-shrink: 0;" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                                    <div class="d-none" style="width: 32px; height: 32px; border-radius: 50%; background: var(--adm-primary); border: 1.5px solid var(--adm-primary); display: flex; align-items: center; justify-content: center; font-weight: 600; color: #fff; flex-shrink: 0;">
+                                        @(string.IsNullOrWhiteSpace(comment.UserName) ? "A" : comment.UserName[0].ToString().ToUpper())
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                }
+            </div>
+
+            <form asp-controller="Issue" asp-action="AddComment" method="post">
+                @Html.AntiForgeryToken()
+                <input type="hidden" name="IssueId" value="@Model.IssueId" />
+                <textarea name="Text" class="det-textarea" placeholder="Type a message to the citizen..." required style="min-height: 80px;"></textarea>
+                <button type="submit" class="det-btn" style="margin-top: 12px;">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                    Send Message
+                </button>
+            </form>
+        </div>
+
+        <!-- Admin notes -->
+        <div class="det-card">
+            <h2>
+                <span class="h-ico">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                        <polyline points="14 2 14 8 20 8"></polyline>
+                        <line x1="16" y1="13" x2="8" y2="13"></line>
+                        <line x1="16" y1="17" x2="8" y2="17"></line>
+                        <polyline points="10 9 9 9 8 9"></polyline>
+                    </svg>
+                </span>
+                Admin Notes
+            </h2>
+            <form asp-action="SaveAdminNotes" asp-route-id="@Model.IssueId" method="post">
+                @Html.AntiForgeryToken()
+                <textarea name="adminNotes" class="det-textarea" placeholder="Add internal notes about this issue...">@Model.AdminNotes</textarea>
+                <button type="submit" class="det-btn">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"></path>
+                        <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                        <polyline points="7 3 7 8 15 8"></polyline>
+                    </svg>
+                    Save Notes
+                </button>
+            </form>
+        </div>
+
+        <!-- Schedule Form Container -->
+        @if (Model.Status == IssueStatus.Approved)
+        {
+            <div id="scheduleContainer" class="det-card" style="display: none; border: 2px solid var(--adm-primary); margin-top: 10px; padding: 28px;">
+                <h3 style="font-size: 16px; font-weight: 700; color: var(--adm-text); margin-top: 0; margin-bottom: 22px; display: flex; align-items: center; gap: 10px;">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" class="text-primary" style="color: var(--adm-primary);">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Schedule Maintenance
+                </h3>
+                <form id="schedForm" asp-controller="Admin" asp-action="CreateSchedule" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="IssueId" value="@Model.IssueId" />
+                    <input type="hidden" id="schedVisitDate" name="VisitDate" />
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 18px;">
+                        <div>
+                            <label class="form-label-fixit" style="font-size: 13px; font-weight: 600; color: var(--adm-text); margin-bottom: 6px; display: block;">Date *</label>
+                            <input type="date" id="schedDate" required class="form-control-fixit" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--adm-border); border-radius: 8px; background: var(--adm-bg); color: var(--adm-text); outline: none;" />
+                        </div>
+                        <div>
+                            <label class="form-label-fixit" style="font-size: 13px; font-weight: 600; color: var(--adm-text); margin-bottom: 6px; display: block;">Time *</label>
+                            <input type="time" id="schedTime" required class="form-control-fixit" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--adm-border); border-radius: 8px; background: var(--adm-bg); color: var(--adm-text); outline: none;" />
+                        </div>
+                    </div>
+
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 24px;">
+                        <div>
+                            <label class="form-label-fixit" style="font-size: 13px; font-weight: 600; color: var(--adm-text); margin-bottom: 6px; display: block;">Estimated Cost ($)</label>
+                            <input type="number" name="EstimatedCost" min="0.01" step="0.01" value="10.00" required class="form-control-fixit" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--adm-border); border-radius: 8px; background: var(--adm-bg); color: var(--adm-text); outline: none;" />
+                        </div>
+                        <div>
+                            <label class="form-label-fixit" style="font-size: 13px; font-weight: 600; color: var(--adm-text); margin-bottom: 6px; display: block;">Assigned Worker/Team</label>
+                            <input type="text" name="WorkerName" placeholder="Worker or team name" required class="form-control-fixit" style="width: 100%; padding: 10px 14px; border: 1.5px solid var(--adm-border); border-radius: 8px; background: var(--adm-bg); color: var(--adm-text); outline: none;" />
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 12px; align-items: center;">
+                        <button type="submit" class="det-btn" style="background: #e9af70; border: 1px solid #e9af70; color: #fff; font-weight: 600; padding: 10px 22px; border-radius: 8px; margin-top: 0; cursor: pointer;">
+                            Confirm Schedule
+                        </button>
+                        <button type="button" id="cancelSchedBtn" class="det-btn" style="background: transparent; border: 1.5px solid var(--adm-border); color: var(--adm-text); font-weight: 500; padding: 10px 22px; border-radius: 8px; margin-top: 0; cursor: pointer;">
+                            Cancel
+                        </button>
+                    </div>
+                </form>
+            </div>
+        }
+
+        <!-- Maintenance schedule -->
+        @if (Model.Schedule != null)
+        {
+            <div class="det-card">
+                <h2>
+                    <span class="h-ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                            <line x1="16" y1="2" x2="16" y2="6"></line>
+                            <line x1="8" y1="2" x2="8" y2="6"></line>
+                            <line x1="3" y1="10" x2="21" y2="10"></line>
+                        </svg>
+                    </span>
+                    Maintenance Schedule
+                </h2>
+                <div class="det-sched">
+                    <div>
+                        <div class="det-sched-label">Date</div>
+                        <div class="det-sched-value">@Model.Schedule.VisitDate.ToString("M/d/yyyy")</div>
+                    </div>
+                    <div>
+                        <div class="det-sched-label">Time</div>
+                        <div class="det-sched-value">@Model.Schedule.VisitDate.ToString("HH:mm")</div>
+                    </div>
+                    <div>
+                        <div class="det-sched-label">Assigned</div>
+                        <div class="det-sched-value">@(string.IsNullOrWhiteSpace(Model.Schedule.WorkerName) ? "—" : Model.Schedule.WorkerName)</div>
+                    </div>
+                    <div>
+                        <div class="det-sched-label">Est. Cost</div>
+                        <div class="det-sched-value">$@Model.Schedule.EstimatedCost.ToString("0.##")</div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+
+    <!-- Right rail -->
+    <div class="det-stack">
+        <div class="det-card">
+            <h2>Actions</h2>
+            
+            @if (Model.Status == IssueStatus.Approved)
+            {
+                <button type="button" id="showScheduleBtn" class="det-btn det-btn-success" style="background: linear-gradient(135deg, var(--adm-primary), var(--adm-accent)); border: none; font-weight: 600; width: 100%; justify-content: center;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                        <line x1="16" y1="2" x2="16" y2="6"></line>
+                        <line x1="8" y1="2" x2="8" y2="6"></line>
+                        <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    Schedule Maintenance
+                </button>
+            }
+            else if (Model.Status == IssueStatus.InProgress)
+            {
+                <a href="/Admin/Reports?issueId=@Model.IssueId" class="det-btn det-btn-success" style="background: linear-gradient(135deg, #10b981, #059669); border: none; font-weight: 600; text-decoration: none; text-align: center; width: 100%; justify-content: center; padding: 11px 16px;">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                        <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                        <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                    </svg>
+                    Mark Resolved
+                </a>
+            }
+            else if (primaryAction.HasValue)
+            {
+                <form asp-action="ChangeStatus" asp-route-id="@Model.IssueId" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="newStatus" value="@primaryAction.Value.next" />
+                    <button type="submit" class="det-btn det-btn-success">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="margin-right: 6px;">
+                            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                        </svg>
+                        @primaryAction.Value.label
+                    </button>
+                </form>
+            }
+            else
+            {
+                <div style="color: var(--adm-muted); font-size: 13px; padding: 6px 0;">No further actions available.</div>
+            }
+
+            @if (canReject)
+            {
+                <form asp-action="ChangeStatus" asp-route-id="@Model.IssueId" method="post">
+                    @Html.AntiForgeryToken()
+                    <input type="hidden" name="newStatus" value="@IssueStatus.Rejected" />
+                    <button type="submit" class="det-btn det-btn-danger"
+                            onclick="return confirm('Reject this issue?');">
+                        Reject Issue
+                    </button>
+                </form>
+            }
+        </div>
+
+        @if (Model.Status == IssueStatus.Resolved || Model.Status == IssueStatus.Closed || Model.IsPaid || Model.PaymentStatus != null)
+        {
+            <div class="det-card">
+                <h2>
+                    <span class="h-ico">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+                            <line x1="1" y1="10" x2="23" y2="10"></line>
+                        </svg>
+                    </span>
+                    Payment Information
+                </h2>
+                
+                <div style="display: flex; flex-direction: column; gap: 12px; font-size: 13.5px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--adm-border); padding-bottom: 8px;">
+                        <span style="color: var(--adm-muted);">Payment Status</span>
+                        @if (Model.IsPaid)
+                        {
+                            <span class="adm-badge adm-badge-resolved" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.2); font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">COMPLETED</span>
+                        }
+                        else if (Model.PaymentStatus == "Pending")
+                        {
+                            <span class="adm-badge adm-badge-inprogress" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.2); font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">PENDING</span>
+                        }
+                        else
+                        {
+                            <span class="adm-badge adm-badge-new" style="background: rgba(100, 116, 139, 0.15); color: #64748b; border: 1px solid rgba(100, 116, 139, 0.2); font-size: 11.5px; font-weight: 700; padding: 3px 8px; border-radius: 6px;">UNPAID</span>
+                        }
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--adm-border); padding-bottom: 8px;">
+                        <span style="color: var(--adm-muted);">Resolution Fee</span>
+                        <strong style="color: var(--adm-text);">
+                            @if (Model.IsPaid)
+                            {
+                                @((Model.PaidAmount ?? 50.00m).ToString("F2")) @(Model.PaidCurrency ?? "EGP")
+                            }
+                            else
+                            {
+                                @((Model.Schedule?.EstimatedCost > 0 ? Model.Schedule.EstimatedCost : 50.00m).ToString("F2")) @("EGP")
+                            }
+                        </strong>
+                    </div>
+
+                    @if (Model.IsPaid && Model.PaymentCompletedAt.HasValue)
+                    {
+                        <div style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--adm-border); padding-bottom: 8px;">
+                            <span style="color: var(--adm-muted);">Settled On</span>
+                            <span style="color: var(--adm-text); font-weight: 500;">@Model.PaymentCompletedAt.Value.ToString("M/d/yyyy, h:mm tt")</span>
+                        </div>
+                    }
+
+                    @if (!string.IsNullOrEmpty(Model.PaymentTransactionId))
+                    {
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span style="color: var(--adm-muted);">Stripe Txn ID</span>
+                            <span class="font-monospace" style="font-size: 11.5px; background: var(--adm-bg); border: 1px solid var(--adm-border); padding: 2px 6px; border-radius: 4px; color: var(--adm-text); max-width: 150px; text-truncate: true;" title="@Model.PaymentTransactionId">@Model.PaymentTransactionId</span>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+
+        <div class="det-card">
+            <h2>Status Timeline</h2>
+            <div class="det-timeline">
+                @{
+                    // Sort ascending so older statuses (like Scheduled) appear before newer statuses (like In Progress)
+                    var ordered = Model.Timeline.OrderBy(t => t.ChangedAt).ThenBy(t => t.Status).ToList();
+                }
+                @for (int idx = 0; idx < ordered.Count; idx++)
+                {
+                    var entry = ordered[idx];
+                    bool isCurrent = idx == ordered.Count - 1;
+                    string cls = isCurrent ? "det-tl-item is-active" : "det-tl-item is-past";
+                    <div class="@cls">
+                        <span class="det-tl-dot"></span>
+                        <div class="det-tl-status">
+                            <span class="@StatusBadgeClass(entry.Status)">@StatusLabel(entry.Status)</span>
+                        </div>
+                        <div class="det-tl-time">@entry.ChangedAt.ToString("M/d/yyyy, h:mm:ss tt")</div>
+                        @if (!string.IsNullOrWhiteSpace(entry.Note))
+                        {
+                            <div class="det-tl-note">@entry.Note</div>
+                        }
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+<script>
+    document.getElementById('showScheduleBtn')?.addEventListener('click', function () {
+        var container = document.getElementById('scheduleContainer');
+        if (container) {
+            container.style.display = 'block';
+            container.scrollIntoView({ behavior: 'smooth' });
+        }
+    });
+
+    document.getElementById('cancelSchedBtn')?.addEventListener('click', function () {
+        var container = document.getElementById('scheduleContainer');
+        if (container) {
+            container.style.display = 'none';
+        }
+    });
+
+    document.getElementById('schedForm')?.addEventListener('submit', function (e) {
+        var dateVal = document.getElementById('schedDate').value;
+        var timeVal = document.getElementById('schedTime').value;
+        if (dateVal && timeVal) {
+            document.getElementById('schedVisitDate').value = dateVal + 'T' + timeVal;
+        } else {
+            e.preventDefault();
+            alert('Please select both Date and Time.');
+        }
+    });
+</script>
+}

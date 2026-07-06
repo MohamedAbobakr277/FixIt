@@ -1,39 +1,50 @@
 @model TwoFactorRecoveryDto
-
 @{
     ViewData["Title"] = "Your Recovery Codes";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8">
-            <div class="card shadow-lg border-0 rounded-lg">
-                <div class="card-header bg-warning text-dark text-center py-4">
-                    <h3 class="font-weight-light my-2"><i class="bi bi-exclamation-triangle"></i> Important: Save Your Recovery Codes</h3>
+<div class="page-wrapper">
+    <div class="section-container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 120px);">
+        <div class="card-fixit shadow-lg p-5" style="max-width: 600px; width: 100%;">
+            <div class="text-center mb-5">
+                <div class="feature-icon mx-auto mb-4" style="width: 64px; height: 64px; font-size: 28px; background: rgba(234, 179, 8, 0.1); color: #ca8a04;">
+                    <i class="bi bi-exclamation-triangle"></i>
                 </div>
-                <div class="card-body p-5">
-                    <p class="mb-4">
-                        If you lose your device, you can use these codes to access your account. 
-                        <strong>Each code can only be used once.</strong> Store them in a safe place.
-                    </p>
+                <h2 class="section-title mb-2">Save Your Recovery Codes</h2>
+                <p class="text-muted">If you lose your device, these codes are the ONLY way to access your account.</p>
+            </div>
 
-                    <div class="bg-light p-4 rounded border mb-4">
-                        <div class="row">
-                            @foreach (var code in Model.RecoveryCodes)
-                            {
-                                <div class="col-6 mb-2">
-                                    <code class="fs-5 fw-bold text-dark">@code</code>
-                                </div>
-                            }
+            <div class="alert alert-warning border-0 small mb-4" style="background: rgba(234, 179, 8, 0.05);">
+                <strong>Important:</strong> Each code can be used only once. Store them in a secure password manager or print them out.
+            </div>
+
+            <div class="recovery-codes-grid p-4 rounded-3 border mb-5 bg-surface-2">
+                <div class="row g-3">
+                    @foreach (var code in Model.RecoveryCodes)
+                    {
+                        <div class="col-6">
+                            <div class="p-2 px-3 bg-white border rounded text-center font-monospace fw-bold fs-5 shadow-sm">
+                                @code
+                            </div>
                         </div>
-                    </div>
-
-                    <div class="d-grid gap-2">
-                        <button onclick="window.print()" class="btn btn-dark"><i class="bi bi-printer"></i> Print Codes</button>
-                        <a asp-controller="Home" asp-action="Index" class="btn btn-primary">Done</a>
-                    </div>
+                    }
                 </div>
+            </div>
+
+            <div class="d-grid gap-3">
+                <button onclick="window.print()" class="btn-outline-fixit justify-content-center w-100">
+                    <i class="bi bi-printer me-2"></i> Print Recovery Codes
+                </button>
+                <a asp-controller="Home" asp-action="Index" class="btn-primary-fixit justify-content-center w-100">
+                    I Have Saved These Codes
+                </a>
             </div>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .bg-surface-2 { background-color: var(--bg-surface-2); }
+    </style>
+}

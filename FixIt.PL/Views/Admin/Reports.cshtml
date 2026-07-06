@@ -6,119 +6,410 @@
     Layout = "~/Views/Shared/_AdminLayout.cshtml";
 }
 
-<div class="container mt-4">
-    <div class="row">
-        <!-- Left Panel - In Progress Issues -->
-        <div class="col-md-4">
-            <div class="card">
-                <div class="card-header bg-warning text-dark">
-                    <h5><i class="bi bi-tools"></i> In Progress Issues</h5>
-                </div>
-                <div class="card-body p-0">
-                    @if (Model.InProgressIssues.Any())
-                    {
-                        <div class="list-group list-group-flush">
-                            @foreach (var issue in Model.InProgressIssues)
-                            {
-                                <a href="#" class="list-group-item list-group-item-action issue-item" 
-                                   data-issue-id="@issue.IssueId"
-                                   data-issue-title="@issue.Title"
-                                   data-issue-location="@issue.Location"
-                                   data-worker-name="@issue.WorkerName">
-                                    <div class="d-flex w-100 justify-content-between">
-                                        <h6 class="mb-1">@issue.Title</h6>
-                                        <span class="badge bg-warning text-dark">@issue.Category</span>
-                                    </div>
-                                    <p class="mb-1">
-                                        <small class="text-muted">
-                                            <i class="bi bi-geo-alt"></i> @issue.Location
-                                        </small>
-                                    </p>
-                                    @if (!string.IsNullOrEmpty(issue.WorkerName))
-                                    {
-                                        <p class="mb-0">
-                                            <small class="text-muted">
-                                                <i class="bi bi-person"></i> @issue.WorkerName
-                                            </small>
-                                        </p>
-                                    }
-                                </a>
-                            }
+@section Styles {
+<style>
+    /* Page header styling */
+    .rep-page-head {
+        margin-bottom: 32px;
+    }
+    .rep-page-title {
+        font-family: var(--adm-font-heading);
+        font-size: clamp(1.8rem, 4vw, 2.2rem);
+        font-weight: 800;
+        color: var(--adm-text);
+        margin-bottom: 6px;
+        letter-spacing: -0.5px;
+    }
+    .rep-page-subtitle {
+        font-size: 14.5px;
+        color: var(--adm-muted);
+        font-weight: 500;
+    }
+
+    /* Column structure */
+    .rep-container {
+        display: grid;
+        grid-template-columns: 380px 1fr;
+        gap: 32px;
+        align-items: start;
+    }
+    @@media (max-width: 992px) {
+        .rep-container {
+            grid-template-columns: 1fr;
+        }
+    }
+
+    /* Panels styling */
+    .rep-panel {
+        background: var(--adm-surface);
+        border: 1.5px solid var(--adm-border);
+        border-radius: var(--adm-radius);
+        box-shadow: var(--adm-card-shadow);
+        overflow: hidden;
+        transition: all 0.3s ease;
+    }
+    .rep-panel-header {
+        padding: 20px 24px;
+        border-bottom: 1px solid var(--adm-border);
+        display: flex;
+        flex-direction: column;
+    }
+    .rep-panel-title {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--adm-text);
+        display: flex;
+        align-items: center;
+        gap: 10px;
+    }
+    .rep-panel-subtitle {
+        font-size: 12.5px;
+        color: var(--adm-muted);
+        font-weight: 500;
+        margin-top: 4px;
+    }
+
+    /* List items in Left Panel */
+    .rep-list {
+        display: flex;
+        flex-direction: column;
+        max-height: 650px;
+        overflow-y: auto;
+        padding: 16px;
+        gap: 12px;
+    }
+    .rep-item {
+        background: var(--adm-surface-2);
+        border: 1.5px solid var(--adm-border);
+        border-radius: 12px;
+        padding: 16px;
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        cursor: pointer;
+        text-decoration: none;
+        color: inherit;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+    }
+    .rep-item:hover {
+        background: var(--adm-surface);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.03);
+        border-color: rgba(0, 151, 167, 0.2);
+    }
+    .rep-item.active {
+        background: var(--adm-surface);
+        border-color: var(--adm-primary);
+        box-shadow: 0 4px 15px var(--adm-primary-glow);
+        border-left: 4px solid var(--adm-primary);
+    }
+
+    .rep-item-icon {
+        width: 38px;
+        height: 38px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        background: rgba(0, 151, 167, 0.1);
+        color: var(--adm-primary);
+        flex-shrink: 0;
+    }
+    .rep-item.active .rep-item-icon {
+        background: var(--adm-primary);
+        color: #fff;
+    }
+
+    .rep-item-content {
+        flex: 1;
+        min-width: 0;
+    }
+    .rep-item-title {
+        font-size: 14px;
+        font-weight: 700;
+        color: var(--adm-text);
+        margin-bottom: 4px;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+    .rep-item-meta {
+        font-size: 12px;
+        color: var(--adm-muted);
+        font-weight: 500;
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+    }
+    .rep-item-meta span {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    /* Placeholder Empty State */
+    .rep-placeholder {
+        padding: 80px 40px;
+        text-align: center;
+        color: var(--adm-muted);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+    }
+    .rep-placeholder-icon {
+        font-size: 48px;
+        color: var(--adm-border);
+        margin-bottom: 20px;
+    }
+    .rep-placeholder-text {
+        font-size: 14.5px;
+        font-weight: 600;
+        max-width: 320px;
+        line-height: 1.5;
+    }
+
+    /* Form Body */
+    .rep-form-body {
+        padding: 28px;
+    }
+    .rep-issue-summary-box {
+        background: var(--adm-primary-glow);
+        border: 1px solid rgba(0, 151, 167, 0.15);
+        border-radius: 12px;
+        padding: 18px 20px;
+        margin-bottom: 24px;
+    }
+    .rep-summary-title {
+        font-size: 15.5px;
+        font-weight: 700;
+        color: var(--adm-primary-dark);
+        margin-bottom: 8px;
+    }
+    .rep-summary-meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 16px;
+        font-size: 13px;
+        color: var(--adm-text);
+        opacity: 0.85;
+        font-weight: 500;
+    }
+    .rep-summary-meta span {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    /* Inputs Styling */
+    .rep-label {
+        font-size: 13.5px;
+        font-weight: 700;
+        color: var(--adm-text);
+        margin-bottom: 8px;
+        display: block;
+    }
+    .rep-input-group {
+        margin-bottom: 20px;
+    }
+    .rep-textarea {
+        width: 100%;
+        background: var(--adm-surface-2);
+        border: 1.5px solid var(--adm-border);
+        border-radius: 10px;
+        padding: 12px 16px;
+        color: var(--adm-text);
+        font-family: var(--adm-font);
+        font-size: 14px;
+        outline: none;
+        transition: all 0.25s ease;
+        resize: vertical;
+    }
+    .rep-textarea:focus {
+        border-color: var(--adm-primary);
+        box-shadow: 0 0 0 3px var(--adm-primary-glow);
+        background: var(--adm-surface);
+    }
+    .rep-file-control {
+        width: 100%;
+        background: var(--adm-surface-2);
+        border: 1.5px solid var(--adm-border);
+        border-radius: 10px;
+        padding: 10px 14px;
+        color: var(--adm-text);
+        font-size: 13.5px;
+        font-family: var(--adm-font);
+        outline: none;
+        cursor: pointer;
+        transition: all 0.25s ease;
+    }
+    .rep-file-control:hover {
+        border-color: var(--adm-primary);
+        background: var(--adm-surface);
+    }
+
+    /* Submit Button */
+    .rep-submit-btn {
+        background: linear-gradient(135deg, var(--adm-primary), var(--adm-accent));
+        color: #fff;
+        border: none;
+        padding: 14px 28px;
+        font-size: 15px;
+        font-weight: 700;
+        border-radius: 12px;
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+        box-shadow: 0 6px 20px rgba(0, 151, 167, 0.25);
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .rep-submit-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 10px 25px rgba(0, 151, 167, 0.4);
+        filter: brightness(1.05);
+    }
+    .rep-submit-btn:active {
+        transform: translateY(1px);
+    }
+
+    [data-adm-theme="dark"] .rep-item.active {
+        background: rgba(255, 255, 255, 0.03);
+    }
+</style>
+}
+
+<div class="rep-page-head">
+    <h1 class="rep-page-title">Maintenance Reports</h1>
+    <p class="rep-page-subtitle">Submit completion reports for in-progress issues</p>
+</div>
+
+<div class="rep-container">
+    <!-- Left Panel: In Progress Issues -->
+    <div class="rep-panel">
+        <div class="rep-panel-header">
+            <span class="rep-panel-title">
+                <i class="bi bi-tools text-warning"></i> In Progress Issues
+            </span>
+            <span class="rep-panel-subtitle">Select an issue to submit a completion report</span>
+        </div>
+        <div class="rep-list">
+            @if (Model.InProgressIssues.Any())
+            {
+                @foreach (var issue in Model.InProgressIssues)
+                {
+                    <a href="#" class="rep-item issue-item" 
+                       data-issue-id="@issue.IssueId"
+                       data-issue-title="@issue.Title"
+                       data-issue-location="@issue.Location"
+                       data-worker-name="@issue.WorkerName"
+                       data-issue-category="@issue.Category">
+                        <div class="rep-item-icon">
+                            <i class="bi bi-@GetCategoryIcon(issue.Category)"></i>
                         </div>
-                    }
-                    else
-                    {
-                        <div class="text-center py-4">
-                            <i class="bi bi-tools text-muted" style="font-size: 2rem;"></i>
-                            <p class="text-muted mb-0">No issues in progress</p>
+                        <div class="rep-item-content">
+                            <div class="rep-item-title">@issue.Title</div>
+                            <div class="rep-item-meta">
+                                <span><i class="bi bi-geo-alt me-1"></i> @issue.Location</span>
+                                @if (!string.IsNullOrEmpty(issue.WorkerName))
+                                {
+                                    <span><i class="bi bi-person me-1"></i> @issue.WorkerName</span>
+                                }
+                            </div>
                         </div>
-                    }
+                    </a>
+                }
+            }
+            else
+            {
+                <div class="text-center py-5 text-muted">
+                    <i class="bi bi-clipboard-x text-muted mb-2" style="font-size: 2.5rem;"></i>
+                    <p class="small mb-0">No issues currently in progress</p>
                 </div>
+            }
+        </div>
+    </div>
+
+    <!-- Right Panel: Completion Report Form -->
+    <div class="rep-panel">
+        <div class="rep-panel-header">
+            <span class="rep-panel-title">
+                <i class="bi bi-clipboard-check-fill text-success"></i> Completion Report
+            </span>
+            <span class="rep-panel-subtitle">Select an issue to submit a report</span>
+        </div>
+        
+        <!-- Empty State Placeholder -->
+        <div class="rep-placeholder" id="reportPlaceholder">
+            <div class="rep-placeholder-icon">
+                <i class="bi bi-file-earmark-text"></i>
+            </div>
+            <div class="rep-placeholder-text">
+                Select an issue from the list to submit a completion report
             </div>
         </div>
 
-        <!-- Right Panel - Completion Report Form -->
-        <div class="col-md-8">
-            <div class="card">
-                <div class="card-header bg-success text-white">
-                    <h5><i class="bi bi-clipboard-check"></i> Completion Report</h5>
+        <!-- Form content (hidden until an issue is selected) -->
+        <div class="rep-form-body d-none" id="reportFormContainer">
+            <form id="reportForm" asp-action="SubmitReport" method="post" enctype="multipart/form-data">
+                <input type="hidden" id="IssueId" name="IssueId" />
+                
+                <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+                <!-- Selected Issue Info Box -->
+                <div class="rep-issue-summary-box" id="issueInfo">
+                    <div class="rep-summary-title" id="selectedIssueTitle"></div>
+                    <div class="rep-summary-meta">
+                        <span><i class="bi bi-geo-alt"></i> <span id="selectedIssueLocation"></span></span>
+                        <span><i class="bi bi-person"></i> <span id="selectedWorkerName"></span></span>
+                    </div>
                 </div>
-                <div class="card-body">
-                    <form id="reportForm" asp-action="SubmitReport" method="post" enctype="multipart/form-data">
-                        <input type="hidden" id="IssueId" name="IssueId" />
-                        
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
-                        <div id="issueInfo" class="alert alert-info d-none">
-                            <h6 id="selectedIssueTitle"></h6>
-                            <p class="mb-0">
-                                <small>
-                                    <i class="bi bi-geo-alt"></i> <span id="selectedIssueLocation"></span><br />
-                                    <i class="bi bi-person"></i> <span id="selectedWorkerName"></span>
-                                </small>
-                            </p>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="Summary" class="form-label">Report Summary *</label>
-                            <textarea id="Summary" name="Summary" class="form-control" rows="4" 
-                                      placeholder="Provide a summary of the work completed..." required></textarea>
-                            <span class="text-danger small" id="Summary-error"></span>
-                        </div>
-
-                        <div class="mb-3">
-                            <label for="WorkerNotes" class="form-label">Worker Notes</label>
-                            <textarea id="WorkerNotes" name="WorkerNotes" class="form-control" rows="3" 
-                                      placeholder="Additional notes from the worker..."></textarea>
-                        </div>
-
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="BeforeImage" class="form-label">Before Image</label>
-                                    <input type="file" id="BeforeImage" name="BeforeImage" class="form-control" 
-                                           accept="image/*" />
-                                    <span class="text-danger small" id="BeforeImage-error"></span>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label for="AfterImage" class="form-label">After Image</label>
-                                    <input type="file" id="AfterImage" name="AfterImage" class="form-control" 
-                                           accept="image/*" />
-                                    <span class="text-danger small" id="AfterImage-error"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-success" id="submitBtn" disabled>
-                                <i class="bi bi-check-circle"></i> Mark as Resolved
-                            </button>
-                        </div>
-                    </form>
+                <!-- Report Summary -->
+                <div class="rep-input-group">
+                    <label for="Summary" class="rep-label">Report Summary *</label>
+                    <textarea id="Summary" name="Summary" class="rep-textarea" rows="4" 
+                              placeholder="Provide a detailed summary of the work completed..." required minlength="10"></textarea>
+                    <span class="text-danger small" id="Summary-error"></span>
                 </div>
-            </div>
+
+                <!-- Worker Notes -->
+                <div class="rep-input-group">
+                    <label for="WorkerNotes" class="rep-label">Worker Notes</label>
+                    <textarea id="WorkerNotes" name="WorkerNotes" class="rep-textarea" rows="3" 
+                              placeholder="Any additional notes or comments from the worker..."></textarea>
+                </div>
+
+                <!-- Images Upload -->
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="rep-input-group">
+                            <label for="BeforeImage" class="rep-label">Before Image</label>
+                            <input type="file" id="BeforeImage" name="BeforeImage" class="rep-file-control" 
+                                   accept="image/*" />
+                            <span class="text-danger small" id="BeforeImage-error"></span>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="rep-input-group">
+                            <label for="AfterImage" class="rep-label">After Image</label>
+                            <input type="file" id="AfterImage" name="AfterImage" class="rep-file-control" 
+                                   accept="image/*" />
+                            <span class="text-danger small" id="AfterImage-error"></span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <button type="submit" class="rep-submit-btn" id="submitBtn">
+                        <i class="bi bi-check-circle-fill"></i> Mark as Resolved
+                    </button>
+                </div>
+            </form>
         </div>
     </div>
 </div>
@@ -147,12 +438,12 @@
                 $('#selectedIssueLocation').text(location);
                 $('#selectedWorkerName').text(workerName || 'Not assigned');
                 
-                // Show issue info and enable submit button
-                $('#issueInfo').removeClass('d-none');
-                $('#submitBtn').prop('disabled', false);
+                // Show form body and hide empty placeholder
+                $('#reportPlaceholder').addClass('d-none');
+                $('#reportFormContainer').removeClass('d-none');
             });
             
-            // Handle form submission
+            // Handle form submission validation
             $('#reportForm').on('submit', function(e) {
                 var issueId = $('#IssueId').val();
                 if (!issueId) {
@@ -161,6 +452,33 @@
                     return false;
                 }
             });
+
+            // Automatically select pre-selected issue if redirected here with an issueId
+            @if (ViewBag.SelectedIssueId != null)
+            {
+                <text>
+                var selId = @ViewBag.SelectedIssueId;
+                $('.issue-item[data-issue-id="' + selId + '"]').click();
+                </text>
+            }
         });
     </script>
+}
+
+@functions {
+    public string GetCategoryIcon(string category)
+    {
+        return category.ToLower() switch
+        {
+            "plumbing" => "droplet",
+            "electrical" => "lightning",
+            "hvac" => "thermometer-half",
+            "carpentry" => "hammer",
+            "painting" => "paint-bucket",
+            "cleaning" => "brush",
+            "landscaping" => "tree",
+            "other" => "gear",
+            _ => "tools"
+        };
+    }
 }

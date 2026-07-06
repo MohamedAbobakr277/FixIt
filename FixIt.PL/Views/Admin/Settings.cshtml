@@ -1,0 +1,310 @@
+@model FixIt.Common.DTOs.AdminProfileDto
+@{
+    ViewData["Title"] = "Admin Settings";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-wrapper">
+    <div class="section-container">
+
+        <div class="settings-header mb-5">
+            <h1 class="section-title">Admin Settings</h1>
+            <p class="section-desc text-start ms-0">Manage your administrator profile, security preferences, and notification settings.</p>
+        </div>
+
+        <div class="row">
+            <div class="col-lg-3">
+                <div class="card-fixit p-3 mb-4 sticky-top" style="top: 100px;">
+                    <div class="nav flex-column nav-pills settings-nav" id="settings-tabs" role="tablist">
+                        <button class="nav-link active" id="profile-tab" data-bs-toggle="pill" data-bs-target="#profile" type="button" role="tab">
+                            <i class="bi bi-person-circle"></i> Profile Info
+                        </button>
+                        <button class="nav-link" id="security-tab" data-bs-toggle="pill" data-bs-target="#security" type="button" role="tab">
+                            <i class="bi bi-shield-lock"></i> Security & 2FA
+                        </button>
+                        <button class="nav-link" id="notifications-tab" data-bs-toggle="pill" data-bs-target="#notifications" type="button" role="tab">
+                            <i class="bi bi-bell"></i> Notifications
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-lg-9">
+                <div class="tab-content" id="settings-tabContent">
+
+                    <!-- Profile Tab -->
+                    <div class="tab-pane fade show active" id="profile" role="tabpanel">
+                        <div class="card-fixit mb-4">
+                            <h3 class="card-title-fixit mb-4">Profile Information</h3>
+
+                            @if (TempData["ActiveTab"]?.ToString() != "notifications" && TempData["SuccessMessage"] != null)
+                            {
+                                <div class="alert alert-success border-0 small mb-4 py-2 px-3 d-flex align-items-center" style="background: rgba(34, 197, 94, 0.1); color: #16a34a;">
+                                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                                </div>
+                            }
+
+                            <form asp-action="Settings" asp-controller="Admin" method="post" class="settings-form" enctype="multipart/form-data">
+                                <div class="d-flex align-items-center gap-4 mb-5">
+                                    <div class="profile-avatar-container large">
+                                        @if (!string.IsNullOrWhiteSpace(Model.ProfilePicture))
+                                        {
+                                            <img src="@Model.ProfilePicture" alt="@Model.FullName" class="profile-avatar" id="avatarPreview" onerror="this.classList.add('d-none'); document.getElementById('avatarPlaceholder').classList.remove('d-none');" />
+                                            <div class="profile-avatar-placeholder d-none" id="avatarPlaceholder" style="display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:bold; color:var(--text-heading);">
+                                                @(string.IsNullOrWhiteSpace(Model.FullName) ? "A" : Model.FullName[0].ToString().ToUpper())
+                                            </div>
+                                        }
+                                        else
+                                        {
+                                            <div class="profile-avatar-placeholder" id="avatarPlaceholder" style="display:flex; align-items:center; justify-content:center; font-size:40px; font-weight:bold; color:var(--text-heading);">
+                                                @(string.IsNullOrWhiteSpace(Model.FullName) ? "A" : Model.FullName[0].ToString().ToUpper())
+                                            </div>
+                                            <img src="#" alt="@Model.FullName" class="profile-avatar d-none" id="avatarPreview" />
+                                        }
+                                        <label for="ProfilePicture" class="avatar-edit-btn" style="margin: 0;">
+                                            <i class="bi bi-camera"></i>
+                                        </label>
+                                        <input type="file" id="ProfilePicture" name="ProfilePicture" accept=".jpg,.jpeg,.png,.webp" class="d-none" onchange="previewAvatar(event)" />
+                                    </div>
+                                    <div>
+                                        <h4 class="mb-1">@Model.FullName</h4>
+                                        <p class="text-muted small mb-0">
+                                            <span class="admin-role-badge-sm"><i class="bi bi-shield-check me-1"></i>Administrator</span>
+                                            &nbsp;·&nbsp; Since @Model.MemberSince.ToString("MMM yyyy")
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <div asp-validation-summary="All" class="text-danger small mb-4"></div>
+
+                                <div class="row g-4">
+                                    <div class="col-md-6">
+                                        <label class="form-label-fixit">Full Name</label>
+                                        <input name="FullName" type="text" class="form-control-fixit" value="@Model.FullName" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label-fixit">Email Address</label>
+                                        <input name="Email" type="email" class="form-control-fixit" value="@Model.Email" required />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label-fixit">Phone Number</label>
+                                        <input name="PhoneNumber" type="tel" class="form-control-fixit" value="@Model.PhoneNumber" placeholder="+1 (555) 000-0000" />
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label-fixit">Department</label>
+                                        <input name="Address" type="text" class="form-control-fixit" value="@Model.Department" placeholder="e.g. Infrastructure, Public Works…" />
+                                    </div>
+                                    <div class="col-12 text-end mt-4">
+                                        <button type="submit" class="btn-primary-fixit">Save Changes</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+
+                        <!-- Stats mini cards -->
+                        <div class="stats-row">
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-icon"><i class="bi bi-collection"></i></div>
+                                <div class="stat-mini-data">
+                                    <div class="stat-mini-value">@Model.TotalIssuesManaged</div>
+                                    <div class="stat-mini-label">Total Issues</div>
+                                </div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-icon success"><i class="bi bi-check-circle"></i></div>
+                                <div class="stat-mini-data">
+                                    <div class="stat-mini-value">@Model.ResolvedIssues</div>
+                                    <div class="stat-mini-label">Resolved</div>
+                                </div>
+                            </div>
+                            <div class="stat-mini-card">
+                                <div class="stat-mini-icon warning"><i class="bi bi-clock-history"></i></div>
+                                <div class="stat-mini-data">
+                                    <div class="stat-mini-value">@Model.PendingIssues</div>
+                                    <div class="stat-mini-label">Pending</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Security Tab -->
+                    <div class="tab-pane fade" id="security" role="tabpanel">
+                        <div class="card-fixit mb-4">
+                            <h3 class="card-title-fixit mb-4">Security Settings</h3>
+
+                            <div class="settings-option mb-4 p-4 border rounded-3 @(Model.IsTwoFactorEnabled ? "bg-success-light" : "bg-surface-2") d-flex align-items-center justify-content-between">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h5 class="mb-0">Two-Factor Authentication</h5>
+                                        @if (Model.IsTwoFactorEnabled)
+                                        {
+                                            <span class="badge bg-success-fixit">Enabled</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge bg-secondary">Disabled</span>
+                                        }
+                                    </div>
+                                    <p class="text-muted small mb-0">Add an extra layer of security to your admin account.</p>
+                                </div>
+                                <a asp-controller="Account" asp-action="Security" class="btn-outline-fixit ms-4">
+                                    <i class="bi bi-shield-lock"></i>
+                                    @(Model.IsTwoFactorEnabled ? "Manage 2FA" : "Enable 2FA")
+                                </a>
+                            </div>
+
+                            <div class="p-4 border rounded-3">
+                                <div class="d-flex align-items-center justify-content-between">
+                                    <div>
+                                        <h5 class="mb-1">Change Password</h5>
+                                        <p class="text-muted small mb-0">It's a good practice to use a strong, unique password.</p>
+                                    </div>
+                                    <a asp-controller="Account" asp-action="ChangePassword" class="btn-outline-fixit ms-4">
+                                        <i class="bi bi-key"></i> Change Password
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Notifications Tab -->
+                    <div class="tab-pane fade" id="notifications" role="tabpanel">
+                        <div class="card-fixit">
+                            <h3 class="card-title-fixit mb-4">Notification Preferences</h3>
+
+                            @if (TempData["ActiveTab"]?.ToString() == "notifications" && TempData["SuccessMessage"] != null)
+                            {
+                                <div class="alert alert-success border-0 small mb-4 py-2 px-3 d-flex align-items-center" style="background: rgba(34, 197, 94, 0.1); color: #16a34a;">
+                                    <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessMessage"]
+                                </div>
+                            }
+                            @if (TempData["ErrorMessage"] != null)
+                            {
+                                <div class="alert alert-danger border-0 small mb-4 py-2 px-3 d-flex align-items-center">
+                                    <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["ErrorMessage"]
+                                </div>
+                            }
+
+                            <form asp-action="UpdateNotifications" asp-controller="Admin" method="post">
+                                <div class="notification-group mb-4">
+                                    <h6 class="text-uppercase small fw-800 text-primary mb-3">Email Notifications</h6>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" asp-for="EmailIssueUpdates" id="EmailIssueUpdates">
+                                        <label class="form-check-label" for="EmailIssueUpdates">New issue submissions</label>
+                                    </div>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" asp-for="EmailMaintenanceAlerts" id="EmailMaintenanceAlerts">
+                                        <label class="form-check-label" for="EmailMaintenanceAlerts">Maintenance alerts & escalations</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" asp-for="EmailWeeklyReports" id="EmailWeeklyReports">
+                                        <label class="form-check-label" for="EmailWeeklyReports">Weekly summary reports</label>
+                                    </div>
+                                </div>
+
+                                <div class="notification-group">
+                                    <h6 class="text-uppercase small fw-800 text-primary mb-3">App Notifications</h6>
+                                    <div class="form-check form-switch mb-3">
+                                        <input class="form-check-input" type="checkbox" asp-for="AppRealTimePush" id="AppRealTimePush">
+                                        <label class="form-check-label" for="AppRealTimePush">Real-time issue alerts</label>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" asp-for="AppDirectMessages" id="AppDirectMessages">
+                                        <label class="form-check-label" for="AppDirectMessages">Citizen messages & comments</label>
+                                    </div>
+                                </div>
+
+                                <div class="text-end mt-5 border-top pt-4">
+                                    <button type="submit" class="btn-primary-fixit">Save Preferences</button>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+@section Styles {
+    <style>
+        .settings-nav .nav-link {
+            text-align: left; padding: 12px 16px; color: var(--text-muted);
+            font-weight: 500; border-radius: var(--radius-sm);
+            display: flex; align-items: center; gap: 12px; transition: var(--transition);
+            background: none; border: none; width: 100%;
+        }
+        .settings-nav .nav-link i { font-size: 18px; }
+        .settings-nav .nav-link:hover { background: var(--bg-surface-2); color: var(--primary); }
+        .settings-nav .nav-link.active { background: var(--primary-glow); color: var(--primary); font-weight: 700; }
+
+        .profile-avatar-container.large { width: 120px; height: 120px; position: relative; }
+        .avatar-edit-btn {
+            position: absolute; bottom: 0; right: 0; width: 36px; height: 36px; border-radius: 50%;
+            background: var(--primary); color: #fff; border: 3px solid var(--bg-card);
+            display: flex; align-items: center; justify-content: center; cursor: pointer; transition: var(--transition);
+        }
+        .avatar-edit-btn:hover { transform: scale(1.1); }
+        .profile-avatar-container { width: 80px; height: 80px; flex-shrink: 0; }
+        .profile-avatar, .profile-avatar-placeholder { width: 100%; height: 100%; border-radius: var(--radius-lg); object-fit: cover; }
+        .profile-avatar-placeholder { background: var(--bg-surface-2); display: flex; align-items: center; justify-content: center; font-size: 32px; color: var(--text-light); border: 1.5px solid var(--border); }
+
+        .admin-role-badge-sm { display: inline-flex; align-items: center; background: rgba(99,102,241,0.1); color: #6366f1; font-size: 11px; font-weight: 700; padding: 2px 10px; border-radius: 100px; }
+
+        .settings-form .form-label-fixit { margin-bottom: 8px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em; font-size: 11px; }
+        .form-switch .form-check-input { width: 3em; height: 1.5em; cursor: pointer; }
+        .form-switch .form-check-input:checked { background-color: var(--primary); border-color: var(--primary); }
+        .fw-800 { font-weight: 800; }
+        .bg-success-light { background: rgba(34, 197, 94, 0.05) !important; }
+        .bg-surface-2 { background: var(--bg-surface-2) !important; }
+        .bg-success-fixit { background: rgba(34, 197, 94, 0.15); color: #16a34a; }
+
+        .stats-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; margin-top: 32px; }
+        .stat-mini-card {
+            background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg);
+            padding: 24px; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.03); transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1); position: relative; overflow: hidden;
+        }
+        .stat-mini-card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 4px; background: var(--primary); opacity: 0; transition: opacity 0.3s ease; }
+        .stat-mini-card:hover { transform: translateY(-8px); box-shadow: 0 12px 30px rgba(0,0,0,0.08); }
+        .stat-mini-card:hover::before { opacity: 1; }
+        .stat-mini-icon { width: 56px; height: 56px; border-radius: 16px; background: var(--primary-glow); color: var(--primary); display: flex; align-items: center; justify-content: center; font-size: 24px; transition: transform 0.5s ease; }
+        .stat-mini-card:hover .stat-mini-icon { transform: scale(1.1) rotate(5deg); }
+        .stat-mini-icon.success { background: rgba(34, 197, 94, 0.1); color: #16a34a; }
+        .stat-mini-icon.warning { background: rgba(251, 191, 36, 0.1); color: #fbbf24; }
+        .stat-mini-data { display: flex; flex-direction: column; gap: 4px; }
+        .stat-mini-value { font-size: 28px; font-weight: 800; color: var(--text-heading); letter-spacing: -0.02em; line-height: 1; }
+        .stat-mini-label { font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; }
+
+        @@media (max-width: 992px) { .sticky-top { position: static !important; } .stats-row { grid-template-columns: 1fr; } }
+    </style>
+}
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <script>
+        function previewAvatar(event) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    const preview = document.getElementById('avatarPreview');
+                    const placeholder = document.getElementById('avatarPlaceholder');
+                    if (preview) { preview.src = e.target.result; preview.classList.remove('d-none'); }
+                    if (placeholder) { placeholder.classList.add('d-none'); }
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', function() {
+            var activeTab = '@TempData["ActiveTab"]';
+            if (activeTab) {
+                var tabElement = document.querySelector('button[data-bs-target="#' + activeTab + '"]');
+                if (tabElement) { new bootstrap.Tab(tabElement).show(); }
+            }
+        });
+    </script>
+}

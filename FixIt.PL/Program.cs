@@ -10,6 +10,7 @@ using FixIt.BLL.Interfaces;
 using FixIt.BLL.Validators;
 using FixIt.Common.Constants;
 using FixIt.Common.Helpers;
+using FixIt.Common.Settings;
 using FluentValidation;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,8 +23,12 @@ if (!string.IsNullOrEmpty(encryptionKey) && !string.IsNullOrEmpty(encryptionIv))
     EncryptionHelper.Initialize(encryptionKey, encryptionIv);
 }
 
+// ── Configure Stripe ──
+Stripe.StripeConfiguration.ApiKey = builder.Configuration["Stripe:SecretKey"];
+
 // Add services to the container.
 builder.Services.AddControllersWithViews();
+builder.Services.AddHttpContextAccessor();
 
 // ── Database ──
 builder.Services.AddDbContext<FixItDbContext>(options =>
@@ -48,6 +53,7 @@ builder.Services.AddIdentity<ApplicationUser, IdentityRole>(options =>
 
 // ── Configuration ──
 builder.Services.Configure<FixIt.Common.Settings.SmtpSettings>(builder.Configuration.GetSection("SmtpSettings"));
+builder.Services.Configure<GeminiSettings>(builder.Configuration.GetSection("GeminiSettings"));
 
 // ── Cookie Settings ──
 builder.Services.ConfigureApplicationCookie(options =>
@@ -94,11 +100,19 @@ builder.Services.AddScoped<IAccountService, AccountService>();
 builder.Services.AddScoped<ITwoFactorService, TwoFactorService>();
 builder.Services.AddScoped<IIssueService, IssueService>();
 builder.Services.AddScoped<IIssueDetailsService, IssueDetailsService>();
+builder.Services.AddScoped<IAdminIssueService, AdminIssueService>();
 builder.Services.AddScoped<IRatingService, RatingService>();
+builder.Services.AddScoped<IRatingAdminService, RatingAdminService>();
 builder.Services.AddScoped<IAdminDashboardService, AdminDashboardService>();
 builder.Services.AddScoped<IScheduleService, ScheduleService>();
 builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<ICitizenDashboardService, CitizenDashboardService>();
+builder.Services.AddScoped<IAdminProfileService, AdminProfileService>();
 builder.Services.AddScoped<IEmailSenderService, SmtpEmailSenderService>();
+builder.Services.AddScoped<INotificationService, MockNotificationService>();
+builder.Services.AddScoped<IPaymentService, StripePaymentService>();
+builder.Services.AddHttpClient<IAiClassificationService, GeminiClassificationService>();
+builder.Services.AddScoped<ISystemAdminService, SystemAdminService>();
 
 // ── FluentValidation ──
 // One registration covers all validators in the same assembly
@@ -125,7 +139,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = { AppConstants.CitizenRole, AppConstants.AdminRole };
+    string[] roles = { AppConstants.CitizenRole, AppConstants.AdminRole, AppConstants.SystemAdminRole };
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))

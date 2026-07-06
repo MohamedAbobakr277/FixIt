@@ -1,7 +1,9 @@
 @using Microsoft.AspNetCore.Identity
 @using FixIt.DAL.Entities
+@using FixIt.BLL.Interfaces
 @inject SignInManager<ApplicationUser> SignInManager
 @inject UserManager<ApplicationUser> UserManager
+@inject INotificationService NotificationService
 <!DOCTYPE html>
 <html lang="en" data-adm-theme="light">
 <head>
@@ -11,6 +13,7 @@
     <title>@ViewData["Title"] - FixIt Admin</title>
     <link rel="icon" type="image/png" href="~/images/logo-icon.png" asp-append-version="true" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <link rel="stylesheet" href="~/css/admin.css" asp-append-version="true" />
     @RenderSection("Styles", required: false)
 </head>
@@ -31,6 +34,10 @@
         bool match = currentController == ctrl && (action == null || currentAction == action);
         return match ? "adm-nav-link active" : "adm-nav-link";
     }
+}
+@{
+    var unreadCount = await NotificationService.GetAdminUnreadCountAsync();
+    var adminNotifications = await NotificationService.GetAdminNotificationsAsync(5);
 }
 
 <div class="adm-shell" id="admShell">
@@ -57,42 +64,81 @@
             <a class="@NavClass("Admin", "Reports")" asp-controller="Admin" asp-action="Reports">
                 <span class="adm-nav-label">Reports</span>
             </a>
-            <a class="@NavClass("Rating")" asp-controller="Rating" asp-action="Index">
+            <a class="@NavClass("Admin", "Ratings")" asp-controller="Admin" asp-action="Ratings">
                 <span class="adm-nav-label">Ratings</span>
             </a>
         </nav>
         <div class="adm-topbar-right">
             <button class="adm-icon-btn" id="admThemeToggle" title="Toggle Theme">🌙</button>
-            <button class="adm-icon-btn" title="Search">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
-            </button>
-            <button class="adm-icon-btn" title="Notifications" style="position: relative;">
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
-                <span style="position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; background: #ef4444; border-radius: 50%; border: 1px solid #fff;"></span>
-            </button>
-            <div class="dropdown" style="margin-left: 4px;">
-                <div class="adm-avatar" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;" title="@displayName">@initials</div>
-                <div class="dropdown-menu dropdown-menu-end shadow-sm adm-dropdown" style="margin-top: 10px;">
-                    <div class="adm-dropdown-header">
-                        <div class="adm-dropdown-name">@displayName</div>
-                        <div class="adm-dropdown-role">Administrator</div>
+
+            <div class="dropdown">
+                <button class="adm-icon-btn" title="Notifications" style="position: relative;" data-bs-toggle="dropdown" aria-expanded="false">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg>
+                    @if(unreadCount > 0)
+                    {
+                        <span style="position: absolute; top: 8px; right: 8px; width: 6px; height: 6px; background: #ef4444; border-radius: 50%; border: 1px solid #fff;"></span>
+                    }
+                </button>
+                <div class="dropdown-menu dropdown-menu-end shadow-sm adm-dropdown" style="margin-top: 10px; width: 300px; padding: 0;">
+                    <div class="adm-dropdown-header" style="border-bottom: 1px solid var(--adm-border); padding: 12px 16px;">
+                        <div class="adm-dropdown-name" style="font-size: 14px;">Notifications</div>
                     </div>
-                    <a class="dropdown-item" href="#">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
-                        My Profile
-                    </a>
-                    <a class="dropdown-item" href="#">
-                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                        Settings
-                    </a>
-                    <form asp-controller="Account" asp-action="Logout" method="post" style="margin: 4px 0 0 0; border-top: 1px solid rgba(0,0,0,0.05); padding-top: 4px;">
-                        @Html.AntiForgeryToken()
-                        <button type="submit" class="dropdown-item text-danger">
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line></svg>
-                            Log Out
-                        </button>
-                    </form>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        @if (!adminNotifications.Any())
+                        {
+                            <div style="padding: 16px; text-align: center; color: var(--adm-text-light); font-size: 13px;">No new notifications</div>
+                        }
+                        else
+                        {
+                            foreach (var notif in adminNotifications)
+                            {
+                                var fixedUrl = notif.RelatedEntityUrl?.Replace("/Admin/IssueDetails", "/Issue/AdminDetails");
+                                <a class="dropdown-item" href="/api/Notification/admin/read-and-redirect/@notif.Id?url=@Uri.EscapeDataString(fixedUrl ?? "/Admin/Dashboard")" style="padding: 12px 16px; border-bottom: 1px solid var(--adm-border); white-space: normal; @(notif.IsRead ? "opacity: 0.7;" : "background: rgba(14,165,233,0.05);")">
+                                    <div style="font-weight: 600; font-size: 13px; color: var(--adm-text); margin-bottom: 4px;">@notif.Title</div>
+                                    <div style="font-size: 12px; color: var(--adm-text-light);">@notif.Message</div>
+                                    <div style="font-size: 11px; color: var(--adm-text-light); margin-top: 6px;">@notif.CreatedAt.ToString("MMM dd, HH:mm")</div>
+                                </a>
+                            }
+                        }
+                    </div>
                 </div>
+            </div>
+            <div class="dropdown" style="margin-left: 4px;">
+                @if (!string.IsNullOrWhiteSpace(currentUser?.ProfileImageUrl))
+                {
+                    <img src="@currentUser.ProfileImageUrl" alt="Profile" data-bs-toggle="dropdown" aria-expanded="false" style="width: 34px; height: 34px; border-radius: 50%; object-fit: cover; cursor: pointer; border: 1px solid var(--adm-border);" title="@displayName" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                    <div class="adm-avatar d-none" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;" title="@displayName">@initials</div>
+                }
+                else
+                {
+                    <div class="adm-avatar" data-bs-toggle="dropdown" aria-expanded="false" style="cursor: pointer;" title="@displayName">@initials</div>
+                }
+                <ul class="dropdown-menu dropdown-menu-end shadow-sm" style="border-radius: 12px; border: 1px solid var(--adm-border); box-shadow: 0 4px 15px rgba(0,0,0,0.1); margin-top: 10px;">
+                    <li class="dropdown-header">
+                        <div class="dropdown-user-full" style="font-weight: 600; color: var(--adm-text);">@displayName</div>
+                        <div class="dropdown-user-role text-muted" style="font-size: 12px;">Administrator</div>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <a class="dropdown-item" asp-controller="Admin" asp-action="Profile" style="font-size: 14px; display: flex; align-items: center;">
+                            <i class="bi bi-person me-2"></i> My Profile
+                        </a>
+                    </li>
+                    <li>
+                        <a class="dropdown-item" asp-controller="Admin" asp-action="Settings" style="font-size: 14px; display: flex; align-items: center;">
+                            <i class="bi bi-gear me-2"></i> Settings
+                        </a>
+                    </li>
+                    <li><hr class="dropdown-divider"></li>
+                    <li>
+                        <form asp-controller="Account" asp-action="Logout" method="post" class="m-0">
+                            @Html.AntiForgeryToken()
+                            <button type="submit" class="dropdown-item text-danger" style="font-size: 14px; display: flex; align-items: center;">
+                                <i class="bi bi-box-arrow-right me-2"></i> Log Out
+                            </button>
+                        </form>
+                    </li>
+                </ul>
             </div>
         </div>
     </header>

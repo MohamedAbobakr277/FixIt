@@ -1,44 +1,61 @@
 @model TwoFactorSetupDto
-
 @{
     ViewData["Title"] = "Setup Two-Factor Authentication";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0 rounded-lg">
-                <div class="card-header bg-primary text-white text-center py-4">
-                    <h3 class="font-weight-light my-2">Setup 2FA</h3>
+<div class="page-wrapper">
+    <div class="section-container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 120px);">
+        <div class="card-fixit shadow-lg p-5" style="max-width: 500px; width: 100%;">
+            <div class="text-center mb-5">
+                <div class="feature-icon mx-auto mb-4" style="width: 64px; height: 64px; font-size: 28px;">
+                    <i class="bi bi-shield-check"></i>
                 </div>
-                <div class="card-body p-5">
-                    <p class="text-muted mb-4">
-                        Scan the QR code below with your authenticator app (like Google Authenticator or Microsoft Authenticator).
-                    </p>
+                <h2 class="section-title mb-2">Secure Your Account</h2>
+                <p class="text-muted">Enhance your account security with Two-Factor Authentication.</p>
+            </div>
 
-                    <div class="text-center mb-4">
-                        <img src="@Model.QrCodeImageUrl" class="img-fluid rounded border p-2" alt="QR Code" style="max-width: 200px;" />
+            <div class="setup-steps">
+                <div class="mb-4">
+                    <p class="small fw-bold text-uppercase tracking-wider mb-3">1. Scan QR Code</p>
+                    <div class="text-center p-3 border rounded-3 bg-white mb-3 shadow-sm">
+                        <img src="@Model.QrCodeImageUrl" class="img-fluid" alt="QR Code" style="max-height: 180px;" />
+                    </div>
+                    <p class="small text-muted text-center">Scan this with Google Authenticator or Microsoft Authenticator.</p>
+                </div>
+
+                <div class="mb-4">
+                    <p class="small fw-bold text-uppercase tracking-wider mb-2">2. Enter Key Manually (Optional)</p>
+                    <div class="p-2 px-3 bg-surface-2 rounded border small font-monospace text-center">
+                        @Model.ManualEntryKey
+                    </div>
+                </div>
+
+                <form asp-action="Setup2FA" method="post" class="mt-5">
+                    <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+                    
+                    <p class="small fw-bold text-uppercase tracking-wider mb-2">3. Verify Code</p>
+                    <div class="mb-4">
+                        <input name="code" class="form-control-fixit text-center fs-4 fw-bold" style="letter-spacing: 0.5em;" 
+                               placeholder="000000" maxlength="6" required autocomplete="off" />
                     </div>
 
-                    <div class="alert alert-info small">
-                        <strong>Manual Entry Key:</strong> @Model.ManualEntryKey
+                    <div class="d-grid gap-3">
+                        <button type="submit" class="btn-primary-fixit justify-content-center w-100 py-3">
+                            Enable 2FA Now
+                        </button>
+                        <a asp-controller="Home" asp-action="Index" class="btn-outline-fixit justify-content-center w-100">
+                            Cancel Setup
+                        </a>
                     </div>
-
-                    <form asp-action="Setup2FA" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
-                        
-                        <div class="form-floating mb-3">
-                            <input name="code" class="form-control" placeholder="Enter 6-digit code" required autocomplete="off" />
-                            <label for="code">Enter 6-digit verification code</label>
-                        </div>
-
-                        <div class="d-grid gap-2">
-                            <button type="submit" class="btn btn-primary btn-lg">Verify and Enable</button>
-                            <a asp-controller="Home" asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
-                        </div>
-                    </form>
-                </div>
+                </form>
             </div>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .tracking-wider { letter-spacing: 0.05em; }
+        .bg-surface-2 { background-color: var(--bg-surface-2); }
+    </style>
+}

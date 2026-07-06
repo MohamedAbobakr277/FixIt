@@ -1,0 +1,103 @@
+@model FixIt.Common.DTOs.AdminProfileDto
+@{
+    ViewData["Title"] = "My Profile";
+    Layout = "~/Views/Shared/_AdminLayout.cshtml";
+}
+
+<div class="page-wrapper">
+    <div class="section-container">
+
+        <!-- Profile Header -->
+        <div class="card-fixit profile-card mb-4">
+            <div class="profile-layout">
+                <div class="profile-avatar-container">
+                    @if (!string.IsNullOrWhiteSpace(Model.ProfilePicture))
+                    {
+                        <img src="@Model.ProfilePicture" alt="@Model.FullName" class="profile-avatar" onerror="this.classList.add('d-none'); this.nextElementSibling.classList.remove('d-none');" />
+                        <div class="profile-avatar-placeholder d-none" style="display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:bold; color:var(--text-heading);">
+                            @(string.IsNullOrWhiteSpace(Model.FullName) ? "A" : Model.FullName[0].ToString().ToUpper())
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="profile-avatar-placeholder" style="display:flex; align-items:center; justify-content:center; font-size:36px; font-weight:bold; color:var(--text-heading);">
+                            @(string.IsNullOrWhiteSpace(Model.FullName) ? "A" : Model.FullName[0].ToString().ToUpper())
+                        </div>
+                    }
+                </div>
+                <div class="profile-info">
+                    <h1 class="profile-name">@Model.FullName</h1>
+                    <div class="profile-meta">
+                        <span class="meta-item"><i class="bi bi-envelope"></i> @Model.Email</span>
+                        @if (!string.IsNullOrEmpty(Model.Department))
+                        {
+                            <span class="meta-item"><i class="bi bi-building"></i> @Model.Department</span>
+                        }
+                        <span class="meta-item"><i class="bi bi-calendar3"></i> Admin since @Model.MemberSince.ToString("MMMM d, yyyy")</span>
+                    </div>
+                    <div class="mt-2">
+                        <span class="admin-role-badge">
+                            <i class="bi bi-shield-check me-1"></i> Administrator
+                        </span>
+                    </div>
+                </div>
+                <div class="profile-actions ms-auto">
+                    <a asp-action="Settings" asp-controller="Admin" class="btn-outline-fixit">
+                        <i class="bi bi-gear"></i> Edit Settings
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Stats -->
+        <div class="stats-row mb-4">
+            <div class="stat-mini-card">
+                <div class="stat-mini-icon"><i class="bi bi-collection"></i></div>
+                <div class="stat-mini-data">
+                    <div class="stat-mini-value">@Model.TotalIssuesManaged</div>
+                    <div class="stat-mini-label">Total Issues</div>
+                </div>
+            </div>
+            <div class="stat-mini-card">
+                <div class="stat-mini-icon success"><i class="bi bi-check-circle"></i></div>
+                <div class="stat-mini-data">
+                    <div class="stat-mini-value">@Model.ResolvedIssues</div>
+                    <div class="stat-mini-label">Resolved</div>
+                </div>
+            </div>
+            <div class="stat-mini-card">
+                <div class="stat-mini-icon warning"><i class="bi bi-clock-history"></i></div>
+                <div class="stat-mini-data">
+                    <div class="stat-mini-value">@Model.PendingIssues</div>
+                    <div class="stat-mini-label">Pending</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Quick Links -->
+        <div class="card-fixit mb-4">
+            <h3 class="card-title-fixit mb-4">Admin Quick Access</h3>
+            <div class="admin-quick-links">
+                <a asp-controller="Admin" asp-action="Dashboard" class="quick-link-card">
+                    <i class="bi bi-speedometer2"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a asp-controller="Issue" asp-action="AdminIndex" class="quick-link-card">
+                    <i class="bi bi-list-task"></i>
+                    <span>All Issues</span>
+                </a>
+                <a asp-controller="Admin" asp-action="Ratings" class="quick-link-card">
+                    <i class="bi bi-star"></i>
+                    <span>Ratings</span>
+                </a>
+                <a asp-controller="Admin" asp-action="Settings" class="quick-link-card">
+                    <i class="bi bi-gear"></i>
+                    <span>Settings</span>
+                </a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+

@@ -10,6 +10,11 @@ public interface IUnitOfWork : IDisposable
     IGenericRepository<Rating> Ratings { get; }
     IGenericRepository<MaintenanceSchedule> Schedules { get; }
     IGenericRepository<MaintenanceReport> Reports { get; }
+    IGenericRepository<IssueStatusHistory> StatusHistories { get; }
+    IGenericRepository<LoginHistory> LoginHistories { get; }
+    IGenericRepository<Notification> Notifications { get; }
+    IGenericRepository<AdminNotification> AdminNotifications { get; }
+    IGenericRepository<Payment> Payments { get; }
     Task<int> CompleteAsync();
 }
 
@@ -21,6 +26,11 @@ public class UnitOfWork : IUnitOfWork
     private IGenericRepository<Rating>? _ratings;
     private IGenericRepository<MaintenanceSchedule>? _schedules;
     private IGenericRepository<MaintenanceReport>? _reports;
+    private IGenericRepository<IssueStatusHistory>? _statusHistories;
+    private IGenericRepository<LoginHistory>? _loginHistories;
+    private IGenericRepository<Notification>? _notifications;
+    private IGenericRepository<AdminNotification>? _adminNotifications;
+    private IGenericRepository<Payment>? _payments;
 
     public UnitOfWork(FixItDbContext context)
     {
@@ -38,6 +48,21 @@ public class UnitOfWork : IUnitOfWork
 
     public IGenericRepository<MaintenanceReport> Reports
         => _reports ??= new GenericRepository<MaintenanceReport>(_context);
+
+    public IGenericRepository<IssueStatusHistory> StatusHistories
+        => _statusHistories ??= new GenericRepository<IssueStatusHistory>(_context);
+
+    public IGenericRepository<LoginHistory> LoginHistories
+        => _loginHistories ??= new GenericRepository<LoginHistory>(_context);
+
+    public IGenericRepository<Notification> Notifications
+        => _notifications ??= new GenericRepository<Notification>(_context);
+        
+    public IGenericRepository<AdminNotification> AdminNotifications
+        => _adminNotifications ??= new GenericRepository<AdminNotification>(_context);
+
+    public IGenericRepository<Payment> Payments
+        => _payments ??= new GenericRepository<Payment>(_context);
 
     public async Task<int> CompleteAsync()
         => await _context.SaveChangesAsync();

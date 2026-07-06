@@ -1,41 +1,48 @@
 @model TwoFactorLoginDto
-
 @{
     ViewData["Title"] = "Two-Factor Verification";
 }
 
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-md-6">
-            <div class="card shadow-lg border-0 rounded-lg">
-                <div class="card-header bg-dark text-white text-center py-4">
-                    <h3 class="font-weight-light my-2">Security Verification</h3>
+<div class="page-wrapper">
+    <div class="section-container d-flex justify-content-center align-items-center" style="min-height: calc(100vh - 120px);">
+        <div class="card-fixit shadow-lg p-5" style="max-width: 450px; width: 100%;">
+            <div class="text-center mb-5">
+                <div class="feature-icon mx-auto mb-4" style="width: 64px; height: 64px; font-size: 28px; background: rgba(59, 130, 246, 0.1); color: #3b82f6;">
+                    <i class="bi bi-shield-lock"></i>
                 </div>
-                <div class="card-body p-5">
-                    <div class="text-center mb-4">
-                        <i class="bi bi-shield-lock text-primary" style="font-size: 3rem;"></i>
-                        <p class="text-muted mt-2">Enter the code from your authenticator app to sign in.</p>
-                    </div>
-
-                    <form asp-action="Verify2FA" method="post">
-                        <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
-                        
-                        <div class="form-floating mb-3">
-                            <input asp-for="Code" class="form-control text-center fs-3 fw-bold" placeholder="000000" maxlength="6" required autocomplete="one-time-code" autofocus />
-                            <label asp-for="Code">6-Digit Code</label>
-                            <span asp-validation-for="Code" class="text-danger small"></span>
-                        </div>
-
-                        <div class="d-grid gap-2 mb-3">
-                            <button type="submit" class="btn btn-primary btn-lg">Verify & Sign In</button>
-                        </div>
-                        
-                        <div class="text-center">
-                            <a asp-action="RecoveryCodeLogin" class="text-decoration-none small text-muted">Lost your device? Use a recovery code</a>
-                        </div>
-                    </form>
-                </div>
+                <h2 class="section-title mb-2">Verification Required</h2>
+                <p class="text-muted">Enter the 6-digit code from your authenticator app to continue.</p>
             </div>
+
+            <form asp-action="Verify2FA" method="post">
+                <div asp-validation-summary="ModelOnly" class="text-danger small mb-3"></div>
+                
+                <div class="mb-4">
+                    <input asp-for="Code" class="form-control-fixit text-center fs-2 fw-bold" 
+                           style="letter-spacing: 0.3em; height: 70px;" 
+                           placeholder="000000" maxlength="6" required autocomplete="one-time-code" autofocus />
+                    <span asp-validation-for="Code" class="text-danger small"></span>
+                </div>
+
+                <div class="d-grid gap-3 mb-4">
+                    <button type="submit" class="btn-primary-fixit justify-content-center w-100 py-3">
+                        Verify & Sign In
+                    </button>
+                </div>
+                
+                <div class="text-center border-top pt-4">
+                    <p class="small text-muted mb-2">Lost your device?</p>
+                    <a asp-action="RecoveryCodeLogin" class="text-decoration-none small fw-600">
+                        <i class="bi bi-key me-1"></i> Use a Recovery Code
+                    </a>
+                </div>
+            </form>
         </div>
     </div>
 </div>
+
+@section Styles {
+    <style>
+        .fw-600 { font-weight: 600; }
+    </style>
+}

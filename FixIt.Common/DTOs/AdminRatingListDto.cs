@@ -7,5 +7,6 @@ public class AdminRatingListDto
     public string IssueTitle { get; set; } = string.Empty;
     public string CitizenName { get; set; } = string.Empty;
     public int Stars { get; set; }
+    public string? Comment { get; set; }
     public DateTime SubmittedAt { get; set; }
 }

@@ -13,27 +13,98 @@ public class AdminController : Controller
     private readonly IAdminDashboardService _dashboardService;
     private readonly IScheduleService _scheduleService;
     private readonly IReportService _reportService;
+    private readonly IRatingAdminService _ratingAdminService;
     private readonly IValidator<CreateScheduleDto> _scheduleValidator;
     private readonly IValidator<CreateReportDto> _reportValidator;
+    private readonly IAdminProfileService _profileService;
 
     public AdminController(
         IAdminDashboardService dashboardService,
         IScheduleService scheduleService,
         IReportService reportService,
+        IRatingAdminService ratingAdminService,
         IValidator<CreateScheduleDto> scheduleValidator,
-        IValidator<CreateReportDto> reportValidator)
+        IValidator<CreateReportDto> reportValidator,
+        IAdminProfileService profileService)
     {
         _dashboardService = dashboardService;
         _scheduleService = scheduleService;
         _reportService = reportService;
+        _ratingAdminService = ratingAdminService;
         _scheduleValidator = scheduleValidator;
         _reportValidator = reportValidator;
+        _profileService = profileService;
     }
 
     public async Task<IActionResult> Dashboard()
     {
         var stats = await _dashboardService.GetDashboardStatsAsync();
         return View(stats);
+    }
+
+    public async Task<IActionResult> Profile()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        var data = await _profileService.GetAdminProfileAsync(userId);
+        return View("~/Views/Admin/Profile.cshtml", data);
+    }
+
+    public async Task<IActionResult> Settings()
+    {
+        var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (string.IsNullOrEmpty(userId)) return Challenge();
+
+        var data = await _profileService.GetAdminProfileAsync(userId);
+        return View("~/Views/Admin/Settings.cshtml", data);
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Settings(FixIt.BLL.DTOs.UpdateProfileDto dto)
+    {
+        if (!ModelState.IsValid)
+        {
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId != null)
+            {
+                var data = await _profileService.GetAdminProfileAsync(userId);
+                return View("~/Views/Admin/Settings.cshtml", data);
+            }
+            return RedirectToAction("Dashboard");
+        }
+
+        var uid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (uid != null)
+        {
+            var success = await _profileService.UpdateAdminProfileAsync(uid, dto);
+            if (success)
+                TempData["SuccessMessage"] = "Profile updated successfully.";
+        }
+        return RedirectToAction(nameof(Settings));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> UpdateNotifications(FixIt.BLL.DTOs.UpdateNotificationsDto dto)
+    {
+        var uid = User.FindFirstValue(ClaimTypes.NameIdentifier);
+        if (uid != null)
+        {
+            var success = await _profileService.UpdateAdminNotificationsAsync(uid, dto);
+            if (success)
+            {
+                TempData["SuccessMessage"] = "Notification preferences updated.";
+                TempData["ActiveTab"] = "notifications";
+            }
+        }
+        return RedirectToAction(nameof(Settings));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> Ratings()
+    {
+        var data = await _ratingAdminService.GetRatingsPageDataAsync();
+        return View(data);
     }
 
     // ── GET /Admin/Schedule ─────────────────────────────────────────────
@@ -65,20 +136,20 @@ public class AdminController : Controller
         var validation = await _scheduleValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            foreach (var error in validation.Errors)
-                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-            return View(dto);
+            var errors = string.Join(" ", validation.Errors.Select(e => e.ErrorMessage));
+            TempData["ErrorMessage"] = $"Validation failed: {errors}";
+            return RedirectToAction("AdminDetails", "Issue", new { id = dto.IssueId });
         }
 
         var success = await _scheduleService.CreateScheduleAsync(dto);
         if (success)
         {
             TempData["SuccessMessage"] = "Maintenance scheduled successfully!";
-            return RedirectToAction(nameof(Schedule));
+            return RedirectToAction("AdminDetails", "Issue", new { id = dto.IssueId });
         }
 
         TempData["ErrorMessage"] = "Failed to create schedule. Issue may not be approved.";
-        return View(dto);
+        return RedirectToAction("AdminDetails", "Issue", new { id = dto.IssueId });
     }
 
     // ── GET /Admin/Reports ───────────────────────────────────────────────
@@ -121,9 +192,9 @@ public class AdminController : Controller
         var validation = await _reportValidator.ValidateAsync(dto);
         if (!validation.IsValid)
         {
-            foreach (var error in validation.Errors)
-                ModelState.AddModelError(error.PropertyName, error.ErrorMessage);
-            return View("CreateReport", dto);
+            var errors = string.Join(" ", validation.Errors.Select(e => e.ErrorMessage));
+            TempData["ErrorMessage"] = $"Validation failed: {errors}";
+            return RedirectToAction("Reports", new { issueId = dto.IssueId });
         }
 
         var adminId = User.FindFirstValue(ClaimTypes.NameIdentifier);
@@ -140,6 +211,8 @@ public class AdminController : Controller
         }
 
         TempData["ErrorMessage"] = "Failed to submit report. Issue may not be in progress.";
-        return View("CreateReport", dto);
+        return RedirectToAction("Reports", new { issueId = dto.IssueId });
     }
+
+
 }

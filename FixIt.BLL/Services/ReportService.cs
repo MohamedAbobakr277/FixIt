@@ -12,10 +12,12 @@ namespace FixIt.BLL.Services;
 public class ReportService : IReportService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notificationService;
 
-    public ReportService(IUnitOfWork unitOfWork)
+    public ReportService(IUnitOfWork unitOfWork, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
+        _notificationService = notificationService;
     }
 
     public async Task<ReportsPageDto> GetReportsPageAsync()
@@ -92,7 +94,26 @@ public class ReportService : IReportService
         issue.UpdatedAt = DateTime.Now;
         _unitOfWork.Issues.Update(issue);
 
+        // Add history entry
+        var history = new IssueStatusHistory
+        {
+            IssueId = dto.IssueId,
+            Status = IssueStatus.Resolved,
+            ChangedAt = DateTime.Now,
+            ChangedById = adminId,
+            Note = "Maintenance report submitted."
+        };
+        await _unitOfWork.StatusHistories.AddAsync(history);
+
         await _unitOfWork.CompleteAsync();
+
+        if (!string.IsNullOrEmpty(issue.CitizenId))
+        {
+            string notifTitle = $"Issue Resolved: {issue.Title}";
+            string notifMsg = $"Maintenance is complete! Please log in to view the report and rate the service.";
+            await _notificationService.SendNotificationAsync(issue.CitizenId, NotificationType.Push, notifTitle, notifMsg);
+        }
+
         return true;
     }
 

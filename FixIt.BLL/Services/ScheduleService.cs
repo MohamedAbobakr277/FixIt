@@ -11,10 +11,12 @@ namespace FixIt.BLL.Services;
 public class ScheduleService : IScheduleService
 {
     private readonly IUnitOfWork _unitOfWork;
+    private readonly INotificationService _notificationService;
 
-    public ScheduleService(IUnitOfWork unitOfWork)
+    public ScheduleService(IUnitOfWork unitOfWork, INotificationService notificationService)
     {
         _unitOfWork = unitOfWork;
+        _notificationService = notificationService;
     }
 
     public async Task<SchedulePageDto> GetSchedulePageAsync()
@@ -105,7 +107,25 @@ public class ScheduleService : IScheduleService
         issue.UpdatedAt = DateTime.Now;
         _unitOfWork.Issues.Update(issue);
 
+        // Add history entry
+        var history = new IssueStatusHistory
+        {
+            IssueId = dto.IssueId,
+            Status = IssueStatus.Scheduled,
+            ChangedAt = DateTime.Now,
+            Note = $"Scheduled for {dto.VisitDate:yyyy-MM-dd HH:mm} with worker {dto.WorkerName}."
+        };
+        await _unitOfWork.StatusHistories.AddAsync(history);
+
         await _unitOfWork.CompleteAsync();
+
+        if (!string.IsNullOrEmpty(issue.CitizenId))
+        {
+            string notifTitle = $"Maintenance Scheduled: {issue.Title}";
+            string notifMsg = $"Worker {dto.WorkerName} is scheduled to visit on {dto.VisitDate:MMMM dd, yyyy h:mm tt}.";
+            await _notificationService.SendNotificationAsync(issue.CitizenId, NotificationType.WhatsApp, notifTitle, notifMsg);
+        }
+
         return true;
     }
 }

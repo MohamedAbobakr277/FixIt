@@ -23,6 +23,7 @@ public class FixItDbContext : IdentityDbContext<ApplicationUser>
         modelBuilder.ApplyConfiguration(new MaintenanceScheduleConfiguration());
         modelBuilder.ApplyConfiguration(new MaintenanceReportConfiguration());
         modelBuilder.ApplyConfiguration(new RatingConfiguration());
+        modelBuilder.ApplyConfiguration(new PaymentConfiguration());
     }
 
     public DbSet<Citizen> Citizens { get; set; }
@@ -31,4 +32,9 @@ public class FixItDbContext : IdentityDbContext<ApplicationUser>
     public DbSet<MaintenanceSchedule> MaintenanceSchedules { get; set; }
     public DbSet<MaintenanceReport> MaintenanceReports { get; set; }
     public DbSet<Rating> Ratings { get; set; }
+    public DbSet<LoginHistory> LoginHistories { get; set; }
+    public DbSet<IssueComment> IssueComments { get; set; }
+    public DbSet<Notification> Notifications { get; set; }
+    public DbSet<AdminNotification> AdminNotifications { get; set; }
+    public DbSet<Payment> Payments { get; set; }
 }
