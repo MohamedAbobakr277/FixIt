@@ -43,7 +43,9 @@ public class MappingProfile : Profile
             .ForMember(dest => dest.Admin, opt => opt.Ignore())
             .ForMember(dest => dest.MaintenanceSchedule, opt => opt.Ignore())
             .ForMember(dest => dest.MaintenanceReport, opt => opt.Ignore())
-            .ForMember(dest => dest.Rating, opt => opt.Ignore());
+            .ForMember(dest => dest.Rating, opt => opt.Ignore())
+            .ForMember(dest => dest.StatusHistory, opt => opt.Ignore())
+            .ForMember(dest => dest.Comments, opt => opt.Ignore());
 
         // Rating mappings
         CreateMap<Rating, RatingDto>();

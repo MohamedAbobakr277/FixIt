@@ -4,6 +4,7 @@ using FixIt.DAL.Data;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FixIt.DAL.Data.Migrations
 {
     [DbContext(typeof(FixItDbContext))]
-    partial class FixItDbContextModelSnapshot : ModelSnapshot
+    [Migration("20260705190111_AddGpsAndUpvotes")]
+    partial class AddGpsAndUpvotes
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -235,6 +238,9 @@ namespace FixIt.DAL.Data.Migrations
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("datetime2");
 
+                    b.Property<int>("UpvoteCount")
+                        .HasColumnType("int");
+
                     b.HasKey("IssueId");
 
                     b.HasIndex("AdminId");
@@ -305,6 +311,37 @@ namespace FixIt.DAL.Data.Migrations
                     b.HasIndex("IssueId");
 
                     b.ToTable("IssueStatusHistory");
+                });
+
+            modelBuilder.Entity("FixIt.DAL.Entities.IssueUpvote", b =>
+                {
+                    b.Property<int>("IssueUpvoteId")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("IssueUpvoteId"));
+
+                    b.Property<string>("CitizenId")
+                        .IsRequired()
+                        .HasMaxLength(450)
+                        .HasColumnType("nvarchar(450)");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("datetime2")
+                        .HasDefaultValueSql("GETUTCDATE()");
+
+                    b.Property<int>("IssueId")
+                        .HasColumnType("int");
+
+                    b.HasKey("IssueUpvoteId");
+
+                    b.HasIndex("CitizenId");
+
+                    b.HasIndex("IssueId", "CitizenId")
+                        .IsUnique();
+
+                    b.ToTable("IssueUpvotes", (string)null);
                 });
 
             modelBuilder.Entity("FixIt.DAL.Entities.LoginHistory", b =>
@@ -708,6 +745,25 @@ namespace FixIt.DAL.Data.Migrations
                     b.Navigation("Issue");
                 });
 
+            modelBuilder.Entity("FixIt.DAL.Entities.IssueUpvote", b =>
+                {
+                    b.HasOne("FixIt.DAL.Entities.Citizen", "Citizen")
+                        .WithMany()
+                        .HasForeignKey("CitizenId")
+                        .OnDelete(DeleteBehavior.NoAction)
+                        .IsRequired();
+
+                    b.HasOne("FixIt.DAL.Entities.Issue", "Issue")
+                        .WithMany("Upvotes")
+                        .HasForeignKey("IssueId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Citizen");
+
+                    b.Navigation("Issue");
+                });
+
             modelBuilder.Entity("FixIt.DAL.Entities.LoginHistory", b =>
                 {
                     b.HasOne("FixIt.DAL.Entities.ApplicationUser", "User")
@@ -841,6 +897,8 @@ namespace FixIt.DAL.Data.Migrations
                     b.Navigation("Rating");
 
                     b.Navigation("StatusHistory");
+
+                    b.Navigation("Upvotes");
                 });
 
             modelBuilder.Entity("FixIt.DAL.Entities.Admin", b =>

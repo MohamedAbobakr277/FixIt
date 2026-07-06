@@ -126,6 +126,60 @@
 
         .submit-wrap { margin-top: 40px; display: flex; justify-content: flex-end; }
         .field-error { font-size: 13px; color: #ef4444; font-weight: 500; margin-top: 6px; display: block; }
+
+        /* ── Map Picker ── */
+        .map-picker-wrap {
+            border-radius: var(--radius-lg);
+            border: 1.5px solid var(--border);
+            overflow: hidden;
+            margin-top: 12px;
+            box-shadow: var(--card-shadow);
+        }
+        #locationSearchBox {
+            width: 100%;
+            padding: 12px 16px;
+            font-size: 14px;
+            border: none;
+            border-bottom: 1.5px solid var(--border);
+            background: var(--bg-surface);
+            color: var(--text-heading);
+            outline: none;
+            font-family: var(--font-body);
+        }
+        #locationSearchBox::placeholder { color: var(--text-muted); }
+        #issuePickerMap {
+            width: 100%;
+            height: 320px;
+        }
+        .map-coords-badge {
+            display: flex; align-items: center; gap: 8px;
+            padding: 10px 16px;
+            background: var(--bg-surface-2);
+            border-top: 1px solid var(--border);
+            font-size: 13px; color: var(--text-muted);
+        }
+        .map-coords-badge i { color: var(--primary); }
+        .map-coords-badge .coord-val { font-weight: 700; color: var(--text-heading); }
+        .map-gps-hint {
+            display: flex; align-items: center; gap: 8px;
+            margin-top: 10px; padding: 10px 14px;
+            background: rgba(0,188,212,0.06);
+            border: 1px solid rgba(0,188,212,0.15);
+            border-radius: var(--radius-md);
+            font-size: 13px; color: var(--text-muted);
+        }
+        .map-gps-hint i { color: var(--primary); }
+        .btn-gps {
+            margin-left: auto;
+            background: none;
+            border: 1.5px solid var(--primary);
+            color: var(--primary);
+            border-radius: var(--radius-md);
+            padding: 4px 12px;
+            font-size: 12px; font-weight: 700;
+            cursor: pointer; transition: var(--transition);
+        }
+        .btn-gps:hover { background: var(--primary); color: white; }
     </style>
 }
 
@@ -277,6 +331,27 @@
                         <label class="form-label-fixit" for="Location">Exact Location *</label>
                         <input asp-for="Location" class="form-control-fixit" id="Location" placeholder="Address or specific location markers" />
                         <span asp-validation-for="Location" class="field-error"></span>
+                        
+                        <!-- Map Picker -->
+                        <div class="map-gps-hint">
+                            <i class="bi bi-geo-alt-fill"></i>
+                            <span>Pin the exact location on the map for faster response</span>
+                            <button type="button" class="btn-gps" id="useMyLocationBtn" title="Use my current GPS location">
+                                <i class="bi bi-crosshair"></i> Use GPS
+                            </button>
+                        </div>
+                        <div class="map-picker-wrap" id="mapPickerWrap" style="margin-top: 12px;">
+                            <input id="locationSearchBox" type="text" placeholder="🔍  Search address on map..." />
+                            <div id="issuePickerMap"></div>
+                            <div class="map-coords-badge" id="coordsBadge" style="display:none">
+                                <i class="bi bi-pin-map-fill"></i>
+                                <span>Lat: <span class="coord-val" id="coordLat">—</span> &nbsp; Lng: <span class="coord-val" id="coordLng">—</span></span>
+                            </div>
+                        </div>
+                        
+                        <!-- Hidden GPS fields -->
+                        <input type="hidden" asp-for="Latitude" id="Latitude" />
+                        <input type="hidden" asp-for="Longitude" id="Longitude" />
                     </div>
 
                     <div class="col-md-6">
@@ -431,4 +506,155 @@
             btn.innerHTML = 'Submitting... <i class="bi bi-hourglass-split"></i>';
         });
     </script>
+
+    <!-- ── Leaflet.js + OpenStreetMap (free, no API key) ── -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script>
+    (function() {
+        const latInput    = document.getElementById('Latitude');
+        const lngInput    = document.getElementById('Longitude');
+        const locInput    = document.getElementById('Location');
+        const coordsBadge = document.getElementById('coordsBadge');
+        const coordLat    = document.getElementById('coordLat');
+        const coordLng    = document.getElementById('coordLng');
+        const searchBox   = document.getElementById('locationSearchBox');
+
+        // Default centre: Cairo
+        const DEFAULT_LAT = 30.0444, DEFAULT_LNG = 31.2357;
+
+        const map = L.map('issuePickerMap', { zoomControl: true }).setView([DEFAULT_LAT, DEFAULT_LNG], 12);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+            maxZoom: 19
+        }).addTo(map);
+
+        // Custom teal pin icon
+        const pinIcon = L.divIcon({
+            className: '',
+            html: '<div style="width:20px;height:20px;background:var(--primary,#00bcd4);border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>',
+            iconSize: [20, 20],
+            iconAnchor: [10, 20]
+        });
+
+        let marker = null;
+
+        function updatePin(lat, lng) {
+            if (marker) { marker.setLatLng([lat, lng]); }
+            else {
+                marker = L.marker([lat, lng], { icon: pinIcon, draggable: true }).addTo(map);
+                marker.on('dragend', function(e) {
+                    const p = e.target.getLatLng();
+                    setCoords(p.lat, p.lng);
+                    reverseGeocode(p.lat, p.lng);
+                });
+            }
+            setCoords(lat, lng);
+            coordsBadge.style.display = 'flex';
+        }
+
+        function setCoords(lat, lng) {
+            latInput.value    = lat.toFixed(7);
+            lngInput.value    = lng.toFixed(7);
+            coordLat.textContent = lat.toFixed(5);
+            coordLng.textContent = lng.toFixed(5);
+        }
+
+        // Nominatim reverse geocoding (free OSM service)
+        async function reverseGeocode(lat, lng) {
+            try {
+                const r = await fetch(
+                    `https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=${lat}&lon=${lng}`,
+                    { headers: { 'Accept-Language': 'en' } }
+                );
+                const data = await r.json();
+                if (data && data.display_name && !locInput.value) {
+                    locInput.value = data.display_name;
+                }
+            } catch {}
+        }
+
+        // Click on map → place pin
+        map.on('click', function(e) {
+            updatePin(e.latlng.lat, e.latlng.lng);
+            reverseGeocode(e.latlng.lat, e.latlng.lng);
+        });
+
+        // Search box → Nominatim forward geocoding
+        let searchTimer;
+        searchBox.addEventListener('input', function() {
+            clearTimeout(searchTimer);
+            const q = this.value.trim();
+            if (q.length < 3) return;
+            searchTimer = setTimeout(async () => {
+                try {
+                    const r = await fetch(
+                        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5`,
+                        { headers: { 'Accept-Language': 'en' } }
+                    );
+                    const results = await r.json();
+                    showSuggestions(results);
+                } catch {}
+            }, 400);
+        });
+
+        // Simple dropdown suggestions
+        let suggestBox = null;
+        function showSuggestions(results) {
+            removeSuggestions();
+            if (!results.length) return;
+            suggestBox = document.createElement('div');
+            suggestBox.style.cssText = 'position:absolute;z-index:9999;background:white;border:1.5px solid #e2e8f0;border-radius:10px;box-shadow:0 8px 24px rgba(0,0,0,0.12);max-height:220px;overflow-y:auto;width:100%;left:0;top:100%;margin-top:4px;';
+            results.forEach(r => {
+                const item = document.createElement('div');
+                item.style.cssText = 'padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid #f1f5f9;color:#374151;';
+                item.textContent = r.display_name;
+                item.onmouseenter = () => item.style.background = '#f0f9ff';
+                item.onmouseleave = () => item.style.background = '';
+                item.onclick = () => {
+                    const lat = parseFloat(r.lat), lng = parseFloat(r.lon);
+                    map.setView([lat, lng], 16);
+                    updatePin(lat, lng);
+                    locInput.value = r.display_name;
+                    searchBox.value = r.display_name;
+                    removeSuggestions();
+                };
+                suggestBox.appendChild(item);
+            });
+            // Position relative to the search box wrapper
+            const wrap = searchBox.parentElement;
+            wrap.style.position = 'relative';
+            wrap.appendChild(suggestBox);
+        }
+        function removeSuggestions() {
+            if (suggestBox) { suggestBox.remove(); suggestBox = null; }
+        }
+        document.addEventListener('click', e => { if (!searchBox.contains(e.target)) removeSuggestions(); });
+
+        // GPS button
+        document.getElementById('useMyLocationBtn').addEventListener('click', function() {
+            if (!navigator.geolocation) { alert('Geolocation not supported by your browser.'); return; }
+            this.innerHTML = '<i class="bi bi-hourglass-split"></i> Locating...';
+            const btn = this;
+            navigator.geolocation.getCurrentPosition(
+                function(pos) {
+                    const lat = pos.coords.latitude, lng = pos.coords.longitude;
+                    map.setView([lat, lng], 17);
+                    updatePin(lat, lng);
+                    reverseGeocode(lat, lng);
+                    btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Located!';
+                    setTimeout(() => { btn.innerHTML = '<i class="bi bi-crosshair"></i> Use GPS'; }, 2500);
+                },
+                function() {
+                    alert('Could not get your location. Please pin manually on the map.');
+                    btn.innerHTML = '<i class="bi bi-crosshair"></i> Use GPS';
+                },
+                { enableHighAccuracy: true, timeout: 8000 }
+            );
+        });
+    })();
+    </script>
 }
+
+
