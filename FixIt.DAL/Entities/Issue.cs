@@ -8,6 +8,8 @@ public class Issue
     public string Title { get; set; } = string.Empty;
     public string Description { get; set; } = string.Empty;
     public string Location { get; set; } = string.Empty;
+    public double? Latitude { get; set; }
+    public double? Longitude { get; set; }
     public string? ImageUrl { get; set; }
     public IssueStatus Status { get; set; } = IssueStatus.New;
     public IssueCategory Category { get; set; }
@@ -29,3 +31,4 @@ public class Issue
     public ICollection<IssueStatusHistory> StatusHistory { get; set; } = new List<IssueStatusHistory>();
     public ICollection<IssueComment> Comments { get; set; } = new List<IssueComment>();
 }
+

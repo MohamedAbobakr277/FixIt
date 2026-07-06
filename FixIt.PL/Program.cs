@@ -135,6 +135,7 @@ builder.Services.AddAuthorization(options =>
 var app = builder.Build();
 
 // ── Seed Roles ──
+// ── Seed Roles & Coordinates ──
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
@@ -143,6 +144,21 @@ using (var scope = app.Services.CreateScope())
     {
         if (!await roleManager.RoleExistsAsync(role))
             await roleManager.CreateAsync(new IdentityRole(role));
+    }
+
+    // Seed GPS coordinates for existing issues if they are empty
+    var context = scope.ServiceProvider.GetRequiredService<FixItDbContext>();
+    var issuesToUpdate = await context.Issues.Where(i => i.Latitude == null || i.Longitude == null).ToListAsync();
+    if (issuesToUpdate.Any())
+    {
+        var random = new Random();
+        foreach (var issue in issuesToUpdate)
+        {
+            // Randomly seed around Cairo area (e.g. 30.0444, 31.2357)
+            issue.Latitude = 30.0444 + (random.NextDouble() - 0.5) * 0.15;
+            issue.Longitude = 31.2357 + (random.NextDouble() - 0.5) * 0.15;
+        }
+        await context.SaveChangesAsync();
     }
 }
 
@@ -167,3 +183,4 @@ app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
 app.Run();
+

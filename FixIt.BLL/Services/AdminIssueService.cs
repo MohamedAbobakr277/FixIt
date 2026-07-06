@@ -74,6 +74,7 @@ public class AdminIssueService : IAdminIssueService
         }
 
         return dto;
+        return _mapper.Map<AdminIssueDetailsDto>(issue);
     }
 
     public async Task<bool> ChangeStatusAsync(int issueId, IssueStatus newStatus, string adminId, string? note = null)
@@ -127,3 +128,4 @@ public class AdminIssueService : IAdminIssueService
         return await _unitOfWork.CompleteAsync() > 0;
     }
 }
+

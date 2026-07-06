@@ -32,6 +32,7 @@
 }
 
 @section Styles {
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <style>
         .issue-hero {
             background: linear-gradient(145deg, var(--bg-surface) 0%, rgba(0, 188, 212, 0.03) 100%);
@@ -151,6 +152,17 @@
                     @if (!string.IsNullOrEmpty(Model.ImageUrl))
                     {
                         <img class="issue-image mb-5" src="@Model.ImageUrl" alt="Issue Image" />
+                    }
+
+                    @if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+                    {
+                        <div class="mb-5">
+                            <div class="section-header-line">
+                                <i class="bi bi-geo-alt-fill"></i>
+                                <h3>Mapped Location</h3>
+                            </div>
+                            <div id="detailsMap" style="height: 320px; border-radius: var(--radius-lg); border: 1.5px solid var(--border); box-shadow: var(--card-shadow); z-index: 1;"></div>
+                        </div>
                     }
 
                     @if (Model.Schedule != null)
@@ -475,3 +487,32 @@
         </div>
     </div>
 </div>
+
+@if (Model.Latitude.HasValue && Model.Longitude.HasValue)
+{
+    @section Scripts {
+        <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+        <script>
+            (function() {
+                const lat = @Model.Latitude.Value.ToString("F7", System.Globalization.CultureInfo.InvariantCulture);
+                const lng = @Model.Longitude.Value.ToString("F7", System.Globalization.CultureInfo.InvariantCulture);
+                const map = L.map('detailsMap', { zoomControl: true }).setView([lat, lng], 15);
+                L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+                    maxZoom: 19
+                }).addTo(map);
+
+                const pinIcon = L.divIcon({
+                    className: '',
+                    html: '<div style="width:20px;height:20px;background:var(--primary,#00bcd4);border:3px solid white;border-radius:50% 50% 50% 0;transform:rotate(-45deg);box-shadow:0 2px 8px rgba(0,0,0,0.3)"></div>',
+                    iconSize: [20, 20],
+                    iconAnchor: [10, 20]
+                });
+
+                L.marker([lat, lng], { icon: pinIcon }).addTo(map)
+                    .bindPopup("<strong>Pinned Location</strong><br/>" + @Json.Serialize(Model.Location));
+            })();
+        </script>
+    }
+}
+
