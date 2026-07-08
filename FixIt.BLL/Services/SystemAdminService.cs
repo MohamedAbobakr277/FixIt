@@ -51,7 +51,7 @@ public class SystemAdminService : ISystemAdminService
         };
     }
 
-    public async Task<IEnumerable<UserManagementDto>> GetAllUsersAsync()
+    public async Task<IEnumerable<UserManagementDto>> GetAllUsersAsync(string searchTerm = null, string roleFilter = null)
     {
         // Use LINQ join to avoid N+1 query problem from calling GetRolesAsync in a loop
         var usersWithRoles = await (from user in _context.Users
@@ -67,7 +67,22 @@ public class SystemAdminService : ISystemAdminService
                                         CreatedAt = user.CreatedAt
                                     }).ToListAsync();
 
-        return usersWithRoles.OrderByDescending(u => u.CreatedAt);
+        var query = usersWithRoles.AsQueryable();
+
+        if (!string.IsNullOrWhiteSpace(searchTerm))
+        {
+            searchTerm = searchTerm.ToLower();
+            query = query.Where(u => 
+                (u.FullName != null && u.FullName.ToLower().Contains(searchTerm)) || 
+                (u.Email != null && u.Email.ToLower().Contains(searchTerm)));
+        }
+
+        if (!string.IsNullOrWhiteSpace(roleFilter))
+        {
+            query = query.Where(u => u.Role == roleFilter);
+        }
+
+        return query.OrderByDescending(u => u.CreatedAt).ToList();
     }
 
     public async Task<bool> ToggleUserLockStatusAsync(string userId)
@@ -106,5 +121,22 @@ public class SystemAdminService : ISystemAdminService
         // Add new role
         var addResult = await _userManager.AddToRoleAsync(user, newRole);
         return addResult.Succeeded;
+    }
+
+    public async Task<IEnumerable<SystemLogDto>> GetSystemLogsAsync(int count = 100)
+    {
+        return await _context.LoginHistories
+            .Include(l => l.User)
+            .OrderByDescending(l => l.Timestamp)
+            .Take(count)
+            .Select(l => new SystemLogDto
+            {
+                UserEmail = l.User != null ? l.User.Email : "Unknown",
+                FullName = l.User != null ? l.User.FullName : "Unknown",
+                IpAddress = l.IpAddress,
+                IsSuccess = true,
+                LoginTime = l.Timestamp,
+                Device = l.Device
+            }).ToListAsync();
     }
 }

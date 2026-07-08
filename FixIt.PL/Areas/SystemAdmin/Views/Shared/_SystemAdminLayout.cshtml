@@ -53,20 +53,14 @@
         </div>
             
         <nav class="adm-nav-horizontal">
-            <a class="@NavClass("Admin","Dashboard")" asp-controller="Admin" asp-action="Dashboard">
-                <span class="adm-nav-label">Overview</span>
+            <a class="@NavClass("SystemAdmin","Dashboard")" asp-area="SystemAdmin" asp-controller="SystemAdmin" asp-action="Dashboard">
+                <span class="adm-nav-label">System Overview</span>
             </a>
-            <a class="@NavClass("Issue")" asp-controller="Issue" asp-action="AdminIndex">
-                <span class="adm-nav-label">Issues</span>
+            <a class="@NavClass("SystemAdmin","Users")" asp-area="SystemAdmin" asp-controller="SystemAdmin" asp-action="Users">
+                <span class="adm-nav-label">Manage Users</span>
             </a>
-            <a class="@NavClass("Admin", "Schedule")" asp-controller="Admin" asp-action="Schedule">
-                <span class="adm-nav-label">Schedule</span>
-            </a>
-            <a class="@NavClass("Admin", "Reports")" asp-controller="Admin" asp-action="Reports">
-                <span class="adm-nav-label">Reports</span>
-            </a>
-            <a class="@NavClass("Admin", "Ratings")" asp-controller="Admin" asp-action="Ratings">
-                <span class="adm-nav-label">Ratings</span>
+            <a class="@NavClass("SystemAdmin","SystemLogs")" asp-area="SystemAdmin" asp-controller="SystemAdmin" asp-action="SystemLogs">
+                <span class="adm-nav-label">Audit Logs</span>
             </a>
         </nav>
         <div class="adm-topbar-right">

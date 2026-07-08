@@ -1,0 +1,175 @@
+@model IEnumerable<FixIt.BLL.DTOs.UserManagementDto>
+@{
+    ViewData["Title"] = "Manage Users";
+}
+
+<div class="adm-welcome-header">
+    <h1 class="adm-greeting">
+        User <span class="adm-username">Management</span>
+    </h1>
+    <p class="adm-subtitle" style="margin-top: 8px; color: var(--adm-text-light);">Manage roles, access, and permissions for all users.</p>
+</div>
+
+@if (TempData["ErrorMessage"] != null)
+{
+    <div style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.2); color: #ef4444; padding: 12px 16px; border-radius: 12px; margin-bottom: 24px;">
+        ⚠️ @TempData["ErrorMessage"]
+    </div>
+}
+
+@if (TempData["SuccessMessage"] != null)
+{
+    <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); color: #10b981; padding: 12px 16px; border-radius: 12px; margin-bottom: 24px;">
+        ✅ @TempData["SuccessMessage"]
+    </div>
+}
+
+<!-- Search and Filter Bar -->
+<div class="adm-card" style="margin-bottom: 24px;">
+    <div class="adm-card-body" style="padding: 16px 24px;">
+        <form method="get" asp-action="Users" class="d-flex align-items-center" style="gap: 16px;">
+            <div style="flex-grow: 1;">
+                <input type="text" name="searchTerm" value="@ViewData["CurrentSearch"]" placeholder="Search by name or email..." class="form-control" style="background: var(--adm-bg); border: 1px solid var(--adm-border); color: var(--adm-text); border-radius: 8px; padding: 10px 16px;" />
+            </div>
+            <div>
+                <select name="roleFilter" class="form-select" style="background: var(--adm-bg); border: 1px solid var(--adm-border); color: var(--adm-text); border-radius: 8px; padding: 10px 16px; min-width: 150px;">
+                    <option value="">All Roles</option>
+                    @if ((string)ViewData["CurrentRole"] == "Citizen") { <option value="Citizen" selected>Citizen</option> } else { <option value="Citizen">Citizen</option> }
+                    @if ((string)ViewData["CurrentRole"] == "Admin") { <option value="Admin" selected>Admin</option> } else { <option value="Admin">Admin</option> }
+                    @if ((string)ViewData["CurrentRole"] == "SystemAdmin") { <option value="SystemAdmin" selected>System Admin</option> } else { <option value="SystemAdmin">System Admin</option> }
+                </select>
+            </div>
+            <button type="submit" style="background: var(--adm-primary); color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; cursor: pointer;">
+                Search
+            </button>
+            <a asp-action="Users" style="background: var(--adm-bg); color: var(--adm-text); border: 1px solid var(--adm-border); padding: 10px 24px; border-radius: 8px; font-weight: 600; text-decoration: none;">
+                Clear
+            </a>
+            <a asp-action="ExportUsers" style="background: #10b981; color: white; border: none; padding: 10px 24px; border-radius: 8px; font-weight: 600; text-decoration: none; margin-left: auto;">
+                📥 Export CSV
+            </a>
+        </form>
+    </div>
+</div>
+
+<div class="adm-card">
+    <div class="adm-card-header">
+        <div class="adm-card-title">
+            <span class="adm-card-icon">👥</span> Registered Users
+        </div>
+    </div>
+    
+    @if (!Model.Any())
+    {
+        <div style="padding: 60px; text-align: center; color: var(--adm-muted);">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🔍</div>
+            <p>No users found matching your criteria.</p>
+        </div>
+    }
+    else
+    {
+        <table class="adm-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Status</th>
+                    <th>Joined</th>
+                    <th style="text-align: right;">Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="adm-citizen-avatar" style="margin-right: 12px; width: 36px; height: 36px; font-size: 14px;">
+                                    @(string.IsNullOrEmpty(user.FullName) ? "U" : user.FullName[0].ToString().ToUpper())
+                                </div>
+                                <div>
+                                    <div class="adm-issue-title" style="margin-bottom: 2px;">@user.FullName</div>
+                                    <div style="font-size: 11px; color: var(--adm-muted);">ID: @user.Id.Substring(0, 8)...</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="color: var(--adm-text-light);">@user.Email</td>
+                        <td>
+                            @if (user.Role == "SystemAdmin")
+                            {
+                                <span class="adm-badge adm-badge-rejected">System Admin</span>
+                            }
+                            else if (user.Role == "Admin")
+                            {
+                                <span class="adm-badge adm-badge-inprogress">Admin</span>
+                            }
+                            else
+                            {
+                                <span class="adm-badge adm-badge-approved">Citizen</span>
+                            }
+                        </td>
+                        <td>
+                            @if (user.IsLockedOut)
+                            {
+                                <span class="adm-badge adm-badge-closed">🔒 Locked</span>
+                            }
+                            else
+                            {
+                                <span class="adm-badge adm-badge-new">✅ Active</span>
+                            }
+                        </td>
+                        <td style="color: var(--adm-text-light); font-size: 13px;">
+                            @user.CreatedAt.ToString("MMM dd, yyyy")
+                        </td>
+                        <td style="text-align: right;">
+                            <div class="dropdown">
+                                <button class="adm-action-btn dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false" style="background: var(--adm-bg); border: 1px solid var(--adm-border); color: var(--adm-text); padding: 6px 12px; border-radius: 6px; font-size: 13px;">
+                                    Manage
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-sm adm-dropdown" style="border-radius: 12px; padding: 8px 0; border: 1px solid var(--adm-border); min-width: 200px;">
+                                    <li><h6 class="dropdown-header text-uppercase" style="font-size: 11px; color: var(--adm-muted); letter-spacing: 0.5px;">Change Role</h6></li>
+                                    
+                                    <form asp-action="ChangeRole" method="post" class="d-inline">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <input type="hidden" name="newRole" value="Citizen" />
+                                        <li><button type="submit" class="dropdown-item py-2" style="font-size: 13px; @(user.Role == "Citizen" ? "opacity: 0.5;" : "")" @(user.Role == "Citizen" ? "disabled" : "")>👤 Make Citizen</button></li>
+                                    </form>
+                                    
+                                    <form asp-action="ChangeRole" method="post" class="d-inline">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <input type="hidden" name="newRole" value="Admin" />
+                                        <li><button type="submit" class="dropdown-item py-2" style="font-size: 13px; @(user.Role == "Admin" ? "opacity: 0.5;" : "")" @(user.Role == "Admin" ? "disabled" : "")>🛡️ Make Admin</button></li>
+                                    </form>
+
+                                    <form asp-action="ChangeRole" method="post" class="d-inline">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <input type="hidden" name="newRole" value="SystemAdmin" />
+                                        <li><button type="submit" class="dropdown-item py-2" style="font-size: 13px; @(user.Role == "SystemAdmin" ? "opacity: 0.5;" : "")" @(user.Role == "SystemAdmin" ? "disabled" : "")>💻 Make System Admin</button></li>
+                                    </form>
+                                    
+                                    <li><hr class="dropdown-divider" style="border-color: var(--adm-border);"></li>
+                                    <li><h6 class="dropdown-header text-uppercase" style="font-size: 11px; color: var(--adm-muted); letter-spacing: 0.5px;">Access Control</h6></li>
+                                    
+                                    <form asp-action="ToggleLock" method="post">
+                                        <input type="hidden" name="userId" value="@user.Id" />
+                                        <li>
+                                            @if (user.IsLockedOut)
+                                            {
+                                                <button type="submit" class="dropdown-item py-2 text-success" style="font-size: 13px; font-weight: 500;">🔓 Unlock Account</button>
+                                            }
+                                            else
+                                            {
+                                                <button type="submit" class="dropdown-item py-2 text-danger" style="font-size: 13px; font-weight: 500;">🔒 Lock Account</button>
+                                            }
+                                        </li>
+                                    </form>
+                                </ul>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

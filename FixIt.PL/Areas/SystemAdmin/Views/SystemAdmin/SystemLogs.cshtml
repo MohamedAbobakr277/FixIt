@@ -1,0 +1,75 @@
+@model IEnumerable<FixIt.BLL.DTOs.SystemLogDto>
+@{
+    ViewData["Title"] = "System Audit Logs";
+}
+
+<div class="adm-welcome-header">
+    <h1 class="adm-greeting">
+        System <span class="adm-username">Audit Logs</span>
+    </h1>
+    <p class="adm-subtitle" style="margin-top: 8px; color: var(--adm-text-light);">Monitor platform-wide authentication events and access history.</p>
+</div>
+
+<div class="adm-card">
+    <div class="adm-card-header">
+        <div class="adm-card-title">
+            <span class="adm-card-icon">🛡️</span> Global Login History (Last 100 Events)
+        </div>
+    </div>
+    
+    @if (!Model.Any())
+    {
+        <div style="padding: 60px; text-align: center; color: var(--adm-muted);">
+            <div style="font-size: 3rem; margin-bottom: 16px;">🔍</div>
+            <p>No audit logs available.</p>
+        </div>
+    }
+    else
+    {
+        <table class="adm-table">
+            <thead>
+                <tr>
+                    <th>User</th>
+                    <th>Email</th>
+                    <th>IP Address</th>
+                    <th>Device</th>
+                    <th>Status</th>
+                    <th style="text-align: right;">Timestamp</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var log in Model)
+                {
+                    <tr>
+                        <td>
+                            <div class="d-flex align-items-center">
+                                <div class="adm-citizen-avatar" style="margin-right: 12px; width: 36px; height: 36px; font-size: 14px;">
+                                    @(string.IsNullOrEmpty(log.FullName) || log.FullName == "Unknown" ? "?" : log.FullName[0].ToString().ToUpper())
+                                </div>
+                                <div>
+                                    <div class="adm-issue-title" style="margin-bottom: 2px;">@log.FullName</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td style="color: var(--adm-text-light);">@log.UserEmail</td>
+                        <td style="font-family: monospace; color: var(--adm-text-light);">@log.IpAddress</td>
+                        <td style="color: var(--adm-text-light); font-size: 13px;">@(string.IsNullOrEmpty(log.Device) ? "Unknown Device" : log.Device)</td>
+                        <td>
+                            @if (log.IsSuccess)
+                            {
+                                <span class="adm-badge adm-badge-new">✅ Success</span>
+                            }
+                            else
+                            {
+                                <span class="adm-badge adm-badge-closed">❌ Failed</span>
+                            }
+                        </td>
+                        <td style="text-align: right; color: var(--adm-text-light); font-size: 13px;">
+                            @log.LoginTime.ToString("MMM dd, HH:mm:ss")
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    }
+</div>

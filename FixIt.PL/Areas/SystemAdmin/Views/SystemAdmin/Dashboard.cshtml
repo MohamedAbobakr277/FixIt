@@ -1,0 +1,121 @@
+@model FixIt.BLL.DTOs.SystemDashboardStatsDto
+@using Microsoft.AspNetCore.Identity
+@using FixIt.DAL.Entities
+@inject UserManager<ApplicationUser> UserManager
+@{
+    ViewData["Title"] = "System Dashboard";
+
+    var currentUser = await UserManager.GetUserAsync(User);
+    var displayName = currentUser?.FullName ?? User.Identity?.Name?.Split('@')[0] ?? "System Admin";
+}
+
+<div class="adm-welcome-header">
+    <h1 class="adm-greeting">
+        Good morning, <span class="adm-username">@displayName!</span>
+    </h1>
+</div>
+
+<div class="adm-dashboard-layout" style="display: flex; flex-direction: column; gap: 24px;">
+
+    <!-- ── STAT CARDS ── -->
+    <div class="adm-stats-grid">
+        <div class="adm-stat-card">
+            <div class="adm-stat-label">Total Users</div>
+            <div class="adm-stat-value">@Model.TotalUsers</div>
+            <div class="adm-stat-trend">
+                <span class="adm-trend-pill up">↑ Active</span>
+                <span class="adm-trend-text">Platform wide</span>
+            </div>
+        </div>
+        <div class="adm-stat-card">
+            <div class="adm-stat-label">Citizens</div>
+            <div class="adm-stat-value">@Model.TotalCitizens</div>
+            <div class="adm-stat-trend">
+                <span class="adm-trend-pill up">👤 User</span>
+                <span class="adm-trend-text">Standard accounts</span>
+            </div>
+        </div>
+        <div class="adm-stat-card">
+            <div class="adm-stat-label">Admins</div>
+            <div class="adm-stat-value">@Model.TotalAdmins</div>
+            <div class="adm-stat-trend">
+                <span class="adm-trend-pill down">🛡️ Staff</span>
+                <span class="adm-trend-text">Elevated access</span>
+            </div>
+        </div>
+        <div class="adm-stat-card">
+            <div class="adm-stat-label">Total Issues</div>
+            <div class="adm-stat-value">@Model.TotalIssues</div>
+            <div class="adm-stat-trend">
+                <span class="adm-trend-pill up">↑ Active</span>
+                <span class="adm-trend-text">All time reports</span>
+            </div>
+        </div>
+        <div class="adm-stat-card">
+            <div class="adm-stat-label">Resolved Issues</div>
+            <div class="adm-stat-value text-success">@Model.ResolvedIssues</div>
+            <div class="adm-stat-trend">
+                <span class="adm-trend-pill up text-success">✅ Fixed</span>
+                <span class="adm-trend-text">Resolution</span>
+            </div>
+        </div>
+    </div>
+
+    <!-- ── DASHBOARD WIDGETS ── -->
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        
+        <!-- Status Breakdown -->
+        <div class="adm-card" style="animation-delay: 0.1s;">
+            <div class="adm-card-header">
+                <div class="adm-card-title">
+                    <span class="adm-card-icon">👥</span> Role Distribution
+                </div>
+            </div>
+            <div class="adm-status-list">
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-approved"></span>
+                    <span class="adm-status-name">Citizens</span>
+                    <span class="adm-status-count">@Model.TotalCitizens</span>
+                </div>
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-inprogress"></span>
+                    <span class="adm-status-name">Admins</span>
+                    <span class="adm-status-count">@Model.TotalAdmins</span>
+                </div>
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-rejected"></span>
+                    <span class="adm-status-name">System Admins</span>
+                    <span class="adm-status-count">@Model.TotalSystemAdmins</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Issue Overview -->
+        <div class="adm-card" style="animation-delay: 0.2s;">
+            <div class="adm-card-header">
+                <div class="adm-card-title">
+                    <span class="adm-card-icon">📌</span> Platform Health
+                </div>
+            </div>
+            <div class="adm-status-list">
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-new"></span>
+                    <span class="adm-status-name">Active Issues (Pending)</span>
+                    <span class="adm-status-count">@Model.ActiveIssues</span>
+                </div>
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-resolved"></span>
+                    <span class="adm-status-name">Resolved Issues</span>
+                    <span class="adm-status-count">@Model.ResolvedIssues</span>
+                </div>
+                <div class="adm-status-row">
+                    <span class="adm-status-dot adm-dot-closed"></span>
+                    <span class="adm-status-name">Total Platform Issues</span>
+                    <span class="adm-status-count">@Model.TotalIssues</span>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+</div>

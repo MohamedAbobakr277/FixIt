@@ -4,8 +4,10 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 
-namespace FixIt.PL.Controllers;
+namespace FixIt.PL.Areas.SystemAdmin.Controllers;
 
+[Area("SystemAdmin")]
+[Route("SystemAdmin/[action]")]
 [Authorize(Roles = AppConstants.SystemAdminRole)]
 public class SystemAdminController : Controller
 {
@@ -24,9 +26,12 @@ public class SystemAdminController : Controller
     }
 
     [HttpGet]
-    public async Task<IActionResult> Users()
+    public async Task<IActionResult> Users(string searchTerm, string roleFilter)
     {
-        var users = await _systemAdminService.GetAllUsersAsync();
+        ViewData["CurrentSearch"] = searchTerm;
+        ViewData["CurrentRole"] = roleFilter;
+        
+        var users = await _systemAdminService.GetAllUsersAsync(searchTerm, roleFilter);
         return View(users);
     }
 
@@ -74,5 +79,26 @@ public class SystemAdminController : Controller
         }
 
         return RedirectToAction(nameof(Users));
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> ExportUsers()
+    {
+        var users = await _systemAdminService.GetAllUsersAsync();
+        var builder = new System.Text.StringBuilder();
+        builder.AppendLine("ID,FullName,Email,Role,Status,JoinedDate");
+        foreach (var u in users)
+        {
+            var status = u.IsLockedOut ? "Locked" : "Active";
+            builder.AppendLine($"{u.Id},{u.FullName},{u.Email},{u.Role},{status},{u.CreatedAt:yyyy-MM-dd}");
+        }
+        return File(System.Text.Encoding.UTF8.GetBytes(builder.ToString()), "text/csv", $"FixIt_Users_{DateTime.Now:yyyyMMdd}.csv");
+    }
+
+    [HttpGet]
+    public async Task<IActionResult> SystemLogs()
+    {
+        var logs = await _systemAdminService.GetSystemLogsAsync();
+        return View(logs);
     }
 }

@@ -20,3 +20,13 @@ public class UserManagementDto
     public bool IsLockedOut { get; set; }
     public DateTime CreatedAt { get; set; }
 }
+
+public class SystemLogDto
+{
+    public string UserEmail { get; set; } = string.Empty;
+    public string FullName { get; set; } = string.Empty;
+    public string IpAddress { get; set; } = string.Empty;
+    public bool IsSuccess { get; set; }
+    public DateTime LoginTime { get; set; }
+    public string Device { get; set; } = string.Empty;
+}
