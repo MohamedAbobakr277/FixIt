@@ -11,6 +11,7 @@ using FixIt.DAL.UnitOfWork;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using Stripe;
 using Stripe.Checkout;
 
@@ -22,17 +23,20 @@ public class StripePaymentService : IPaymentService
     private readonly IMapper _mapper;
     private readonly IConfiguration _configuration;
     private readonly IHttpContextAccessor _httpContextAccessor;
+    private readonly ILogger<StripePaymentService> _logger;
 
     public StripePaymentService(
         IUnitOfWork unitOfWork,
         IMapper mapper,
         IConfiguration configuration,
-        IHttpContextAccessor httpContextAccessor)
+        IHttpContextAccessor httpContextAccessor,
+        ILogger<StripePaymentService> logger)
     {
         _unitOfWork = unitOfWork;
         _mapper = mapper;
         _configuration = configuration;
         _httpContextAccessor = httpContextAccessor;
+        _logger = logger;
     }
 
     public async Task<string> CreateCheckoutSessionAsync(int issueId, string citizenId)
@@ -209,14 +213,14 @@ public class StripePaymentService : IPaymentService
                 }
             }
 
+            // Valid event but not one we handle — return false so controller returns 200
             return false;
         }
         catch (StripeException ex)
         {
             // Webhook signature verification failed or Stripe API error
-            // In a real application, you would log this error
-            Console.WriteLine($"Stripe webhook validation failed: {ex.Message}");
-            return false;
+            _logger.LogWarning(ex, "Stripe webhook validation failed: {Message}", ex.Message);
+            throw; // Re-throw so the controller can return 400 for bad signatures
         }
     }
 

@@ -11,6 +11,7 @@ using FixIt.Common.Enums;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
+using Stripe;
 
 namespace FixIt.PL.Controllers;
 
@@ -18,13 +19,16 @@ public class PaymentController : Controller
 {
     private readonly IPaymentService _paymentService;
     private readonly UserManager<ApplicationUser> _userManager;
+    private readonly IWebHostEnvironment _env;
 
     public PaymentController(
         IPaymentService paymentService,
-        UserManager<ApplicationUser> userManager)
+        UserManager<ApplicationUser> userManager,
+        IWebHostEnvironment env)
     {
         _paymentService = paymentService;
         _userManager = userManager;
+        _env = env;
     }
 
     // GET /Payment/Checkout/{issueId}
@@ -110,20 +114,22 @@ public class PaymentController : Controller
             return BadRequest("Missing Stripe-Signature header.");
         }
 
-        var processed = await _paymentService.HandleWebhookAsync(json, signatureHeader.ToString());
-        if (processed)
+        try
         {
+            var processed = await _paymentService.HandleWebhookAsync(json, signatureHeader.ToString());
+            // Return 200 for both handled and unhandled-but-valid events.
+            // Stripe retries on non-2xx, so we must acknowledge valid webhooks.
             return Ok();
         }
-
-        // Return 200/Ok or 400 depending on signature validation. 
-        // If validation failed or signature invalid, it returns false inside. 
-        // But Stripe recommends returning 400 for bad signatures so they can troubleshoot.
-        return BadRequest("Webhook event not processed or signature invalid.");
+        catch (StripeException)
+        {
+            // Signature validation failed — return 400 so Stripe can troubleshoot
+            return BadRequest("Webhook signature validation failed.");
+        }
     }
 
-    // GET /Payment/SetupTest
-    [AllowAnonymous]
+    // GET /Payment/SetupTest — Development only, requires Admin role
+    [Authorize(Roles = AppConstants.AdminRole)]
     [HttpGet]
     public async Task<IActionResult> SetupTest()
     {

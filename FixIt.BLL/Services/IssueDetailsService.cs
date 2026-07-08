@@ -49,7 +49,6 @@ public class IssueDetailsService : IIssueDetailsService
         }
 
         return dto;
-        return _mapper.Map<IssueDetailsDto>(issue);
     }
 
     public async Task<IssueCommentDto> AddCommentAsync(int issueId, string userId, string text)
