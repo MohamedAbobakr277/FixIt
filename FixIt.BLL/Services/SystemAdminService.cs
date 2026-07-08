@@ -30,22 +30,10 @@ public class SystemAdminService : ISystemAdminService
 
     public async Task<SystemDashboardStatsDto> GetSystemDashboardStatsAsync()
     {
-        var users = await _userManager.Users.ToListAsync();
-        
-        int totalCitizens = 0;
-        int totalAdmins = 0;
-        int totalSystemAdmins = 0;
-
-        foreach (var user in users)
-        {
-            var roles = await _userManager.GetRolesAsync(user);
-            if (roles.Contains(AppConstants.SystemAdminRole))
-                totalSystemAdmins++;
-            else if (roles.Contains(AppConstants.AdminRole))
-                totalAdmins++;
-            else if (roles.Contains(AppConstants.CitizenRole))
-                totalCitizens++;
-        }
+        var totalSystemAdmins = (await _userManager.GetUsersInRoleAsync(AppConstants.SystemAdminRole)).Count;
+        var totalAdmins = (await _userManager.GetUsersInRoleAsync(AppConstants.AdminRole)).Count;
+        var totalCitizens = (await _userManager.GetUsersInRoleAsync(AppConstants.CitizenRole)).Count;
+        var totalUsers = await _userManager.Users.CountAsync();
 
         var totalIssues = await _context.Issues.CountAsync();
         var activeIssues = await _context.Issues.CountAsync(i => i.Status != FixIt.Common.Enums.IssueStatus.Resolved && i.Status != FixIt.Common.Enums.IssueStatus.Rejected);
@@ -53,7 +41,7 @@ public class SystemAdminService : ISystemAdminService
 
         return new SystemDashboardStatsDto
         {
-            TotalUsers = users.Count,
+            TotalUsers = totalUsers,
             TotalCitizens = totalCitizens,
             TotalAdmins = totalAdmins,
             TotalSystemAdmins = totalSystemAdmins,
@@ -65,26 +53,21 @@ public class SystemAdminService : ISystemAdminService
 
     public async Task<IEnumerable<UserManagementDto>> GetAllUsersAsync()
     {
-        var users = await _userManager.Users.ToListAsync();
-        var userDtos = new List<UserManagementDto>();
+        // Use LINQ join to avoid N+1 query problem from calling GetRolesAsync in a loop
+        var usersWithRoles = await (from user in _context.Users
+                                    let roleId = _context.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).FirstOrDefault()
+                                    let roleName = _context.Roles.Where(r => r.Id == roleId).Select(r => r.Name).FirstOrDefault()
+                                    select new UserManagementDto
+                                    {
+                                        Id = user.Id,
+                                        Email = user.Email ?? "No Email",
+                                        FullName = user.FullName,
+                                        Role = roleName ?? "No Role",
+                                        IsLockedOut = user.LockoutEnd.HasValue && user.LockoutEnd > DateTimeOffset.UtcNow,
+                                        CreatedAt = user.CreatedAt
+                                    }).ToListAsync();
 
-        foreach (var user in users)
-        {
-            var roles = await _userManager.GetRolesAsync(user);
-            var mainRole = roles.FirstOrDefault() ?? "No Role";
-            
-            userDtos.Add(new UserManagementDto
-            {
-                Id = user.Id,
-                Email = user.Email ?? "No Email",
-                FullName = user.FullName,
-                Role = mainRole,
-                IsLockedOut = user.LockoutEnd.HasValue && user.LockoutEnd.Value > DateTimeOffset.UtcNow,
-                CreatedAt = user.CreatedAt
-            });
-        }
-
-        return userDtos.OrderByDescending(u => u.CreatedAt);
+        return usersWithRoles.OrderByDescending(u => u.CreatedAt);
     }
 
     public async Task<bool> ToggleUserLockStatusAsync(string userId)
