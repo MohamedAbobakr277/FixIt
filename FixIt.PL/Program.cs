@@ -112,6 +112,7 @@ builder.Services.AddScoped<IEmailSenderService, SmtpEmailSenderService>();
 builder.Services.AddScoped<INotificationService, MockNotificationService>();
 builder.Services.AddScoped<IPaymentService, StripePaymentService>();
 builder.Services.AddHttpClient<IAiClassificationService, GeminiClassificationService>();
+builder.Services.AddScoped<ISystemAdminService, SystemAdminService>();
 
 // ── FluentValidation ──
 // One registration covers all validators in the same assembly
@@ -139,7 +140,7 @@ var app = builder.Build();
 using (var scope = app.Services.CreateScope())
 {
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
-    string[] roles = { AppConstants.CitizenRole, AppConstants.AdminRole };
+    string[] roles = { AppConstants.CitizenRole, AppConstants.AdminRole, AppConstants.SystemAdminRole };
     foreach (var role in roles)
     {
         if (!await roleManager.RoleExistsAsync(role))

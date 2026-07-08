@@ -16,4 +16,5 @@ public static class AppConstants
     // Roles
     public const string CitizenRole = "Citizen";
     public const string AdminRole = "Admin";
+    public const string SystemAdminRole = "SystemAdmin";
 }
