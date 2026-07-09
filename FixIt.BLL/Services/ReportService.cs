@@ -111,7 +111,7 @@ public class ReportService : IReportService
         {
             string notifTitle = $"Issue Resolved: {issue.Title}";
             string notifMsg = $"Maintenance is complete! Please log in to view the report and rate the service.";
-            await _notificationService.SendNotificationAsync(issue.CitizenId, NotificationType.Push, notifTitle, notifMsg);
+            await _notificationService.SendNotificationAsync(issue.CitizenId, NotificationType.Push, notifTitle, notifMsg, $"/Issue/Details/{issue.IssueId}");
         }
 
         return true;

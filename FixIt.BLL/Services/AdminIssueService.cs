@@ -109,7 +109,7 @@ public class AdminIssueService : IAdminIssueService
             else if (newStatus == IssueStatus.Scheduled)
                 notifMsg = "Maintenance has been scheduled for your issue.";
                 
-            await _notificationService.SendNotificationAsync(issue.CitizenId, NotificationType.SMS, notifTitle, notifMsg);
+            await _notificationService.SendNotificationAsync(issue.CitizenId, NotificationType.SMS, notifTitle, notifMsg, $"/Issue/Details/{issueId}");
         }
 
         return success;

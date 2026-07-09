@@ -48,6 +48,18 @@ public class RatingService : IRatingService
         if (issue != null)
         {
             issue.Status = IssueStatus.Closed;
+            issue.UpdatedAt = DateTime.UtcNow;
+            
+            var history = new IssueStatusHistory
+            {
+                IssueId = dto.IssueId,
+                Status = IssueStatus.Closed,
+                ChangedAt = DateTime.UtcNow,
+                ChangedById = citizenId,
+                Note = "Issue closed by citizen feedback."
+            };
+            
+            await _unitOfWork.StatusHistories.AddAsync(history);
             _unitOfWork.Issues.Update(issue);
         }
 
@@ -85,13 +97,20 @@ public class RatingService : IRatingService
             return (false, "Only resolved issues can be rated.");
         }
 
-        // Check if rating already exists (redundant if status is Closed, but safe)
         var existingRating = await _unitOfWork.Ratings.GetAll()
                                       .FirstOrDefaultAsync(r => r.IssueId == issueId);
                                       
         if (existingRating != null)
         {
             return (false, "This issue has already been rated.");
+        }
+
+        var payment = await _unitOfWork.Payments.GetAll()
+                                      .FirstOrDefaultAsync(p => p.IssueId == issueId);
+
+        if (payment == null || payment.Status != PaymentStatus.Completed)
+        {
+            return (false, "You must complete the resolution payment before rating this issue.");
         }
 
         return (true, null);

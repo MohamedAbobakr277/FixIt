@@ -168,7 +168,7 @@ public class IssueController : Controller
             await _issueDetailsService.AddCommentAsync(dto.IssueId, userId, dto.Text);
             TempData["SuccessMessage"] = "Comment added successfully.";
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             TempData["ErrorMessage"] = "Failed to add comment.";
         }

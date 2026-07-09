@@ -452,7 +452,7 @@ public class AccountController : Controller
                 { 
                     UserName = email, 
                     Email = email, 
-                    FullName = fullName,
+                    FullName = fullName ?? "Unknown",
                     CreatedAt = DateTime.UtcNow 
                 };
                 var createResult = await _userManager.CreateAsync(user);

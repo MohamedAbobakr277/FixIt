@@ -123,7 +123,7 @@ public class ScheduleService : IScheduleService
         {
             string notifTitle = $"Maintenance Scheduled: {issue.Title}";
             string notifMsg = $"Worker {dto.WorkerName} is scheduled to visit on {dto.VisitDate:MMMM dd, yyyy h:mm tt}.";
-            await _notificationService.SendNotificationAsync(issue.CitizenId, NotificationType.WhatsApp, notifTitle, notifMsg);
+            await _notificationService.SendNotificationAsync(issue.CitizenId, NotificationType.WhatsApp, notifTitle, notifMsg, $"/Issue/Details/{issue.IssueId}");
         }
 
         return true;
