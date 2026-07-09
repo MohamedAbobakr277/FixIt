@@ -12,6 +12,7 @@ using FixIt.Common.Constants;
 using FixIt.Common.Helpers;
 using FixIt.Common.Settings;
 using FluentValidation;
+using Microsoft.AspNetCore.HttpOverrides;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -133,12 +134,24 @@ builder.Services.AddAuthorization(options =>
         policy.RequireRole("Admin"));
 });
 
+// Configure Forwarded Headers for Reverse Proxies (like MonsterASP)
+builder.Services.Configure<ForwardedHeadersOptions>(options =>
+{
+    options.ForwardedHeaders = ForwardedHeaders.XForwardedProto;
+});
+
+
 var app = builder.Build();
 
 // ── Seed Roles ──
 // ── Seed Roles & Coordinates ──
 using (var scope = app.Services.CreateScope())
 {
+    var context = scope.ServiceProvider.GetRequiredService<FixItDbContext>();
+    
+    // Automatically apply pending database migrations on startup
+    await context.Database.MigrateAsync();
+
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     string[] roles = { AppConstants.CitizenRole, AppConstants.AdminRole, AppConstants.SystemAdminRole };
     foreach (var role in roles)
@@ -148,7 +161,6 @@ using (var scope = app.Services.CreateScope())
     }
 
     // Seed GPS coordinates for existing issues if they are empty
-    var context = scope.ServiceProvider.GetRequiredService<FixItDbContext>();
     var issuesToUpdate = await context.Issues.Where(i => i.Latitude == null || i.Longitude == null).ToListAsync();
     if (issuesToUpdate.Any())
     {
