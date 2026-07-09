@@ -53,10 +53,13 @@ public class SystemAdminService : ISystemAdminService
 
     public async Task<IEnumerable<UserManagementDto>> GetAllUsersAsync(string searchTerm = null, string roleFilter = null)
     {
-        // Use LINQ join to avoid N+1 query problem from calling GetRolesAsync in a loop
-        var usersWithRoles = await (from user in _context.Users
-                                    let roleId = _context.UserRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).FirstOrDefault()
-                                    let roleName = _context.Roles.Where(r => r.Id == roleId).Select(r => r.Name).FirstOrDefault()
+        // Use _userManager.Users which returns ALL users regardless of TPH discriminator
+        var userRoles = _context.Set<Microsoft.AspNetCore.Identity.IdentityUserRole<string>>();
+        var roles = _context.Set<Microsoft.AspNetCore.Identity.IdentityRole>();
+
+        var usersWithRoles = await (from user in _userManager.Users
+                                    let roleId = userRoles.Where(ur => ur.UserId == user.Id).Select(ur => ur.RoleId).FirstOrDefault()
+                                    let roleName = roles.Where(r => r.Id == roleId).Select(r => r.Name).FirstOrDefault()
                                     select new UserManagementDto
                                     {
                                         Id = user.Id,

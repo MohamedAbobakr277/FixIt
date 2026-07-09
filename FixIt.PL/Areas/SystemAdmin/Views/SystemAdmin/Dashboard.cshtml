@@ -4,118 +4,130 @@
 @inject UserManager<ApplicationUser> UserManager
 @{
     ViewData["Title"] = "System Dashboard";
-
     var currentUser = await UserManager.GetUserAsync(User);
     var displayName = currentUser?.FullName ?? User.Identity?.Name?.Split('@')[0] ?? "System Admin";
+
+    var totalUsers = Model.TotalUsers > 0 ? Model.TotalUsers : 1;
+    int citizenPct = (int)((double)Model.TotalCitizens / totalUsers * 100);
+    int adminPct = (int)((double)Model.TotalAdmins / totalUsers * 100);
+    int sysAdminPct = (int)((double)Model.TotalSystemAdmins / totalUsers * 100);
+
+    var totalIssues = Model.TotalIssues > 0 ? Model.TotalIssues : 1;
+    int activePct = (int)((double)Model.ActiveIssues / totalIssues * 100);
+    int resolvedPct = (int)((double)Model.ResolvedIssues / totalIssues * 100);
 }
 
-<div class="adm-welcome-header">
-    <h1 class="adm-greeting">
-        Good morning, <span class="adm-username">@displayName!</span>
-    </h1>
+<!-- Page Header -->
+<div class="sa-page-header">
+    <h1 class="sa-page-title">Welcome back, <span>@displayName</span></h1>
+    <p class="sa-page-subtitle">Here's what's happening across the FixIt platform today.</p>
 </div>
 
-<div class="adm-dashboard-layout" style="display: flex; flex-direction: column; gap: 24px;">
+<!-- Stat Cards -->
+<div class="sa-stats-grid">
+    <div class="sa-stat-card">
+        <div class="sa-stat-icon users">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        </div>
+        <div class="sa-stat-label">Total Users</div>
+        <div class="sa-stat-value">@Model.TotalUsers</div>
+        <div class="sa-stat-meta">All registered accounts</div>
+    </div>
+    <div class="sa-stat-card">
+        <div class="sa-stat-icon citizens">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </div>
+        <div class="sa-stat-label">Citizens</div>
+        <div class="sa-stat-value">@Model.TotalCitizens</div>
+        <div class="sa-stat-meta">Standard user accounts</div>
+    </div>
+    <div class="sa-stat-card">
+        <div class="sa-stat-icon admins">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        </div>
+        <div class="sa-stat-label">Admins</div>
+        <div class="sa-stat-value">@Model.TotalAdmins</div>
+        <div class="sa-stat-meta">Elevated access staff</div>
+    </div>
+    <div class="sa-stat-card">
+        <div class="sa-stat-icon issues">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+        </div>
+        <div class="sa-stat-label">Total Issues</div>
+        <div class="sa-stat-value">@Model.TotalIssues</div>
+        <div class="sa-stat-meta">All time reports</div>
+    </div>
+    <div class="sa-stat-card">
+        <div class="sa-stat-icon resolved">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+        </div>
+        <div class="sa-stat-label">Resolved</div>
+        <div class="sa-stat-value" style="color: var(--sa-success);">@Model.ResolvedIssues</div>
+        <div class="sa-stat-meta">Issues completed</div>
+    </div>
+</div>
 
-    <!-- ── STAT CARDS ── -->
-    <div class="adm-stats-grid">
-        <div class="adm-stat-card">
-            <div class="adm-stat-label">Total Users</div>
-            <div class="adm-stat-value">@Model.TotalUsers</div>
-            <div class="adm-stat-trend">
-                <span class="adm-trend-pill up">↑ Active</span>
-                <span class="adm-trend-text">Platform wide</span>
+<!-- Widgets Row -->
+<div class="sa-dashboard-widgets" style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+
+    <!-- Role Distribution -->
+    <div class="sa-card">
+        <div class="sa-card-header">
+            <div class="sa-card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+                Role Distribution
             </div>
         </div>
-        <div class="adm-stat-card">
-            <div class="adm-stat-label">Citizens</div>
-            <div class="adm-stat-value">@Model.TotalCitizens</div>
-            <div class="adm-stat-trend">
-                <span class="adm-trend-pill up">👤 User</span>
-                <span class="adm-trend-text">Standard accounts</span>
+        <div class="sa-dist-list">
+            <div class="sa-dist-row">
+                <span class="sa-dist-dot green"></span>
+                <span class="sa-dist-name">Citizens</span>
+                <div class="sa-dist-bar"><div class="sa-dist-bar-fill" style="width: @(citizenPct)%; background: var(--sa-success);"></div></div>
+                <span class="sa-dist-count">@Model.TotalCitizens</span>
             </div>
-        </div>
-        <div class="adm-stat-card">
-            <div class="adm-stat-label">Admins</div>
-            <div class="adm-stat-value">@Model.TotalAdmins</div>
-            <div class="adm-stat-trend">
-                <span class="adm-trend-pill down">🛡️ Staff</span>
-                <span class="adm-trend-text">Elevated access</span>
+            <div class="sa-dist-row">
+                <span class="sa-dist-dot amber"></span>
+                <span class="sa-dist-name">Admins</span>
+                <div class="sa-dist-bar"><div class="sa-dist-bar-fill" style="width: @(adminPct)%; background: var(--sa-warning);"></div></div>
+                <span class="sa-dist-count">@Model.TotalAdmins</span>
             </div>
-        </div>
-        <div class="adm-stat-card">
-            <div class="adm-stat-label">Total Issues</div>
-            <div class="adm-stat-value">@Model.TotalIssues</div>
-            <div class="adm-stat-trend">
-                <span class="adm-trend-pill up">↑ Active</span>
-                <span class="adm-trend-text">All time reports</span>
-            </div>
-        </div>
-        <div class="adm-stat-card">
-            <div class="adm-stat-label">Resolved Issues</div>
-            <div class="adm-stat-value text-success">@Model.ResolvedIssues</div>
-            <div class="adm-stat-trend">
-                <span class="adm-trend-pill up text-success">✅ Fixed</span>
-                <span class="adm-trend-text">Resolution</span>
+            <div class="sa-dist-row">
+                <span class="sa-dist-dot purple"></span>
+                <span class="sa-dist-name">System Admins</span>
+                <div class="sa-dist-bar"><div class="sa-dist-bar-fill" style="width: @(sysAdminPct)%; background: var(--sa-primary-light);"></div></div>
+                <span class="sa-dist-count">@Model.TotalSystemAdmins</span>
             </div>
         </div>
     </div>
 
-    <!-- ── DASHBOARD WIDGETS ── -->
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
-        
-        <!-- Status Breakdown -->
-        <div class="adm-card" style="animation-delay: 0.1s;">
-            <div class="adm-card-header">
-                <div class="adm-card-title">
-                    <span class="adm-card-icon">👥</span> Role Distribution
-                </div>
-            </div>
-            <div class="adm-status-list">
-                <div class="adm-status-row">
-                    <span class="adm-status-dot adm-dot-approved"></span>
-                    <span class="adm-status-name">Citizens</span>
-                    <span class="adm-status-count">@Model.TotalCitizens</span>
-                </div>
-                <div class="adm-status-row">
-                    <span class="adm-status-dot adm-dot-inprogress"></span>
-                    <span class="adm-status-name">Admins</span>
-                    <span class="adm-status-count">@Model.TotalAdmins</span>
-                </div>
-                <div class="adm-status-row">
-                    <span class="adm-status-dot adm-dot-rejected"></span>
-                    <span class="adm-status-name">System Admins</span>
-                    <span class="adm-status-count">@Model.TotalSystemAdmins</span>
-                </div>
+    <!-- Platform Health -->
+    <div class="sa-card">
+        <div class="sa-card-header">
+            <div class="sa-card-title">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+                Platform Health
             </div>
         </div>
-
-        <!-- Issue Overview -->
-        <div class="adm-card" style="animation-delay: 0.2s;">
-            <div class="adm-card-header">
-                <div class="adm-card-title">
-                    <span class="adm-card-icon">📌</span> Platform Health
-                </div>
+        <div class="sa-dist-list">
+            <div class="sa-dist-row">
+                <span class="sa-dist-dot cyan"></span>
+                <span class="sa-dist-name">Active Issues</span>
+                <div class="sa-dist-bar"><div class="sa-dist-bar-fill" style="width: @(activePct)%; background: var(--sa-info);"></div></div>
+                <span class="sa-dist-count">@Model.ActiveIssues</span>
             </div>
-            <div class="adm-status-list">
-                <div class="adm-status-row">
-                    <span class="adm-status-dot adm-dot-new"></span>
-                    <span class="adm-status-name">Active Issues (Pending)</span>
-                    <span class="adm-status-count">@Model.ActiveIssues</span>
-                </div>
-                <div class="adm-status-row">
-                    <span class="adm-status-dot adm-dot-resolved"></span>
-                    <span class="adm-status-name">Resolved Issues</span>
-                    <span class="adm-status-count">@Model.ResolvedIssues</span>
-                </div>
-                <div class="adm-status-row">
-                    <span class="adm-status-dot adm-dot-closed"></span>
-                    <span class="adm-status-name">Total Platform Issues</span>
-                    <span class="adm-status-count">@Model.TotalIssues</span>
-                </div>
+            <div class="sa-dist-row">
+                <span class="sa-dist-dot green"></span>
+                <span class="sa-dist-name">Resolved Issues</span>
+                <div class="sa-dist-bar"><div class="sa-dist-bar-fill" style="width: @(resolvedPct)%; background: var(--sa-success);"></div></div>
+                <span class="sa-dist-count">@Model.ResolvedIssues</span>
+            </div>
+            <div class="sa-dist-row">
+                <span class="sa-dist-dot purple"></span>
+                <span class="sa-dist-name">Total Platform Issues</span>
+                <div class="sa-dist-bar"><div class="sa-dist-bar-fill" style="width: 100%; background: var(--sa-primary-light);"></div></div>
+                <span class="sa-dist-count">@Model.TotalIssues</span>
             </div>
         </div>
-
     </div>
 
 </div>
