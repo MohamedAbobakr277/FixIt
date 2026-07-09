@@ -318,18 +318,35 @@
 
 @section Scripts {
 <script>
-(function () {
+document.addEventListener('DOMContentLoaded', function () {
     var input = document.querySelector('#issToolbar input[name="search"]');
     var form = document.getElementById('issToolbar');
-    if (!input || !form) return;
-    var timer = null;
-    input.addEventListener('input', function () {
-        clearTimeout(timer);
-        timer = setTimeout(function () { form.submit(); }, 350);
-    });
+    var rows = document.querySelectorAll('.iss-table tbody tr');
+    
+    if (!input || rows.length === 0) return;
+
+    // Remove the name attribute so pressing Enter doesn't submit 'search' param if we don't want to
+    // But keeping it is fine if they still want server search on enter. We'll just prevent default on enter.
     input.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter') { e.preventDefault(); form.submit(); }
+        if (e.key === 'Enter') { 
+            e.preventDefault(); 
+        }
     });
-})();
+
+    input.addEventListener('input', function () {
+        var term = input.value.trim().toLowerCase();
+
+        rows.forEach(function (row) {
+            // Get all text content from the row
+            var rowText = row.textContent.toLowerCase();
+            
+            if (rowText.includes(term)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        });
+    });
+});
 </script>
 }

@@ -162,7 +162,17 @@ public class AccountService : IAccountService
         }
         else
         {
-            secretKey = EncryptionHelper.Decrypt(user.TwoFactorSecret);
+            try
+            {
+                secretKey = EncryptionHelper.Decrypt(user.TwoFactorSecret);
+            }
+            catch (System.Security.Cryptography.CryptographicException)
+            {
+                // The encryption key must have changed or the secret is invalid. Reset it.
+                secretKey = _twoFactorService.GenerateSecretKey();
+                user.TwoFactorSecret = EncryptionHelper.Encrypt(secretKey);
+                await _userManager.UpdateAsync(user);
+            }
         }
 
         var qrUri = _twoFactorService.GenerateQrCodeUri(user.Email!, secretKey);
@@ -180,7 +190,16 @@ public class AccountService : IAccountService
         var user = await _userManager.FindByIdAsync(userId);
         if (user == null || string.IsNullOrEmpty(user.TwoFactorSecret)) return false;
 
-        var secretKey = EncryptionHelper.Decrypt(user.TwoFactorSecret);
+        string secretKey;
+        try
+        {
+            secretKey = EncryptionHelper.Decrypt(user.TwoFactorSecret);
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            return false;
+        }
+
         if (_twoFactorService.VerifyCode(secretKey, code.Trim()))
         {
             user.IsTwoFactorEnabled = true;
@@ -243,7 +262,16 @@ public class AccountService : IAccountService
     {
         if (user == null || !user.IsTwoFactorEnabled || string.IsNullOrEmpty(user.TwoFactorSecret)) return false;
 
-        var secretKey = EncryptionHelper.Decrypt(user.TwoFactorSecret);
+        string secretKey;
+        try
+        {
+            secretKey = EncryptionHelper.Decrypt(user.TwoFactorSecret);
+        }
+        catch (System.Security.Cryptography.CryptographicException)
+        {
+            return false;
+        }
+
         var isValid = _twoFactorService.VerifyCode(secretKey, code.Trim());
         
         if (isValid)

@@ -78,12 +78,12 @@
                             </div>
                         </div>
                         <div class="mb-2">
-                            <small class="text-muted">Issue: </small>
-                            <span class="fw-600 x-small text-primary">@rating.IssueTitle</span>
+                            <small style="color: var(--adm-text-light);">Issue: </small>
+                            <span class="fw-600 x-small" style="color: var(--adm-primary);">@rating.IssueTitle</span>
                         </div>
                         @if (!string.IsNullOrEmpty(rating.Comment))
                         {
-                            <p class="mb-0 fst-italic text-body">"@rating.Comment"</p>
+                            <p class="mb-0 fst-italic" style="color: var(--adm-text);">"@rating.Comment"</p>
                         }
                     </div>
                 }
