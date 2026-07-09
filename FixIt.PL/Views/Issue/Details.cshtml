@@ -127,7 +127,7 @@
             <div class="issue-hero-info">
                 <div class="hero-info-item">
                     <i class="bi bi-calendar3"></i>
-                    <span>Submitted on<br/><strong>@Model.SubmittedAt.ToString("MMM dd, yyyy")</strong></span>
+                    <span>Submitted on<br/><strong>@Model.SubmittedAt.ToLocalTime().ToString("MMM dd, yyyy")</strong></span>
                 </div>
                 <div class="hero-info-item">
                     <i class="bi bi-tag-fill"></i>
@@ -175,7 +175,7 @@
                             <div class="row g-4">
                                 <div class="col-sm-6">
                                     <div class="small fw-bold text-uppercase text-muted mb-1">Visit Date</div>
-                                    <div class="fs-6 fw-bold">@Model.Schedule.VisitDate.ToString("MMMM dd, yyyy h:mm tt")</div>
+                                    <div class="fs-6 fw-bold">@Model.Schedule.VisitDate.ToLocalTime().ToString("MMMM dd, yyyy h:mm tt")</div>
                                 </div>
                                 <div class="col-sm-6">
                                     <div class="small fw-bold text-uppercase text-muted mb-1">Assigned Worker</div>
@@ -187,44 +187,55 @@
 
                     @if (Model.Report != null)
                     {
-                        <div class="info-box">
-                            <div class="section-header-line">
-                                <i class="bi bi-check-circle-fill text-success"></i>
-                                <h3>Completion Report</h3>
-                            </div>
-                            <div class="mb-4">
-                                <div class="small fw-bold text-uppercase text-muted mb-2">Summary of Work</div>
-                                <p class="desc-text mb-0">@Model.Report.Summary</p>
-                            </div>
-                            
-                            @if (!string.IsNullOrEmpty(Model.Report.WorkerNotes))
-                            {
+                        if (Model.IsPaid)
+                        {
+                            <div class="info-box">
+                                <div class="section-header-line">
+                                    <i class="bi bi-check-circle-fill text-success"></i>
+                                    <h3>Completion Report</h3>
+                                </div>
                                 <div class="mb-4">
-                                    <div class="small fw-bold text-uppercase text-muted mb-2">Worker Notes</div>
-                                    <p class="desc-text mb-0">@Model.Report.WorkerNotes</p>
+                                    <div class="small fw-bold text-uppercase text-muted mb-2">Summary of Work</div>
+                                    <p class="desc-text mb-0">@Model.Report.Summary</p>
                                 </div>
-                            }
+                                
+                                @if (!string.IsNullOrEmpty(Model.Report.WorkerNotes))
+                                {
+                                    <div class="mb-4">
+                                        <div class="small fw-bold text-uppercase text-muted mb-2">Worker Notes</div>
+                                        <p class="desc-text mb-0">@Model.Report.WorkerNotes</p>
+                                    </div>
+                                }
 
-                            @if (!string.IsNullOrEmpty(Model.Report.BeforeImageUrl) || !string.IsNullOrEmpty(Model.Report.AfterImageUrl))
-                            {
-                                <div class="row g-3 mt-4">
-                                    @if (!string.IsNullOrEmpty(Model.Report.BeforeImageUrl))
-                                    {
-                                        <div class="col-sm-6">
-                                            <div class="small fw-bold text-uppercase text-muted mb-2 text-center">Before</div>
-                                            <img class="issue-image" src="@Model.Report.BeforeImageUrl" alt="Before" style="max-height: 250px;" />
-                                        </div>
-                                    }
-                                    @if (!string.IsNullOrEmpty(Model.Report.AfterImageUrl))
-                                    {
-                                        <div class="col-sm-6">
-                                            <div class="small fw-bold text-uppercase text-muted mb-2 text-center">After</div>
-                                            <img class="issue-image" src="@Model.Report.AfterImageUrl" alt="After" style="max-height: 250px;" />
-                                        </div>
-                                    }
-                                </div>
-                            }
-                        </div>
+                                @if (!string.IsNullOrEmpty(Model.Report.BeforeImageUrl) || !string.IsNullOrEmpty(Model.Report.AfterImageUrl))
+                                {
+                                    <div class="row g-3 mt-4">
+                                        @if (!string.IsNullOrEmpty(Model.Report.BeforeImageUrl))
+                                        {
+                                            <div class="col-sm-6">
+                                                <div class="small fw-bold text-uppercase text-muted mb-2 text-center">Before</div>
+                                                <img class="issue-image" src="@Model.Report.BeforeImageUrl" alt="Before" style="max-height: 250px;" />
+                                            </div>
+                                        }
+                                        @if (!string.IsNullOrEmpty(Model.Report.AfterImageUrl))
+                                        {
+                                            <div class="col-sm-6">
+                                                <div class="small fw-bold text-uppercase text-muted mb-2 text-center">After</div>
+                                                <img class="issue-image" src="@Model.Report.AfterImageUrl" alt="After" style="max-height: 250px;" />
+                                            </div>
+                                        }
+                                    </div>
+                                }
+                            </div>
+                        }
+                        else
+                        {
+                            <div class="info-box" style="text-align: center; border: 1px dashed var(--border);">
+                                <i class="bi bi-lock-fill" style="font-size: 32px; color: var(--text-muted); margin-bottom: 16px; display: block;"></i>
+                                <h4 style="font-weight: 700; color: var(--text-heading); margin-bottom: 8px;">Report Locked</h4>
+                                <p style="color: var(--text-muted); font-size: 14px; margin-bottom: 0;">Please complete the resolution payment to view the maintenance report and leave your feedback.</p>
+                            </div>
+                        }
                     }
                 </div>
 
@@ -268,7 +279,7 @@
                                     <div style="background: @(isMyComment ? "var(--primary-glow)" : "var(--bg-surface-2)"); padding: 12px 16px; border-radius: 12px; border: 1px solid @(isMyComment ? "var(--primary)" : "var(--border)"); max-width: 80%;">
                                         <div style="display: flex; justify-content: space-between; gap: 16px; margin-bottom: 4px;">
                                             <strong style="font-size: 13px; color: var(--text-heading);">@(isMyComment ? "You" : comment.UserName + " (Admin)")</strong>
-                                            <span style="font-size: 11px; color: var(--text-muted);">@comment.CreatedAt.ToString("MMM d, h:mm tt")</span>
+                                            <span style="font-size: 11px; color: var(--text-muted);">@comment.CreatedAt.ToLocalTime().ToString("MMM d, h:mm tt")</span>
                                         </div>
                                         <p style="margin: 0; font-size: 14px; color: var(--text-body); line-height: 1.5;">@comment.Text</p>
                                     </div>
@@ -319,7 +330,7 @@
                                 <div class="timeline-dot"><i class="bi bi-check"></i></div>
                                 <div class="timeline-content">
                                     <div class="timeline-title">New</div>
-                                    <div class="timeline-date">@Model.SubmittedAt.ToString("MMM dd, yyyy h:mm tt")</div>
+                                    <div class="timeline-date">@Model.SubmittedAt.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</div>
                                     <div class="timeline-desc">Issue submitted successfully</div>
                                 </div>
                             </div>
@@ -327,8 +338,20 @@
                                 <div class="timeline-dot"></div>
                                 <div class="timeline-content">
                                     <div class="timeline-title">Rejected</div>
-                                    <div class="timeline-date">@Model.UpdatedAt.ToString("MMM dd, yyyy h:mm tt")</div>
-                                    <div class="timeline-desc">Issue was rejected by administration</div>
+                                    <div class="timeline-date">@Model.UpdatedAt.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</div>
+                                    <div class="timeline-desc">
+                                        @{
+                                            var rejectEntry = Model.Timeline.OrderByDescending(t => t.ChangedAt).FirstOrDefault(t => t.Status == FixIt.Common.Enums.IssueStatus.Rejected);
+                                        }
+                                        @if(rejectEntry != null && !string.IsNullOrWhiteSpace(rejectEntry.Note))
+                                        {
+                                            <strong>Reason:</strong> @rejectEntry.Note
+                                        }
+                                        else
+                                        {
+                                            @:Issue was rejected by administration
+                                        }
+                                    </div>
                                 </div>
                             </div>
                         }
@@ -362,7 +385,7 @@
                                         <div class="timeline-title">@stage.Display</div>
                                         @if (stageDate.HasValue)
                                         {
-                                            <div class="timeline-date">@stageDate.Value.ToString("MMM dd, yyyy h:mm tt")</div>
+                                            <div class="timeline-date">@stageDate.Value.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</div>
                                         }
                                         <div class="timeline-desc">@stage.Desc</div>
                                     </div>
@@ -397,7 +420,7 @@
                                     {
                                         <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
                                             <span class="text-muted">Paid On:</span>
-                                            <span style="font-weight: 500;">@Model.PaymentCompletedAt.Value.ToString("MMM dd, yyyy h:mm tt")</span>
+                                            <span style="font-weight: 500;">@Model.PaymentCompletedAt.Value.ToLocalTime().ToString("MMM dd, yyyy h:mm tt")</span>
                                         </div>
                                     }
                                     @if (!string.IsNullOrEmpty(Model.PaymentTransactionId))
@@ -434,7 +457,7 @@
                         </div>
                     }
 
-                    @if (Model.Status == "Resolved" && Model.Rating == null)
+                    @if (Model.Status == "Resolved" && Model.IsPaid && Model.Rating == null)
                     {
                         <div class="rating-box">
                             <div class="section-header-line">

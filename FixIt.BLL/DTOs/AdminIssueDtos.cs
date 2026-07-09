@@ -52,14 +52,6 @@ public class AdminIssueDetailsDto
     public IEnumerable<IssueCommentDto> Comments { get; set; } = new List<IssueCommentDto>();
 }
 
-public class TimelineEntryDto
-{
-    public IssueStatus Status { get; set; }
-    public DateTime ChangedAt { get; set; }
-    public string? Note { get; set; }
-    public string? ChangedByName { get; set; }
-}
-
 public class SaveAdminNotesDto
 {
     public int IssueId { get; set; }

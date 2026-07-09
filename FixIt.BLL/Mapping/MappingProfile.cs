@@ -15,7 +15,8 @@ public class MappingProfile : Profile
         CreateMap<Issue, IssueDetailsDto>()
             .ForMember(dest => dest.CitizenName, opt => opt.MapFrom(src => src.Citizen != null ? src.Citizen.FullName : ""))
             .ForMember(dest => dest.Schedule, opt => opt.MapFrom(src => src.MaintenanceSchedule))
-            .ForMember(dest => dest.Report, opt => opt.MapFrom(src => src.MaintenanceReport));
+            .ForMember(dest => dest.Report, opt => opt.MapFrom(src => src.MaintenanceReport))
+            .ForMember(dest => dest.Timeline, opt => opt.MapFrom(src => src.StatusHistory));
 
         CreateMap<Issue, AdminIssueListItemDto>()
             .ForMember(dest => dest.CitizenName, opt => opt.MapFrom(src => src.Citizen != null ? src.Citizen.FullName : "Unknown"));

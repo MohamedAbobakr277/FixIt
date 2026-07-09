@@ -1,3 +1,5 @@
+using FixIt.Common.Enums;
+
 namespace FixIt.Common.DTOs;
 
 public class IssueDetailsDto
@@ -26,5 +28,14 @@ public class IssueDetailsDto
     public DateTime? PaymentCompletedAt { get; set; }
     public string? PaymentTransactionId { get; set; }
     public IEnumerable<IssueCommentDto> Comments { get; set; } = new List<IssueCommentDto>();
+    public List<TimelineEntryDto> Timeline { get; set; } = new();
+}
+
+public class TimelineEntryDto
+{
+    public IssueStatus Status { get; set; }
+    public DateTime ChangedAt { get; set; }
+    public string? Note { get; set; }
+    public string? ChangedByName { get; set; }
 }
 
